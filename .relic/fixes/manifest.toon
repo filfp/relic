@@ -1,15 +1,15 @@
 # fixes index
-2026-04-18-solve-persists-history-against-spec | 2026-04-18-solve-persists-history-against-spec.md |  | 
-2026-04-18-model-config-numeric-fields-unvalidated | 2026-04-18-model-config-numeric-fields-unvalidated.md |  | 
-2026-04-18-init-missing-gitignore-entries | 2026-04-18-init-missing-gitignore-entries.md |  | 
-2026-04-13-copilot-codex-per-command-files | 2026-04-13-copilot-codex-per-command-files.md |  | 
-2026-04-15-missing-tests-write-command | 2026-04-15-missing-tests-write-command.md |  | 
-2026-04-20-npm-publish-404-missing-token | 2026-04-20-npm-publish-404-missing-token.md |  | 
-2026-04-18-specify-unused-spec-flag | 2026-04-18-specify-unused-spec-flag.md |  | 
-2026-04-22-upgrade-spawn-bunfs-path | 2026-04-22-upgrade-spawn-bunfs-path.md |  | 
-2026-04-18-stale-bin-debug-references | 2026-04-18-stale-bin-debug-references.md |  | 
-2026-04-14-init-must-not-write-manifest-json | 2026-04-14-init-must-not-write-manifest-json.md |  | 
-2026-04-20-uv-stderr-leaks-on-pip-fallback | 2026-04-20-uv-stderr-leaks-on-pip-fallback.md |  | 
-2026-04-22-upgrade-hooks-use-stale-templates | 2026-04-22-upgrade-hooks-use-stale-templates.md |  | 
-2026-04-18-centralize-spec-fix-resolution | 2026-04-18-centralize-spec-fix-resolution.md |  | 
-2026-04-20-tag-release-not-triggering-publish | 2026-04-20-tag-release-not-triggering-publish.md |  | 
+2026-04-18-solve-persists-history-against-spec | 2026-04-18-solve-persists-history-against-spec.md | code-bug, 007-remote-ollama-engine, solve, history, persistence | relic solve incorrectly persists conversation history to history.json when it should be one-shot.
+2026-04-18-model-config-numeric-fields-unvalidated | 2026-04-18-model-config-numeric-fields-unvalidated.md | misspecification, 007-remote-ollama-engine, validation, config, numeric-fields | models.json numeric fields accepted without validation allowing negative values and incoherent combinations.
+2026-04-18-init-missing-gitignore-entries | 2026-04-18-init-missing-gitignore-entries.md | code-bug, 007-remote-ollama-engine, init, gitignore, security | relic init writes incomplete .gitignore missing models.json and history.json entries.
+2026-04-13-copilot-codex-per-command-files | 2026-04-13-copilot-codex-per-command-files.md | misspecification, 002-agent-permission-config, copilot, codex, engine, slash-commands | Copilot and Codex engines write monolithic files instead of per-command slash command files.
+2026-04-15-missing-tests-write-command | 2026-04-15-missing-tests-write-command.md | misspecification, 006-structured-write-command, tests, write-command, coverage | Spec 006 relic write implementation completed without any test coverage.
+2026-04-20-npm-publish-404-missing-token | 2026-04-20-npm-publish-404-missing-token.md | code-bug, 004-cli-self-upgrade, npm, publish, token, ci | publish-npm.yml fails with cryptic E404 when NPM_TOKEN secret is missing or invalid.
+2026-04-18-specify-unused-spec-flag | 2026-04-18-specify-unused-spec-flag.md | code-bug, 007-remote-ollama-engine, specify, dead-code, cli | relic specify registers --spec flag but never uses it; dead code from copy-paste.
+2026-04-22-upgrade-spawn-bunfs-path | 2026-04-22-upgrade-spawn-bunfs-path.md | code-bug, 004-cli-self-upgrade, upgrade, bun, spawn, pypi | relic upgrade spawn fails with Module not found due to Bun virtual filesystem path in process.argv.
+2026-04-18-stale-bin-debug-references | 2026-04-18-stale-bin-debug-references.md | code-bug, 007-remote-ollama-engine, cleanup, stale-references, debug-binary | Stale references to deleted bin.debug.ts in publish script and package.json debug scripts.
+2026-04-14-init-must-not-write-manifest-json | 2026-04-14-init-must-not-write-manifest-json.md | misspecification, 005-toon-manifest-format, init, manifest, toon, migration | relic init writes both manifest.json and manifest.toon on fresh install; should be toon-only.
+2026-04-20-uv-stderr-leaks-on-pip-fallback | 2026-04-20-uv-stderr-leaks-on-pip-fallback.md | code-bug, 004-cli-self-upgrade, upgrade, uv, pip, stderr, ux | relic upgrade prints uv error to terminal even when pip fallback succeeds.
+2026-04-22-upgrade-hooks-use-stale-templates | 2026-04-22-upgrade-hooks-use-stale-templates.md | code-bug, 004-cli-self-upgrade, upgrade, hooks, templates, refresh | relic upgrade refreshes hooks with stale templates from old binary still in memory.
+2026-04-18-centralize-spec-fix-resolution | 2026-04-18-centralize-spec-fix-resolution.md | code-bug, 007-remote-ollama-engine, resolution, centralization, copy-paste, utility | Spec and fix resolution chain copy-pasted across 8+ commands with no shared implementation.
+2026-04-20-tag-release-not-triggering-publish | 2026-04-20-tag-release-not-triggering-publish.md | code-bug, 004-cli-self-upgrade, publish, github-actions, tag-release, ci | tag-release.yml pushes tags but publish workflows never fire due to GITHUB_TOKEN cascade block.

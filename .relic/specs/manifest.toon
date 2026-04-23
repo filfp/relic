@@ -1,8 +1,8 @@
 # specs index
-Agent Permission Config | 002-agent-permission-config/ |  | 
-Toon Manifest Format | 005-toon-manifest-format/ |  | 
-Fix Solve Workflow | 003-fix-solve-workflow/ |  | 
-Workflow Test Suite | 001-workflow-test-suite/ |  | 
-Structured Write Command | 006-structured-write-command/ |  | 
-Remote Ollama Engine | 007-remote-ollama-engine/ |  | 
-CLI Self Upgrade | 004-cli-self-upgrade/ |  | 
+Workflow Test Suite | 001-workflow-test-suite/ | testing, bun, ci, commands, quality | Unit and integration tests for all workflow commands and core utilities using Bun test runner.
+Agent Permission Config | 002-agent-permission-config/ | engines, permission, claude, copilot, codex, templates, refactor | Shared utility and engines packages to consolidate prompt templates and pre-approve engine permissions.
+Fix Solve Workflow | 003-fix-solve-workflow/ | workflow, fix, solve, session, audit, ownership | Two-stage cross-spec fix pipeline: diagnose problems, validate ownership, apply approved fixes.
+CLI Self Upgrade | 004-cli-self-upgrade/ | upgrade, distribution, npm, pypi, binary, engines, cli | relic upgrade command to detect install channel, check for updates, upgrade binary, and refresh hooks.
+Toon Manifest Format | 005-toon-manifest-format/ | format, manifest, toon, token-efficiency, search, llm | Compact line-oriented text format for manifest indexes reducing token overhead for LLM consumption.
+Structured Write Command | 006-structured-write-command/ | write, command, structured, changelog, index, validation | relic write command to standardize all index and changelog mutations via JSON payloads.
+Remote Ollama Engine | 007-remote-ollama-engine/ | ollama, model, execution, streaming, history, openai-compatible | Workflow commands promoted to production binary with direct OpenAI-compatible model execution.
