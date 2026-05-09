@@ -11,6 +11,41 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.15] — 2026-05-09
+
+### Fixed
+- `relic upgrade` was broken on every npm-installed binary: the running version was
+  always reported as `0.8.0`, and the install channel was never detected (`channel:
+  "dev"`). Two independent build-pipeline bugs were responsible.
+  - `scripts/publish.ts` bumped the CLI version with a regex matching
+    `.version("X.Y.Z")`, but `packages/cli-node/src/bin.ts` was refactored to read
+    `const VERSION = "..."` and pass it to `.version(VERSION)`. The regex stopped
+    matching, freezing the embedded version constant at `0.8.0` for every release
+    since the refactor. The regex now targets `const VERSION = "..."` directly.
+  - The repo-root `package.json` `build:npm` and `build:binary` scripts (used by
+    `publish-npm.yml`) were missing `--define 'INSTALL_CHANNEL="npm"'`. The five
+    `build:pypi:*` scripts likewise lacked the pypi define, so local PyPI builds
+    produced `"dev"` binaries. All seven scripts now embed their channel
+    explicitly, so `INSTALL_CHANNEL` cannot drift between local and CI builds.
+
+### Changed
+- `.github/workflows/publish-pypi.yml` now invokes `bun run build:pypi:<target>`
+  instead of duplicating the `bun build --compile` invocation. Channel embedding
+  lives in one place (the script). Matrix `bun_target` field renamed to
+  `script_target`; the now-redundant "Embed templates" workflow step was dropped
+  (the build script already chains `build:templates`).
+- Removed dead `build:binary` and `build:npm` scripts from
+  `packages/cli-node/package.json`. CI never invoked them — they were a footgun
+  that obscured the actual build commands in the repo-root `package.json`.
+
+### Upgrade note
+Existing 0.8.x npm installs will keep self-reporting as `0.8.0` until users
+reinstall once: `npm install -g relic-cli@latest` (or
+`uv tool upgrade relic-cli` / `pip install --upgrade relic-cli`). After that,
+`relic upgrade --check` reports the correct current version and channel.
+
+---
+
 ## [0.8.2] — 2026-04-20
 
 ### Fixed
