@@ -52,7 +52,7 @@ function bumpRegex(path: string, pattern: RegExp, replacement: string) {
 // --- bump all 5 files ---
 bumpJson("package.json");
 bumpJson("packages/cli-node/package.json");
-bumpRegex("packages/cli-node/src/bin.ts", /\.version\("[^"]+"\)/, `.version("${version}")`);
+bumpRegex("packages/cli-node/src/bin.ts", /const VERSION = "[^"]+"/, `const VERSION = "${version}"`);
 bumpRegex("packages/cli-python/pyproject.toml", /^version = "[^"]+"/m, `version = "${version}"`);
 bumpRegex("packages/cli-python/relic/__init__.py", /__version__ = "[^"]+"/, `__version__ = "${version}"`);
 
