@@ -29,7 +29,7 @@ import {
 } from "@relic/core";
 import { readEnginesRegistry, writeEnginesRegistry, fileExists, writeJson, resolveSpec } from "@relic/utility";
 
-const VERSION = "0.8.0";
+const VERSION = "0.8.15";
 const program = new Command();
 
 program
