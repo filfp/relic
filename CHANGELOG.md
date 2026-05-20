@@ -11,6 +11,40 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.17] — 2026-05-20
+
+### Added
+- **HTML spec mode** (`relic mode html`) — projects can now switch between Markdown
+  and HTML output modes. In HTML mode, `relic scaffold` creates a self-contained
+  `<spec-id>.html` file alongside the standard `spec.md`/`plan.md`/`tasks.md`, giving
+  AI agents a richer canvas to populate with charts, flow diagrams, tables, and status
+  badges via `<relic-*>` custom components.
+- **`relic mode [md|html]`** — new CLI command. No argument reads the current mode;
+  with an argument sets it and (on first switch to `html`) scaffolds `.relic/base.html`,
+  the self-contained component library.
+- **`templates/base.html`** — embedded component library: utility CSS, and six custom
+  elements (`<relic-chart>` bar/pie/line, `<relic-flow>` flowchart renderer,
+  `<relic-status>` badge, `<relic-table>` JSON table, `<relic-callout>` info/warn/risk,
+  `<relic-progress>` bar). All JS and CSS are inline — works offline.
+- **`mode` field in `relic context` output** — AI workflow commands can check the active
+  mode without reading `config.json` directly.
+- **Conditional HTML step in all seven prompt templates** — when `mode = "html"`, each
+  workflow command (`specify`, `clarify`, `plan`, `tasks`, `implement`, `fix`, `solve`)
+  reads and updates the spec/fix HTML file with enriched content and component calls.
+
+### Changed
+- **`.relic/engines.json` → `.relic/config.json`** — project config migrated to a new
+  file with shape `{ "engines": [...], "mode": "md" }`. Silent auto-migration on first
+  read: if only `engines.json` exists, it is converted and removed automatically.
+- **`relic init` always writes `config.json`** — even when no `--engine` flag is passed,
+  ensuring the file is present for teams to inspect from day one.
+
+### Fixed
+- `relic upgrade` warning now reads "missing or empty" to accurately cover the case
+  where `config.json` doesn't exist yet (not just where it exists but has no engines).
+
+---
+
 ## [0.8.16] — 2026-05-20
 
 ### Added
