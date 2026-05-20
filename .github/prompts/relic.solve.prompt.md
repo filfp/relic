@@ -21,21 +21,26 @@ if needed, and closes the fix. Run `/relic.fix <issue>` first if no fix is activ
 relic context
 ```
 
-Read the `current_fix` field.
+Read the `current_fix` and `mode` fields.
 
 - **`current_fix` is null** → Stop. Report: *"No active fix. Run `/relic.fix <issue>` first to
   diagnose the issue and create a fix document."*
 - **`current_fix` is set** → Continue.
 
+Note `mode` — it determines whether the fix document is `.html` or `.md`, and how to close it.
+
 ---
 
 ## Step 2 — Load the fix document
 
-Read `.relic/fixes/<current_fix>.md` in full. Note:
+**If `mode = "html"`:** Read `.relic/fixes/<current_fix>.html` in full.
+**If `mode = "md"`:** Read `.relic/fixes/<current_fix>.md` in full.
+
+Note:
 - **Owning spec** — which spec governs this fix
-- **Classification** (under `## Root Cause`) — `code-bug | misspecification | misunderstanding | wrong-spec`
-- **Code changes** (under `## Proposed Changes`) — the code changes to apply
-- **Shared artifact changes** (under `## Proposed Changes`) — which shared artifacts (if any) need updating
+- **Classification** (under Root Cause) — `code-bug | misspecification | misunderstanding | wrong-spec`
+- **Code changes** (under Proposed Changes) — the code changes to apply
+- **Shared artifact changes** (under Proposed Changes) — which shared artifacts (if any) need updating
 
 ---
 
@@ -94,8 +99,17 @@ Do not open or edit `changelog.md` directly.
 
 ## Step 7 — Close the fix
 
-Set `Status: solved` in `.relic/fixes/<current_fix>.md` (change the `**Status:** pending` line).
+**If `mode = "html"`:**
+- Update `.relic/fixes/<current_fix>.html`: replace `<relic-status value="pending">` with
+  `<relic-status value="done">solved</relic-status>`, mark proposed changes as applied, add a
+  "Resolved" section with a brief note on what was changed.
+- Do **not** modify or create `<current_fix>.md` — it does not exist in html mode.
 
+**If `mode = "md"`:**
+- Set `Status: solved` in `.relic/fixes/<current_fix>.md` (change the `**Status:** pending` line).
+- Do not create or modify any `.html` file.
+
+Then clear the active fix:
 ```bash
 relic use --clear-fix
 ```
