@@ -1,7 +1,6 @@
 import { writeClaude } from "./engines/claude/index.ts";
 import { writeCopilot } from "./engines/copilot/index.ts";
 import { writeCodex } from "./engines/codex/index.ts";
-import { ENGINE_TEMPLATES } from "./generated/engine-templates.ts";
 
 export type Engine = "claude" | "copilot" | "codex";
 
@@ -10,10 +9,6 @@ export const SUPPORTED_ENGINES: Engine[] = ["claude", "copilot", "codex"];
 export interface AddEngineOptions {
   engine: Engine;
   projectDir: string;
-}
-
-export function getPromptTemplate(name: string): string | undefined {
-  return ENGINE_TEMPLATES[`prompts/${name}.md`];
 }
 
 export async function runAddEngine(options: AddEngineOptions): Promise<void> {

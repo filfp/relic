@@ -49,10 +49,11 @@ function bumpRegex(path: string, pattern: RegExp, replacement: string) {
   console.log(`  bumped ${path}`);
 }
 
-// --- bump all 5 files ---
+// --- bump all 6 files ---
 bumpJson("package.json");
 bumpJson("packages/cli-node/package.json");
 bumpRegex("packages/cli-node/src/bin.ts", /const VERSION = "[^"]+"/, `const VERSION = "${version}"`);
+bumpRegex("packages/cli-node/src/bin.debug.ts", /const VERSION = "[^"]+"/, `const VERSION = "${version}"`);
 bumpRegex("packages/cli-python/pyproject.toml", /^version = "[^"]+"/m, `version = "${version}"`);
 bumpRegex("packages/cli-python/relic/__init__.py", /__version__ = "[^"]+"/, `__version__ = "${version}"`);
 
@@ -62,7 +63,7 @@ console.log("");
 const releaseBranch = `release/v${version}`;
 execSync(`git checkout -b ${releaseBranch}`, { stdio: "inherit" });
 execSync(
-  `git add package.json packages/cli-node/package.json packages/cli-node/src/bin.ts packages/cli-python/pyproject.toml packages/cli-python/relic/__init__.py`,
+  `git add package.json packages/cli-node/package.json packages/cli-node/src/bin.ts packages/cli-node/src/bin.debug.ts packages/cli-python/pyproject.toml packages/cli-python/relic/__init__.py`,
   { stdio: "inherit" }
 );
 execSync(`git commit -m "chore: bump version to ${version}"`, { stdio: "inherit" });

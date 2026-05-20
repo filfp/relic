@@ -5,4 +5,3 @@ Fix Solve Workflow | 003-fix-solve-workflow/ | workflow, fix, solve, session, au
 CLI Self Upgrade | 004-cli-self-upgrade/ | upgrade, distribution, npm, pypi, binary, engines, cli | relic upgrade command to detect install channel, check for updates, upgrade binary, and refresh hooks.
 Toon Manifest Format | 005-toon-manifest-format/ | format, manifest, toon, token-efficiency, search, llm | Compact line-oriented text format for manifest indexes reducing token overhead for LLM consumption.
 Structured Write Command | 006-structured-write-command/ | write, command, structured, changelog, index, validation | relic write command to standardize all index and changelog mutations via JSON payloads.
-Remote Ollama Engine | 007-remote-ollama-engine/ | ollama, model, execution, streaming, history, openai-compatible | Workflow commands promoted to production binary with direct OpenAI-compatible model execution.

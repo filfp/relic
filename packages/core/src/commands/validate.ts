@@ -9,7 +9,7 @@ export interface ValidateOptions {
   relicDir?: string;
 }
 
-const ALLOWED_SPEC_FILES = new Set(["spec.md", "plan.md", "tasks.md", "artifacts.json", "history.json"]);
+const ALLOWED_SPEC_FILES = new Set(["spec.md", "plan.md", "tasks.md", "artifacts.json"]);
 
 interface ValidateResult {
   valid: boolean;
