@@ -27,7 +27,7 @@ import {
 } from "@relic/core";
 import { readEnginesRegistry, writeEnginesRegistry } from "@relic/utility";
 
-const VERSION = "0.8.15";
+const VERSION = "0.8.16";
 const program = new Command();
 
 program
