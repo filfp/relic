@@ -53,13 +53,17 @@ relic context
 
 If `mode` is `"html"`:
 
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory.
-3. Update the Tasks and Plan sections with progress from this implementation session:
-   - Use `<relic-progress>` to show overall and per-phase task completion.
-   - Use `<relic-status value="done">` on completed phases.
-   - Use `<relic-callout type="info">` to note any implementation decisions made during this session.
-   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+3. Update Tasks and Plan sections with **synthesised** progress from this implementation session.
+   **Anti-transcription rules (mandatory):**
+   - Do NOT copy the task list as plain HTML — represent it visually.
+   - Use `<relic-progress>` for overall and per-phase completion (values from actual task counts).
+   - Mark completed phases with `<relic-status value="done">` on the phase heading.
+   - Use `<relic-callout type="info">` for decisions made during implementation; `type="warn"` for deviations from plan.
+   - Use `<relic-chip color="green">done</relic-chip>` inline per completed task in the table.
+   - If a section would look identical to the Markdown source, you are doing it wrong.
+   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.

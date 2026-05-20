@@ -48,13 +48,16 @@ relic context
 
 If `mode` is `"html"`:
 
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory.
-3. Update it with enriched content reflecting the clarifications applied in this session:
-   - Update requirements sections with changed or new requirements.
-   - Use `<relic-callout type="info">` for resolved open questions.
-   - Use `<relic-callout type="warn">` for newly introduced constraints or risks.
-   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+3. Update it with **synthesised** content reflecting the clarifications applied in this session.
+   **Anti-transcription rules (mandatory):**
+   - Do NOT copy Markdown text verbatim into the HTML.
+   - Represent requirement changes as a `<relic-table>` diff (old vs new), not as prose.
+   - Use `<relic-callout type="info">` for resolved open questions; `type="warn"` for new constraints.
+   - Use `<relic-chip>` for inline metadata instead of parenthetical text.
+   - If a section would look identical to the Markdown source, you are doing it wrong.
+   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.

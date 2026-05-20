@@ -29,6 +29,7 @@
     "templates/prompts/implement.md",
     "templates/prompts/fix.md",
     "templates/prompts/solve.md",
-    "scripts/embed-templates.ts"
+    "scripts/embed-templates.ts",
+    "packages/core/src/commands/validate.ts"
   ]
 }

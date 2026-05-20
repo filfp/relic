@@ -11,22 +11,53 @@ The component API contract between `base.html` (provider) and the LLM writing sp
 ## Design Principles
 
 - **Declarative and short**: each component call in a spec/fix HTML file is a single tag or short function call. The full rendering logic lives in `base.html`.
-- **Utility CSS, not inline styles**: `base.html` embeds Tailwind CSS standalone (or equivalent) so HTML files use class names, not verbose inline style attributes.
-- **Self-documenting in `base.html`**: a `<!-- RELIC COMPONENTS -->` comment block at the top of `base.html` enumerates every available component with its invocation syntax. The LLM reads this block before authoring any HTML file.
+- **CSS custom properties, not inline styles**: `base.html` defines a full set of CSS custom properties (`--bg`, `--surface`, `--text`, `--border`, `--accent`, etc.) used by all components and utility classes. Any custom CSS written by the LLM must use these properties so it inherits dark mode automatically.
+- **Self-documenting via `<template id="relic-docs">`**: an inert `<template>` element at the top of `base.html` enumerates every available component with its invocation syntax and authoring rules. The LLM reads this element before authoring any HTML section. A `<template>` element (rather than an HTML comment) is used because Mermaid-style arrow syntax (`-->`) in examples would prematurely terminate HTML comments.
 - **No CDN at runtime**: all JS and CSS are embedded inline in `base.html`. Files work offline and in air-gapped environments.
+- **Synthesis, not transcription**: the LLM must never copy Markdown text verbatim into HTML. Each section must represent information in its most visual form — flow diagrams instead of bullet lists, tables instead of prose, progress bars instead of counts. The `<template id="relic-docs">` block includes explicit LLM authoring rules enforcing this.
 
-## Component Inventory (initial set)
+## Component Inventory
 
 The initial `templates/base.html` ships with the following components:
 
 | Component | Purpose | Invocation pattern |
 |---|---|---|
-| `<relic-chart>` | Bar, pie, or line chart | `<relic-chart type="bar" data='[...]' labels='[...]'>` |
-| `<relic-flow>` | Mermaid-compatible flow/sequence diagram | `<relic-flow>graph LR; A --> B</relic-flow>` |
-| `<relic-status>` | Status badge (pending / in-progress / done / risk) | `<relic-status value="done">Label</relic-status>` |
+| `<relic-status>` | Status badge | `<relic-status value="done\|pending\|in-progress\|risk\|draft">Label</relic-status>` |
+| `<relic-chip>` | Compact inline metadata tag (code/monospace style) | `<relic-chip color="blue\|green\|amber\|red\|purple">label</relic-chip>` |
+| `<relic-callout>` | Highlighted callout block | `<relic-callout type="info\|warn\|risk\|success">Text</relic-callout>` |
+| `<relic-progress>` | Numeric progress bar (colour tracks completion) | `<relic-progress value="7" max="12" label="Label">` |
 | `<relic-table>` | Structured data table from JSON | `<relic-table headers='[...]' rows='[[...]]'>` |
-| `<relic-callout>` | Highlighted callout block (info / warn / risk) | `<relic-callout type="warn">Text</relic-callout>` |
-| `<relic-progress>` | Numeric progress bar | `<relic-progress value="7" max="12">` |
+| `<relic-chart>` | Bar, pie, or line SVG chart | `<relic-chart type="bar\|pie\|line" data='[...]' labels='[...]' title="T">` |
+| `<relic-flow>` | Flow diagram (Mermaid-style graph syntax) | `<relic-flow>graph TD\nA --> B</relic-flow>` |
+
+### `<relic-chip>` — new in this release
+
+A compact inline tag rendered in monospace with a coloured background. Use for spec IDs, file types, tags, and other short metadata labels that should stand out inline without the prominence of a status badge. Colors: `default` (slate), `blue`, `green`, `amber`, `red`, `purple`.
+
+### Dark mode contract
+
+All component colours are hardcoded (they do not use CSS custom properties internally, to keep the component JS minimal). However, the CSS custom properties defined by `base.html` are available for any custom HTML the LLM writes:
+
+| Property | Light value | Dark value |
+|---|---|---|
+| `--bg` | `#f8fafc` | `#0f172a` |
+| `--surface` | `#ffffff` | `#1e293b` |
+| `--surface-2` | `#f1f5f9` | `#263248` |
+| `--border` | `#e2e8f0` | `#334155` |
+| `--text` | `#1e293b` | `#e2e8f0` |
+| `--text-2` | `#475569` | `#94a3b8` |
+| `--text-3` | `#94a3b8` | `#64748b` |
+| `--accent` | `#3b82f6` | `#60a5fa` |
+| `--accent-bg` | `#eff6ff` | `#1e3a5f` |
+| `--code-bg` | `#f1f5f9` | `#263248` |
+
+The LLM must use `var(--*)` for any custom CSS to ensure dark-mode compatibility.
+
+### Header nav link convention
+
+The sticky header in `base.html` includes three navigation links: `spec.md`, `plan.md`, `tasks.md`. These are relative paths — they resolve correctly because spec HTML files live in the same directory as the spec Markdown files (`.relic/specs/<spec-id>/`). Fix HTML files (`.relic/fixes/<fix-id>.html`) do not have corresponding Markdown files in the same directory; the LLM should remove or replace these links when writing a fix HTML document.
+
+The dark mode toggle persists the preference in `localStorage` under the key `relic-theme`.
 
 ## File Naming Convention
 

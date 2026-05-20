@@ -85,7 +85,7 @@ the issue description (e.g. `2026-04-13-null-session-read-on-missing-file`).
 
 **If `mode = "html"`** (determined in Step 0):
 
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Create `.relic/fixes/<fix-id>.html` with the following structure (all fields from
    `FixDocumentContract` expressed via components). Do **not** create `<fix-id>.md`.
 

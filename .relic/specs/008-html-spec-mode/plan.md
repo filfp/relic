@@ -61,11 +61,15 @@ The three concerns are independent at the code level: config infrastructure has 
 ### Phase 4 — `templates/base.html` and embed pipeline
 
 1. Create `templates/base.html`:
-   - Embed Tailwind CSS standalone (full minified CSS inline in a `<style>` block).
-   - Embed Mermaid.js (minified, inline `<script>` block) for `<relic-flow>`.
-   - Implement custom elements: `<relic-chart>`, `<relic-flow>`, `<relic-status>`, `<relic-table>`, `<relic-callout>`, `<relic-progress>` — each as a minimal self-contained web component.
-   - Include `<!-- RELIC COMPONENTS -->` inventory comment block at the top of the `<body>` documenting every component's invocation syntax.
-   - Template variables `{{SPEC_ID}}` and `{{TITLE}}` for substitution when creating spec/fix HTML shells.
+   - CSS custom property system (`--bg`, `--surface`, `--text`, `--border`, `--accent`, etc.) for light/dark themes — no Tailwind standalone (too large; custom properties are sufficient).
+   - Dark mode: `data-theme` attribute on `<html>`, toggled by a header button; persisted in `localStorage`; defaults to `prefers-color-scheme`.
+   - Sticky header: spec ID chip, title, nav links (spec.md / plan.md / tasks.md), dark mode toggle.
+   - Custom elements: `<relic-chart>`, `<relic-flow>`, `<relic-status>`, `<relic-chip>`, `<relic-table>`, `<relic-callout>`, `<relic-progress>` — each self-contained.
+   - `<relic-chip>`: compact monospace tag with 6 colour options (default/blue/green/amber/red/purple).
+   - `<template id="relic-docs">` (not `<!-- -->` comment) for component inventory — immune to `-->` arrow sequences that would break an HTML comment.
+   - Layout: `max-width: 900px` centred body, CSS utility classes (flex/grid/spacing/colour).
+   - Template variables `{{SPEC_ID}}` and `{{TITLE}}` for substitution at scaffold time.
+   - Spec/fix HTML files are **self-contained**: all CSS/JS embedded inline — no runtime reference to external `base.html`.
 2. Update `scripts/embed-templates.ts`:
    - In `collectFiles`, change the filter from `.md` | `.sh` to also include `.html`.
    - No other changes needed — the file is already picked up at the key `"base.html"`.
@@ -81,27 +85,18 @@ The three concerns are independent at the code level: config infrastructure has 
 
 ### Phase 6 — Prompt template HTML steps
 
-Add a conditional "HTML step" section to the end of each of the seven prompt files. The section structure is the same for all spec commands:
+Add a conditional "HTML step" section to the end of each of the seven prompt files. The key elements are:
 
-```markdown
-## HTML Step (conditional)
-
-Run:
-```bash
-relic context
-```
-
-If `mode` is `"html"`:
-
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
-2. Read `<spec-id>.html` (in the spec directory).
-3. Update the relevant sections with enriched content based on the work done in this session:
-   - Use `<relic-chart>`, `<relic-flow>`, `<relic-status>`, and other components for visualisation.
-   - Do not mechanically transcribe the Markdown — synthesise and enrich.
-4. Write the updated `<spec-id>.html` back.
-
-If `mode` is `"md"`, skip this step entirely.
-```
+1. Read `.relic/base.html` — open `<template id="relic-docs">` for the component inventory.
+2. Read the spec/fix HTML file.
+3. Update with **synthesised** content — apply anti-transcription rules (NFR-8):
+   - Do NOT copy Markdown verbatim.
+   - Replace bullet lists of steps with `<relic-flow>` diagrams.
+   - Replace tabular prose with `<relic-table>`.
+   - Replace counts with `<relic-progress>`.
+   - Use `<relic-chip>` for inline metadata instead of parenthetical text.
+   - Use `var(--)` custom properties for any custom CSS.
+4. Write the updated file back.
 
 The fix and solve commands follow the same pattern but:
 - The HTML file path is `<fix-id>.html` in `.relic/fixes/` (not the spec dir).
@@ -126,6 +121,13 @@ Amend `shared/domains/UpgradeDomain.md` (owned by spec 004):
 
 Write a changelog entry for this cross-spec mutation.
 
+### Phase 7b — Update `relic validate` for HTML mode *(blocked: resolve intersection first)*
+
+1. In `packages/core/src/commands/validate.ts`:
+   - When `mode = "html"`, permit `<spec-id>.html` as a legal file in spec folders (in addition to the four standard files).
+   - This requires reading `mode` from `config.json` (via `readMode`) before running the file-count check.
+2. **Intersection:** `validate.ts` is in `touches_files` for specs 005 and 009. Raise a changelog entry and coordinate with those specs before implementing. This phase is blocked until intersection is resolved.
+
 ---
 
 ## File Changes
@@ -146,15 +148,16 @@ Write a changelog entry for this cross-spec mutation.
 | `packages/core/src/index.ts` | **modify** | Export `runMode`, `ModeOptions` |
 | `packages/cli-node/src/bin.ts` | **modify** | Register `relic mode` command |
 | `packages/cli-node/src/bin.debug.ts` | **modify** | Register `relic mode` command |
-| `templates/base.html` | **create** | Self-contained component library (Tailwind + Mermaid inline) |
+| `templates/base.html` | **create** | Self-contained component library: CSS custom props, dark mode header, relic-chip, `<template id="relic-docs">`, no Tailwind/Mermaid deps |
 | `scripts/embed-templates.ts` | **modify** | Add `.html` to file filter |
 | `templates/prompts/specify.md` | **modify** | Add HTML step section |
 | `templates/prompts/clarify.md` | **modify** | Add HTML step section |
 | `templates/prompts/plan.md` | **modify** | Add HTML step section |
 | `templates/prompts/tasks.md` | **modify** | Add HTML step section |
 | `templates/prompts/implement.md` | **modify** | Add HTML step section |
-| `templates/prompts/fix.md` | **modify** | Add HTML step section (HTML replaces MD when mode=html) |
+| `templates/prompts/fix.md` | **modify** | HTML step + anti-transcription rules; `<template id="relic-docs">` reference |
 | `templates/prompts/solve.md` | **modify** | Add HTML step section (update status in HTML file) |
+| `packages/core/src/commands/validate.ts` | **modify** | *(Phase 7b — blocked)* Permit `<spec-id>.html` in spec folders when mode=html; intersection with 005 and 009 |
 
 ---
 

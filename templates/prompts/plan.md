@@ -74,13 +74,17 @@ relic context
 
 If `mode` is `"html"`:
 
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory.
-3. Update the Plan section with enriched content from this planning session:
-   - Use `<relic-flow>` to render the architecture or implementation phase dependency graph.
-   - Use `<relic-table>` for the file changes table.
-   - Use `<relic-callout type="warn">` for intersection notes or cross-spec mutation warnings.
-   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+3. Update the Plan section with **synthesised** content from this planning session.
+   **Anti-transcription rules (mandatory):**
+   - Do NOT copy Markdown text verbatim into the HTML.
+   - Render the implementation phases as a `<relic-flow>` dependency graph, not as a numbered list.
+   - Use `<relic-table>` for the file changes table (file, action, notes).
+   - Use `<relic-callout type="warn">` for intersection notes; `type="risk"` for blocking concerns.
+   - Use `<relic-chip>` for inline spec IDs and file types instead of plain text.
+   - If a section would look identical to the Markdown source, you are doing it wrong.
+   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
