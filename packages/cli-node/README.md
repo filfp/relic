@@ -105,4 +105,4 @@ pip install relic-cli
 
 ---
 
-[Full documentation](https://github.com/filipefpaulo/relic) · [Report an issue](https://github.com/filipefpaulo/relic/issues)
+[Full documentation](https://github.com/filfp/relic) · [Report an issue](https://github.com/filfp/relic/issues)
