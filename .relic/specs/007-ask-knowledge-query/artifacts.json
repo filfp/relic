@@ -1,0 +1,16 @@
+{
+  "owns": [],
+  "reads": [
+    "shared/domains/TemplateDomain.md",
+    "shared/domains/SharedArtifactDomain.md"
+  ],
+  "touches_files": [
+    "templates/prompts/ask.md",
+    "packages/engines/src/engines/claude/index.ts",
+    "packages/engines/src/engines/copilot/index.ts",
+    "packages/engines/src/engines/codex/index.ts",
+    "packages/core/src/commands/ask.ts",
+    "packages/core/src/index.ts",
+    "packages/cli-node/src/bin.debug.ts"
+  ]
+}

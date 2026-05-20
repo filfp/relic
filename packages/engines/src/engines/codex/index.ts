@@ -2,7 +2,7 @@ import { join } from "path";
 import { ensureDir, writeText, fileExists, readText } from "@relic/utility";
 import { ENGINE_TEMPLATES } from "../../generated/engine-templates.ts";
 
-const PROMPT_NAMES = ["specify", "clarify", "plan", "analyse", "tasks", "implement", "fix", "solve", "use", "scan", "constitution"];
+const PROMPT_NAMES = ["specify", "clarify", "plan", "analyse", "tasks", "implement", "fix", "solve", "use", "scan", "constitution", "ask"];
 
 const CODEX_CONFIG_BLOCK = `[rules]
 prefix_rules = [
