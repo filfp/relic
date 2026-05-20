@@ -7,3 +7,4 @@ Toon Manifest Format | 005-toon-manifest-format/ |  |
 Structured Write Command | 006-structured-write-command/ |  | 
 Ask Knowledge Query | 007-ask-knowledge-query/ |  | 
 HTML Spec Mode | 008-html-spec-mode/ |  | 
+External Spec Integration | 009-external-spec-integration/ | external enterprise config adr fr nfr integration specs-dir | Extends config.json with an external specsDir pointer so Relic AI workflow commands automatically read company-owned FRs, NFRs, User Stories, and ADRs from a separate spec repository.
