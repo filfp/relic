@@ -11,6 +11,23 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.18] — 2026-05-20
+
+### Fixed
+- **HTML workflow files remained empty after every session** — the HTML step in all
+  seven prompt templates (`specify`, `clarify`, `plan`, `tasks`, `implement`, `fix`,
+  `solve`) was appended after the terminal "When done, confirm" / "Report to the user"
+  section. AI agents stopped at the checklist and never reached the HTML step. Fixed
+  by moving the HTML step before the confirm section in all five spec templates and
+  integrating it into the step sequence in `fix` and `solve`.
+- **`/relic.fix` created `.md` files in html mode** — the mode check was at the end
+  of the template, after the fix document was already written as `.md`. `fix.md` now
+  checks mode in **Step 0** (before anything else) and commits the correct file path
+  (`.html` or `.md`) for the entire session. Step 5 branches on that decision. The
+  same mode-conditional logic was applied to `solve.md` (Steps 1, 2, and 7).
+
+---
+
 ## [0.8.17] — 2026-05-20
 
 ### Added
