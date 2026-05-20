@@ -166,7 +166,7 @@ async function refreshHooks(
 
   if (engines.length === 0) {
     result.warnings.push(
-      "Warning: .relic/config.json has no registered engines. " +
+      "Warning: .relic/config.json is missing or has no registered engines. " +
         "Run `relic add-engine <engine>` to register your engines, then re-run upgrade."
     );
     return;

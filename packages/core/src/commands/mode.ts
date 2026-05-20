@@ -41,7 +41,10 @@ export async function runMode(options: ModeOptions): Promise<void> {
   if (mode === "html") {
     const baseHtmlPath = join(relicDir, "base.html");
     if (!fileExists(baseHtmlPath)) {
-      const template = TEMPLATES["base.html"] ?? "";
+      const template = (TEMPLATES["base.html"] ?? "")
+        .replace(/\{\{SPEC_ID\}\}/g, "base")
+        .replace(/\{\{TITLE\}\}/g, "Relic Component Library")
+        .replace(/\{\{DATE\}\}/g, new Date().toISOString().slice(0, 10));
       writeText(baseHtmlPath, template);
       if (options.text) {
         console.log(`Mode set to html.`);

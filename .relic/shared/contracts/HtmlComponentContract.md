@@ -32,17 +32,23 @@ The initial `templates/base.html` ships with the following components:
 
 HTML files are named by their artefact ID, not generically:
 
-| Artefact | Location | Filename | Reference to `base.html` |
+| Artefact | Location | Filename | How components are available |
 |---|---|---|---|
-| Spec | `.relic/specs/<spec-id>/` | `<spec-id>.html` | `../../base.html` |
-| Fix | `.relic/fixes/` | `<fix-id>.html` | `../base.html` |
+| Spec | `.relic/specs/<spec-id>/` | `<spec-id>.html` | Components embedded inline (copy of `base.html` content) |
+| Fix | `.relic/fixes/` | `<fix-id>.html` | Components embedded inline (copy of `base.html` content) |
 
 Naming by ID prevents tab name collisions when multiple HTML files are open simultaneously.
+
+## Loading Model
+
+`<spec-id>.html` and `<fix-id>.html` are **self-contained documents**. When `relic scaffold` creates a spec HTML file, it copies the full `base.html` content (substituting `{{SPEC_ID}}` and `{{TITLE}}`). All CSS and JS are embedded inline — there is no separate load step and no reference to an external `base.html` file. This ensures files open correctly regardless of where they are accessed from.
+
+`base.html` is the source template for new files; customising it does not retroactively affect already-created spec or fix HTML files.
 
 ## HTML File Conventions
 
 ### Spec HTML (`<spec-id>.html`)
-1. Loads the component library: `<script src="../../base.html"></script>` (or equivalent module loading pattern).
+1. Self-contained: all component CSS/JS is embedded inline — no external dependencies.
 2. The `<title>` is the spec title (e.g. `008 — HTML Spec Mode`).
 3. Body is organised into sections matching the spec structure: Overview, Requirements, Plan, Tasks, Artifacts.
 4. Each section may contain text, `<relic-*>` component calls, and standard HTML with utility CSS classes.
@@ -55,7 +61,7 @@ When `mode = "html"`, `<fix-id>.html` is the fix document — there is no `<fix-
 
 The HTML fix document must carry all fields defined in `FixDocumentContract.md` (spec 003), expressed via components:
 
-1. Loads the component library: `<script src="../base.html"></script>` (or equivalent).
+1. Self-contained: all component CSS/JS is embedded inline.
 2. The `<title>` is the fix ID (e.g. `2026-05-20 — Publish Credentials Stale`).
 3. Body sections — each maps to a `FixDocumentContract.md` field:
    - **Date / Owning spec / Status** — `<relic-status>` badge (`pending` / `solved`) + metadata line

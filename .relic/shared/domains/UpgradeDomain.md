@@ -37,7 +37,7 @@ knowledge is never modified during an upgrade.
   silently migrates — reads the array, writes `config.json`, removes `engines.json`.
   Must not be confused with personal session state — it is committed so the whole team knows
   which engines and mode are configured.
-  Absent in projects predating spec 004 — upgrade warns and skips hook refresh.
+  Absent in projects predating spec 008 (or projects that have not yet run `relic init`) — upgrade warns and skips hook refresh.
 
 - **Version check** — fetches the channel-specific registry endpoint for the latest version:
   - `npm`: `https://registry.npmjs.org/relic-cli/latest` → `.version`

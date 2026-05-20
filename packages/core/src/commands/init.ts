@@ -75,9 +75,11 @@ export async function runInit(options: InitOptions): Promise<void> {
     await runAddEngine({ engine, projectDir: options.dir });
   }
 
+  writeEngines(relicDir, options.engines.map(String));
   if (options.engines.length > 0) {
-    writeEngines(relicDir, options.engines.map(String));
     console.log(`  .relic/config.json  (registered engines: ${options.engines.join(", ")})`);
+  } else {
+    console.log(`  .relic/config.json  (mode: md, no engines registered)`);
   }
 
   console.log("");

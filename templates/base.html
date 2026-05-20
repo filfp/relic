@@ -176,7 +176,7 @@
         const tr = tbody.insertRow();
         (Array.isArray(row) ? row : [row]).forEach(cell => {
           const td = tr.insertCell();
-          td.innerHTML = String(cell ?? '');
+          td.textContent = String(cell ?? '');
         });
       });
       this.appendChild(t);
