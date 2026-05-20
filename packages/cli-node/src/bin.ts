@@ -13,11 +13,12 @@ import {
   runToonMigrate,
   runUpgrade,
   runWrite,
+  runMode,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
 } from "@relic/core";
-import { readEnginesRegistry, writeEnginesRegistry } from "@relic/utility";
+import { readEngines, writeEngines } from "@relic/utility";
 
 const VERSION = "0.8.16";
 const program = new Command();
@@ -56,8 +57,8 @@ program
     }
     const projectDir = join(relicDir, "..");
     await runAddEngine({ engine: engine as Engine, projectDir });
-    const engines = readEnginesRegistry(relicDir);
-    writeEnginesRegistry(relicDir, [...engines, engine]);
+    const engines = readEngines(relicDir);
+    writeEngines(relicDir, [...engines, engine]);
   });
 
 program
@@ -196,6 +197,14 @@ program
       currentVersion: VERSION,
       relicDir,
     });
+  });
+
+program
+  .command("mode [value]")
+  .description("Get or set the project mode (md|html). When switching to html, scaffolds .relic/base.html if absent.")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (value: string | undefined, opts: { text: boolean }) => {
+    await runMode({ value, text: opts.text });
   });
 
 program.parse(process.argv);

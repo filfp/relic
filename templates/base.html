@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{SPEC_ID}} — {{TITLE}}</title>
+  <style>
+    /* Relic utility CSS — Tailwind-inspired, self-contained */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 2rem; }
+    h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.25rem; font-weight: 600; color: #1e293b; margin: 2rem 0 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.4rem; }
+    h3 { font-size: 1rem; font-weight: 600; color: #334155; margin: 1.25rem 0 0.5rem; }
+    p { margin-bottom: 0.75rem; }
+    code { font-family: ui-monospace, monospace; font-size: 0.85em; background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 3px; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; margin: 0.75rem 0; }
+    pre code { background: none; padding: 0; color: inherit; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    li { margin-bottom: 0.25rem; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+    .meta { color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem; }
+    /* Utility classes */
+    .flex { display: flex; } .flex-wrap { flex-wrap: wrap; } .gap-2 { gap: 0.5rem; } .gap-4 { gap: 1rem; }
+    .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+    .text-sm { font-size: 0.875rem; } .text-xs { font-size: 0.75rem; } .font-mono { font-family: ui-monospace, monospace; }
+    .text-gray { color: #64748b; } .text-red { color: #dc2626; } .text-green { color: #16a34a; } .text-blue { color: #2563eb; } .text-amber { color: #d97706; }
+    .mt-1 { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; } .mt-4 { margin-top: 1rem; }
+    .mb-1 { margin-bottom: 0.25rem; } .mb-2 { margin-bottom: 0.5rem; } .mb-4 { margin-bottom: 1rem; }
+    .p-2 { padding: 0.5rem; } .p-4 { padding: 1rem; }
+    .rounded { border-radius: 4px; } .rounded-md { border-radius: 6px; } .rounded-full { border-radius: 9999px; }
+    .border { border: 1px solid #e2e8f0; }
+    .bg-gray { background: #f8fafc; } .bg-white { background: #fff; }
+    .w-full { width: 100%; } .overflow-auto { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { text-align: left; padding: 0.5rem 0.75rem; background: #f1f5f9; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #475569; }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<!--
+  RELIC COMPONENTS
+  ================
+  This file is the Relic component library. Reference it from spec/fix HTML files.
+  All components below are custom elements — use them as HTML tags.
+
+  <relic-status value="pending|in-progress|done|risk">Label</relic-status>
+    Renders a coloured badge. Values: pending (gray), in-progress (blue), done (green), risk (red).
+    Example: <relic-status value="in-progress">Phase 1</relic-status>
+
+  <relic-callout type="info|warn|risk">Text content</relic-callout>
+    Renders a highlighted callout block.
+    Example: <relic-callout type="warn">This changes the public API.</relic-callout>
+
+  <relic-progress value="7" max="12" label="Tasks"></relic-progress>
+    Renders a labelled numeric progress bar.
+    Example: <relic-progress value="3" max="10" label="Done"></relic-progress>
+
+  <relic-table headers='["Col A","Col B"]' rows='[["v1","v2"],["v3","v4"]]'></relic-table>
+    Renders a structured table from JSON arrays.
+    Example: <relic-table headers='["File","Status"]' rows='[["init.ts","done"],["mode.ts","pending"]]'></relic-table>
+
+  <relic-chart type="bar|pie|line" labels='["A","B","C"]' data='[10,20,15]' title="My Chart"></relic-chart>
+    Renders an SVG chart. type bar/line use labels+data arrays. type pie uses labels+data (percentages auto-computed).
+    Example: <relic-chart type="bar" labels='["Phase 1","Phase 2","Phase 3"]' data='[5,3,8]' title="Tasks by Phase"></relic-chart>
+
+  <relic-flow>
+    graph LR
+    A[Start] --> B{Decision}
+    B -->|yes| C[Done]
+    B -->|no| D[Loop]
+  </relic-flow>
+    Renders a flow diagram. Supports graph LR/TD/RL/BT and basic -->  / -->|label| edges.
+    Node shapes: [box], {diamond}, (circle), >flag].
+    Example:
+    <relic-flow>
+    graph TD
+    init --> config
+    config -->|html mode| scaffold
+    scaffold --> base.html
+    </relic-flow>
+
+  CSS UTILITIES (apply directly to HTML elements)
+  Spacing: .mt-1/2/4  .mb-1/2/4  .p-2/4  .gap-2/4
+  Text:    .text-sm  .text-xs  .font-mono  .text-gray/red/green/blue/amber
+  Layout:  .flex  .flex-wrap  .items-center  .justify-between  .w-full
+  Visual:  .border  .rounded  .rounded-md  .bg-gray  .bg-white  .overflow-auto
+  Section: use <section> tag for a white card with border and padding
+-->
+
+<script>
+(function() {
+  // ── <relic-status> ──────────────────────────────────────────────────────────
+  const STATUS_COLORS = {
+    pending:     { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569' },
+    'in-progress':{ bg: '#dbeafe', border: '#93c5fd', text: '#1d4ed8' },
+    done:        { bg: '#dcfce7', border: '#86efac', text: '#15803d' },
+    risk:        { bg: '#fee2e2', border: '#fca5a5', text: '#b91c1c' },
+  };
+
+  class RelicStatus extends HTMLElement {
+    connectedCallback() {
+      const val = (this.getAttribute('value') || 'pending').toLowerCase();
+      const colors = STATUS_COLORS[val] || STATUS_COLORS.pending;
+      const label = this.textContent.trim() || val;
+      this.innerHTML = '';
+      const span = document.createElement('span');
+      Object.assign(span.style, {
+        display: 'inline-block', padding: '2px 10px', borderRadius: '9999px',
+        fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.02em',
+        background: colors.bg, border: `1px solid ${colors.border}`, color: colors.text,
+      });
+      span.textContent = label;
+      this.appendChild(span);
+    }
+  }
+
+  // ── <relic-callout> ─────────────────────────────────────────────────────────
+  const CALLOUT_STYLES = {
+    info: { bg: '#eff6ff', border: '#bfdbfe', icon: 'ℹ', color: '#1d4ed8' },
+    warn: { bg: '#fffbeb', border: '#fde68a', icon: '⚠', color: '#92400e' },
+    risk: { bg: '#fff1f2', border: '#fecdd3', icon: '✕', color: '#be123c' },
+  };
+
+  class RelicCallout extends HTMLElement {
+    connectedCallback() {
+      const type = (this.getAttribute('type') || 'info').toLowerCase();
+      const s = CALLOUT_STYLES[type] || CALLOUT_STYLES.info;
+      const content = this.innerHTML;
+      this.innerHTML = '';
+      Object.assign(this.style, {
+        display: 'block', background: s.bg, border: `1px solid ${s.border}`,
+        borderLeft: `4px solid ${s.border}`, borderRadius: '6px',
+        padding: '0.75rem 1rem', margin: '0.5rem 0', color: '#1e293b',
+      });
+      this.innerHTML = `<span style="font-weight:700;color:${s.color};margin-right:0.5rem">${s.icon}</span>${content}`;
+    }
+  }
+
+  // ── <relic-progress> ────────────────────────────────────────────────────────
+  class RelicProgress extends HTMLElement {
+    connectedCallback() {
+      const val = parseInt(this.getAttribute('value') || '0', 10);
+      const max = parseInt(this.getAttribute('max') || '100', 10);
+      const label = this.getAttribute('label') || '';
+      const pct = max > 0 ? Math.round((val / max) * 100) : 0;
+      this.innerHTML = '';
+      Object.assign(this.style, { display: 'block', margin: '0.5rem 0' });
+      this.innerHTML = `
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#64748b;margin-bottom:4px">
+          <span>${label}</span><span>${val} / ${max}</span>
+        </div>
+        <div style="background:#e2e8f0;border-radius:9999px;height:10px;overflow:hidden">
+          <div style="background:#3b82f6;height:100%;border-radius:9999px;width:${pct}%;transition:width 0.3s"></div>
+        </div>`;
+    }
+  }
+
+  // ── <relic-table> ───────────────────────────────────────────────────────────
+  class RelicTable extends HTMLElement {
+    connectedCallback() {
+      let headers, rows;
+      try { headers = JSON.parse(this.getAttribute('headers') || '[]'); } catch { headers = []; }
+      try { rows = JSON.parse(this.getAttribute('rows') || '[]'); } catch { rows = []; }
+      this.innerHTML = '';
+      Object.assign(this.style, { display: 'block', overflowX: 'auto', margin: '0.5rem 0' });
+      const t = document.createElement('table');
+      if (headers.length) {
+        const thead = t.createTHead();
+        const tr = thead.insertRow();
+        headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; tr.appendChild(th); });
+      }
+      const tbody = t.createTBody();
+      rows.forEach(row => {
+        const tr = tbody.insertRow();
+        (Array.isArray(row) ? row : [row]).forEach(cell => {
+          const td = tr.insertCell();
+          td.textContent = String(cell ?? '');
+        });
+      });
+      this.appendChild(t);
+    }
+  }
+
+  // ── <relic-chart> ───────────────────────────────────────────────────────────
+  class RelicChart extends HTMLElement {
+    connectedCallback() {
+      const type = this.getAttribute('type') || 'bar';
+      const title = this.getAttribute('title') || '';
+      let labels, data;
+      try { labels = JSON.parse(this.getAttribute('labels') || '[]'); } catch { labels = []; }
+      try { data = JSON.parse(this.getAttribute('data') || '[]'); } catch { data = []; }
+      this.innerHTML = '';
+      Object.assign(this.style, { display: 'block', margin: '0.5rem 0' });
+
+      const W = 480, H = 260, PAD = { top: 36, right: 20, bottom: 60, left: 50 };
+      const svg = (tag, attrs = {}, children = []) => {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        children.forEach(c => el.appendChild(c));
+        return el;
+      };
+      const txt = (x, y, content, attrs = {}) =>
+        svg('text', { x, y, 'font-size': '11', 'font-family': 'system-ui', fill: '#475569', ...attrs }, [
+          Object.assign(document.createTextNode(content), {})
+        ]);
+      // workaround — set text node
+      const svgText = (x, y, content, attrs = {}) => {
+        const el = svg('text', { x, y, 'font-size': '11', 'font-family': 'system-ui', fill: '#475569', ...attrs });
+        el.textContent = content;
+        return el;
+      };
+
+      const COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+      const root = svg('svg', { width: '100%', viewBox: `0 0 ${W} ${H}`, style: 'max-width:480px;display:block' });
+
+      if (title) root.appendChild(svgText(W / 2, 20, title, { 'text-anchor': 'middle', 'font-size': '13', 'font-weight': '600', fill: '#1e293b' }));
+
+      const chartW = W - PAD.left - PAD.right;
+      const chartH = H - PAD.top - PAD.bottom;
+      const nums = data.map(Number);
+      const maxVal = Math.max(...nums, 1);
+
+      if (type === 'bar') {
+        const barW = Math.max(4, chartW / nums.length * 0.6);
+        const gap = chartW / nums.length;
+        root.appendChild(svg('line', { x1: PAD.left, y1: PAD.top, x2: PAD.left, y2: PAD.top + chartH, stroke: '#e2e8f0', 'stroke-width': '1' }));
+        root.appendChild(svg('line', { x1: PAD.left, y1: PAD.top + chartH, x2: PAD.left + chartW, y2: PAD.top + chartH, stroke: '#e2e8f0', 'stroke-width': '1' }));
+        nums.forEach((v, i) => {
+          const bh = (v / maxVal) * chartH;
+          const x = PAD.left + i * gap + gap / 2 - barW / 2;
+          const y = PAD.top + chartH - bh;
+          root.appendChild(svg('rect', { x, y, width: barW, height: bh, fill: COLORS[i % COLORS.length], rx: '2' }));
+          root.appendChild(svgText(x + barW / 2, PAD.top + chartH + 16, labels[i] || '', { 'text-anchor': 'middle' }));
+          root.appendChild(svgText(x + barW / 2, y - 4, v, { 'text-anchor': 'middle', 'font-size': '10', fill: '#64748b' }));
+        });
+
+      } else if (type === 'line') {
+        const pts = nums.map((v, i) => {
+          const x = PAD.left + (i / Math.max(nums.length - 1, 1)) * chartW;
+          const y = PAD.top + chartH - (v / maxVal) * chartH;
+          return [x, y];
+        });
+        root.appendChild(svg('line', { x1: PAD.left, y1: PAD.top, x2: PAD.left, y2: PAD.top + chartH, stroke: '#e2e8f0', 'stroke-width': '1' }));
+        root.appendChild(svg('line', { x1: PAD.left, y1: PAD.top + chartH, x2: PAD.left + chartW, y2: PAD.top + chartH, stroke: '#e2e8f0', 'stroke-width': '1' }));
+        if (pts.length > 1) {
+          const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
+          root.appendChild(svg('path', { d, stroke: '#3b82f6', 'stroke-width': '2', fill: 'none' }));
+        }
+        pts.forEach(([x, y], i) => {
+          root.appendChild(svg('circle', { cx: x, cy: y, r: '4', fill: '#3b82f6' }));
+          root.appendChild(svgText(x, PAD.top + chartH + 16, labels[i] || '', { 'text-anchor': 'middle' }));
+        });
+
+      } else if (type === 'pie') {
+        const total = nums.reduce((a, b) => a + b, 0) || 1;
+        const cx = W / 2, cy = PAD.top + chartH / 2, r = Math.min(chartW, chartH) / 2 - 4;
+        let angle = -Math.PI / 2;
+        nums.forEach((v, i) => {
+          const sweep = (v / total) * 2 * Math.PI;
+          const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+          const x2 = cx + r * Math.cos(angle + sweep), y2 = cy + r * Math.sin(angle + sweep);
+          const large = sweep > Math.PI ? 1 : 0;
+          root.appendChild(svg('path', {
+            d: `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z`,
+            fill: COLORS[i % COLORS.length], stroke: '#fff', 'stroke-width': '2'
+          }));
+          const midA = angle + sweep / 2;
+          const lx = cx + (r * 0.65) * Math.cos(midA), ly = cy + (r * 0.65) * Math.sin(midA);
+          root.appendChild(svgText(lx, ly, `${Math.round((v/total)*100)}%`, { 'text-anchor': 'middle', fill: '#fff', 'font-weight': '600' }));
+          angle += sweep;
+        });
+        // Legend
+        nums.forEach((v, i) => {
+          const ly = PAD.top + chartH + 12 + Math.floor(i / 3) * 18;
+          const lx = PAD.left + (i % 3) * 130;
+          root.appendChild(svg('rect', { x: lx, y: ly - 8, width: 10, height: 10, fill: COLORS[i % COLORS.length], rx: '2' }));
+          root.appendChild(svgText(lx + 14, ly, labels[i] || '', {}));
+        });
+      }
+
+      this.appendChild(root);
+    }
+  }
+
+  // ── <relic-flow> ────────────────────────────────────────────────────────────
+  // Minimal flow diagram renderer — supports: graph LR/TD/RL/BT
+  // Node syntax: A[label]  A{diamond}  A(circle)
+  // Edge syntax: A --> B   A -->|label| B   A --- B
+  class RelicFlow extends HTMLElement {
+    connectedCallback() {
+      const src = this.textContent.trim();
+      this.innerHTML = '';
+      try {
+        this.appendChild(renderFlow(src));
+      } catch (e) {
+        const pre = document.createElement('pre');
+        pre.textContent = src;
+        Object.assign(pre.style, { background: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.75rem', borderRadius: '6px', fontSize: '0.8rem' });
+        this.appendChild(pre);
+      }
+    }
+  }
+
+  function renderFlow(src) {
+    const lines = src.split('\n').map(l => l.trim()).filter(Boolean);
+    let dir = 'LR';
+    const dirMatch = lines[0]?.match(/^(?:graph|flowchart)\s+(LR|TD|RL|BT)/i);
+    if (dirMatch) dir = dirMatch[1].toUpperCase();
+
+    const nodes = new Map(); // id → { label, shape }
+    const edges = []; // { from, to, label }
+
+    const nodeRe = /([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\)|>([^\]]*)\])?/g;
+    const edgeRe = /([A-Za-z0-9_]+)(?:\[.*?\]|\{.*?\}|\(.*?\))?\s*(-->|---)\s*(?:\|([^|]*)\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/;
+
+    const parseNode = (id, label, shape) => {
+      if (!nodes.has(id)) nodes.set(id, { label: label ?? id, shape: shape ?? 'box' });
+      else if (label) nodes.get(id).label = label;
+    };
+
+    for (const line of lines.slice(1)) {
+      const em = line.match(edgeRe);
+      if (em) {
+        const [, fromId,, , edgeLbl, , toId, toLbl, toDiam, toCirc] = em;
+        // re-parse node IDs more carefully
+        const fromM = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
+        const toM = line.match(/(?:-->|---)\s*(?:\|[^|]*\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
+        if (fromM && toM) {
+          const [, fId, fBox, fDiam, fCirc] = fromM;
+          const [, tId, tBox, tDiam, tCirc] = toM;
+          parseNode(fId, fBox ?? fDiam ?? fCirc, fDiam ? 'diamond' : fCirc ? 'circle' : 'box');
+          parseNode(tId, tBox ?? tDiam ?? tCirc, tDiam ? 'diamond' : tCirc ? 'circle' : 'box');
+          const lblM = line.match(/\|([^|]*)\|/);
+          edges.push({ from: fId, to: tId, label: lblM ? lblM[1] : '' });
+        }
+      } else {
+        // Standalone node definition
+        const nm = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?$/);
+        if (nm) parseNode(nm[1], nm[2] ?? nm[3] ?? nm[4], nm[3] ? 'diamond' : nm[4] ? 'circle' : 'box');
+      }
+    }
+
+    // Layout: simple rank-based layout
+    const horizontal = dir === 'LR' || dir === 'RL';
+    const ranks = rankNodes(nodes, edges, dir);
+    const nodeW = 110, nodeH = 36, rankGap = horizontal ? 140 : 80, nodeGap = horizontal ? 70 : 130;
+
+    const allNodes = [...nodes.keys()];
+    const pos = new Map();
+    const rankGroups = new Map();
+    allNodes.forEach(id => {
+      const r = ranks.get(id) ?? 0;
+      if (!rankGroups.has(r)) rankGroups.set(r, []);
+      rankGroups.get(r).push(id);
+    });
+
+    let svgW = 0, svgH = 0;
+    rankGroups.forEach((ids, rank) => {
+      ids.forEach((id, i) => {
+        const x = horizontal ? rank * rankGap + 20 : i * nodeGap + 20;
+        const y = horizontal ? i * nodeGap + 20 : rank * rankGap + 20;
+        pos.set(id, { x, y });
+        svgW = Math.max(svgW, x + nodeW + 40);
+        svgH = Math.max(svgH, y + nodeH + 60);
+      });
+    });
+
+    const svg = (tag, attrs = {}) => {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+      return el;
+    };
+    const root = svg('svg', { width: '100%', viewBox: `0 0 ${svgW} ${svgH}`, style: 'max-width:600px;display:block;overflow:visible' });
+
+    // defs for arrow marker
+    const defs = svg('defs');
+    const marker = svg('marker', { id: 'arr', markerWidth: '8', markerHeight: '8', refX: '6', refY: '3', orient: 'auto' });
+    const arrowPath = svg('path');
+    arrowPath.setAttribute('d', 'M0,0 L0,6 L8,3 z');
+    arrowPath.setAttribute('fill', '#94a3b8');
+    marker.appendChild(arrowPath);
+    defs.appendChild(marker);
+    root.appendChild(defs);
+
+    // Draw edges
+    edges.forEach(({ from, to, label }) => {
+      const fp = pos.get(from), tp = pos.get(to);
+      if (!fp || !tp) return;
+      const x1 = fp.x + nodeW / 2, y1 = fp.y + nodeH / 2;
+      const x2 = tp.x + nodeW / 2, y2 = tp.y + nodeH / 2;
+      const line = svg('line', { x1, y1, x2, y2, stroke: '#94a3b8', 'stroke-width': '1.5', 'marker-end': 'url(#arr)' });
+      root.appendChild(line);
+      if (label) {
+        const lx = (x1 + x2) / 2, ly = (y1 + y2) / 2 - 6;
+        const lt = svg('text');
+        lt.setAttribute('x', lx); lt.setAttribute('y', ly);
+        lt.setAttribute('text-anchor', 'middle'); lt.setAttribute('font-size', '10');
+        lt.setAttribute('fill', '#64748b'); lt.setAttribute('font-family', 'system-ui');
+        lt.textContent = label;
+        root.appendChild(lt);
+      }
+    });
+
+    // Draw nodes
+    nodes.forEach(({ label, shape }, id) => {
+      const p = pos.get(id);
+      if (!p) return;
+      const { x, y } = p;
+      const cx = x + nodeW / 2, cy = y + nodeH / 2;
+
+      if (shape === 'diamond') {
+        const hw = nodeW / 2 - 4, hh = nodeH / 2;
+        const pts = `${cx},${y} ${x + nodeW - 4},${cy} ${cx},${y + nodeH} ${x + 4},${cy}`;
+        const poly = svg('polygon');
+        poly.setAttribute('points', pts);
+        poly.setAttribute('fill', '#fef3c7'); poly.setAttribute('stroke', '#fbbf24'); poly.setAttribute('stroke-width', '1.5');
+        root.appendChild(poly);
+      } else if (shape === 'circle') {
+        const ellipse = svg('ellipse', { cx, cy, rx: nodeW / 2, ry: nodeH / 2, fill: '#f0fdf4', stroke: '#86efac', 'stroke-width': '1.5' });
+        root.appendChild(ellipse);
+      } else {
+        const rect = svg('rect', { x: x + 2, y, width: nodeW - 4, height: nodeH, rx: '5', fill: '#eff6ff', stroke: '#93c5fd', 'stroke-width': '1.5' });
+        root.appendChild(rect);
+      }
+
+      const t = svg('text');
+      t.setAttribute('x', cx); t.setAttribute('y', cy + 4);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '12');
+      t.setAttribute('font-family', 'system-ui'); t.setAttribute('fill', '#1e293b');
+      t.textContent = label.length > 16 ? label.slice(0, 14) + '…' : label;
+      root.appendChild(t);
+    });
+
+    return root;
+  }
+
+  function rankNodes(nodes, edges, dir) {
+    const ranks = new Map();
+    const inDeg = new Map([...nodes.keys()].map(id => [id, 0]));
+    edges.forEach(({ from, to }) => inDeg.set(to, (inDeg.get(to) ?? 0) + 1));
+
+    const queue = [...nodes.keys()].filter(id => (inDeg.get(id) ?? 0) === 0);
+    queue.forEach(id => ranks.set(id, 0));
+
+    const adj = new Map([...nodes.keys()].map(id => [id, []]));
+    edges.forEach(({ from, to }) => adj.get(from)?.push(to));
+
+    const visited = new Set(queue);
+    while (queue.length) {
+      const cur = queue.shift();
+      const r = ranks.get(cur) ?? 0;
+      adj.get(cur)?.forEach(next => {
+        if (!visited.has(next)) { visited.add(next); queue.push(next); }
+        ranks.set(next, Math.max(ranks.get(next) ?? 0, r + 1));
+      });
+    }
+    // Assign any unranked nodes
+    nodes.forEach((_, id) => { if (!ranks.has(id)) ranks.set(id, 0); });
+    return ranks;
+  }
+
+  customElements.define('relic-status', RelicStatus);
+  customElements.define('relic-callout', RelicCallout);
+  customElements.define('relic-progress', RelicProgress);
+  customElements.define('relic-table', RelicTable);
+  customElements.define('relic-chart', RelicChart);
+  customElements.define('relic-flow', RelicFlow);
+})();
+</script>
+
+<h1>{{TITLE}}</h1>
+<p class="meta">Spec: <code>{{SPEC_ID}}</code></p>
+
+<section>
+  <h2>Overview</h2>
+  <p><!-- Spec overview / purpose --></p>
+</section>
+
+<section>
+  <h2>Requirements</h2>
+  <!-- Key requirements summary. Use <relic-callout> for risks or constraints. -->
+</section>
+
+<section>
+  <h2>Plan</h2>
+  <!-- Architecture decisions, implementation phases. Use <relic-flow> for diagrams. -->
+</section>
+
+<section>
+  <h2>Tasks</h2>
+  <!-- Task progress. Use <relic-progress> for phase completion. -->
+</section>
+
+<section>
+  <h2>Artifacts</h2>
+  <!-- Cross-references, owned/read artifacts. Use <relic-table> for structured data. -->
+</section>
+
+</body>
+</html>

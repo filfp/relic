@@ -495,3 +495,15 @@ relic write command implemented; all prompts updated to use structured writes.
 
 Spec 006 plan and tasks did not include a test phase. Created write.test.ts with 20 tests covering runWrite (changelog and toon paths), appendChangelogEntry, validateWritePayload, upsertToonEntry, toon target routing, and metadata merging. Amended spec.md scope, plan.md Phase 7, tasks.md T-19, and artifacts.json. Classification: misspecification — code was correct, spec omitted test requirement.
 
+
+## [2026-05-20T02:56:51.664Z] /relic.clarify — 008-html-spec-mode: fix ScaffoldResultContract.md — spec-id.html not spec.html
+
+The files_created example incorrectly used the generic string spec.html. Corrected to show the actual spec ID as the filename (e.g. 008-html-spec-mode.html) with an explanatory note that the naming is always by spec ID to prevent tab collisions.
+
+## [2026-05-20T03:01:45.926Z] /relic.implement — 008-html-spec-mode: amend ContextResultContract.md — add mode field
+
+Added mode field ("md" | "html") to the relic context JSON output shape. Populated from .relic/config.json via readMode(). Defaults to md when config is absent. AI workflow commands use this field to determine whether the HTML step is active without reading config.json directly. This is a cross-spec mutation — ContextResultContract.md is owned by spec 003.
+
+## [2026-05-20T03:13:47.731Z] /relic.implement — 008-html-spec-mode: amend UpgradeDomain.md — rename engines.json and engines-registry.ts
+
+Replaced all references to .relic/engines.json with .relic/config.json and engines-registry.ts with project-config.ts. The engines list is now part of config.json shape { engines, mode } and is accessed via readEngines()/writeEngines() from project-config.ts. Added migration note and mode field documentation. This is a cross-spec mutation — UpgradeDomain.md is owned by spec 004.
