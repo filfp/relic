@@ -55,12 +55,12 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 
 **AI workflow command HTML step — spec commands**
 
-- FR-14: The prompt templates for `specify.md`, `clarify.md`, `plan.md`, `tasks.md`, and `implement.md` gain a conditional final step: *"If `relic context` shows `mode = "html"`, read `<spec-id>.html` and update it with enriched content reflecting the full work done in this session. Use the components from `base.html` (read its component inventory) to produce charts, flows, and structured sections. The HTML step is strictly last — after all Markdown work is complete."*
+- FR-14: The prompt templates for `specify.md`, `clarify.md`, `plan.md`, `tasks.md`, and `implement.md` gain a conditional HTML step: *"If `relic context` shows `mode = "html"`, read `<spec-id>.html` and update it with enriched content reflecting the full work done in this session. Use the components from `base.html` (read its component inventory) to produce charts, flows, and structured sections."* The HTML step must be positioned **before** the `## When done, confirm` checklist (or equivalent terminal section) — it is the last substantive work step, not a postscript. The confirm checklist must include an HTML item: `If mode is "html": <spec-id>.html updated.`
 - FR-15: The HTML step is the LLM's own synthesis. It is not a mechanical transcription of the Markdown. The intent is enrichment: richer structure, visualisations, cross-references.
 
 **AI workflow command HTML step — fix commands**
 
-- FR-16: The prompt templates for `fix.md` and `solve.md` gain a conditional step: *"If `relic context` shows `mode = "html"`, the fix document is `<fix-id>.html` (not `.md`). Create or update it with enriched fix content: issue description, root cause classification badge, proposed changes as a visual flow, affected files table, and status. Use `base.html` components. The HTML file is the single source of truth for this fix."*
+- FR-16: `fix.md` must check mode at the very top (Step 0, before any file creation) via `relic context`. Based on `mode`, the agent commits to either `<fix-id>.html` (html) or `<fix-id>.md` (md) for the entire session. Step 5 branches on this decision — the fix document is created in the correct format from the start, not retroactively converted at the end. `solve.md` must also read mode in Step 1 and conditionally read `.html` or `.md` in Step 2.
 - FR-17: When `mode = "html"`, the HTML fix document IS the fix document — it is not a complement to a `.md` file. All fields from `FixDocumentContract.md` (issue, root cause, proposed changes, changelog draft, status) are present in the HTML, rendered via `base.html` components.
 
 **`base.html` component library**

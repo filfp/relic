@@ -65,14 +65,6 @@ relic write --changelog --payload '{"name":"<spec-id>: Plan updated — <what ch
 
 Do not open or edit `changelog.md` directly.
 
-## What NOT to do
-
-- Do not write a plan that claims ownership of an artifact already owned by another spec.
-- Do not skip the intersection check.
-- Do not write code.
-
----
-
 ## HTML Step (conditional)
 
 Run:
@@ -92,3 +84,9 @@ If `mode` is `"html"`:
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
+
+## What NOT to do
+
+- Do not write a plan that claims ownership of an artifact already owned by another spec.
+- Do not skip the intersection check.
+- Do not write code.

@@ -44,8 +44,6 @@ relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_co
 
 Do not open or edit `changelog.md` directly.
 
----
-
 ## HTML Step (conditional)
 
 Run:

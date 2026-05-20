@@ -91,15 +91,6 @@ Do not open or edit `specs/manifest.toon` directly.
 - Do not write code.
 - Do not modify shared artifacts owned by another spec.
 
-## When done, confirm
-
-- `spec.md` is complete and clear.
-- `artifacts.json` is populated with correct `owns`, `reads`, `touches_files`.
-- New spec entry written via `relic write --specs` (confirmed by JSON output).
-- Any intersection concerns are flagged in Open Questions.
-
----
-
 ## HTML Step (conditional)
 
 Run:
@@ -110,7 +101,7 @@ relic context
 If `mode` is `"html"`:
 
 1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
-2. Read `<spec-id>.html` in the spec directory.
+2. Read `<spec-id>.html` in the spec directory (path is in the `relic scaffold` output from Step 1).
 3. Update it with enriched content reflecting the work done in this session:
    - Use `<relic-status>` to show the spec's current status.
    - Use `<relic-table>` for the requirements or shared artifact lists.
@@ -119,3 +110,11 @@ If `mode` is `"html"`:
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
+
+## When done, confirm
+
+- `spec.md` is complete and clear.
+- `artifacts.json` is populated with correct `owns`, `reads`, `touches_files`.
+- New spec entry written via `relic write --specs` (confirmed by JSON output).
+- Any intersection concerns are flagged in Open Questions.
+- If mode is `"html"`: `<spec-id>.html` updated with enriched content from this session.
