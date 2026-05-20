@@ -1,5 +1,5 @@
 import { join } from "path";
-import { fileExists, dirExists, readSession, writeSession } from "@relic/utility";
+import { fileExists, dirExists, readSession, writeSession, readMode } from "@relic/utility";
 import { availableSpecs } from "@relic/utility";
 
 export interface UseOptions {
@@ -31,9 +31,10 @@ export async function runUse(options: UseOptions): Promise<void> {
 
   // --fix branch
   if (options.fix) {
-    const fixDoc = join(relicDir, "fixes", options.fix + ".md");
+    const ext = readMode(relicDir) === "html" ? ".html" : ".md";
+    const fixDoc = join(relicDir, "fixes", options.fix + ext);
     if (!fileExists(fixDoc)) {
-      console.error(`Fix document not found: .relic/fixes/${options.fix}.md`);
+      console.error(`Fix document not found: .relic/fixes/${options.fix}${ext}`);
       console.error("Run /relic.fix first to create a fix document.");
       process.exit(1);
     }

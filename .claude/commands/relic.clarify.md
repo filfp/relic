@@ -39,6 +39,26 @@ Apply the user's clarification to `spec.md`:
 - If a shared artifact changes, update it.
 - Update `artifacts.json` if ownership or file touches change.
 
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `<spec-id>.html` in the spec directory.
+3. Update it with enriched content reflecting the clarifications applied in this session:
+   - Update requirements sections with changed or new requirements.
+   - Use `<relic-callout type="info">` for resolved open questions.
+   - Use `<relic-callout type="warn">` for newly introduced constraints or risks.
+   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+4. Write the updated `<spec-id>.html` back.
+
+If `mode` is `"md"`, skip this step entirely.
+
 ## After changes — changelog (cross-artifact mutations only)
 
 Only write a changelog entry if a shared artifact **owned by this spec** was amended in this

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix: 2026-05-20-base-html-design-header-dark-mode</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 2rem; max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 1.75rem 0 0.6rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; }
+    h3 { font-size: 0.95rem; font-weight: 600; color: #334155; margin: 1rem 0 0.4rem; }
+    p { margin-bottom: 0.6rem; color: #334155; }
+    code { font-family: ui-monospace, monospace; font-size: 0.82em; background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 3px; color: #0f172a; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; margin: 0.75rem 0; }
+    ul { padding-left: 1.5rem; margin-bottom: 0.6rem; }
+    li { margin-bottom: 0.2rem; color: #334155; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+    .meta { color: #64748b; font-size: 0.82rem; margin-bottom: 1.5rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .meta span { display: flex; align-items: center; gap: 0.3rem; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; }
+    .badge-pending { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; }
+    .badge-bug { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; }
+    .badge-info { background: #dbeafe; border: 1px solid #93c5fd; color: #1d4ed8; }
+    .callout { display: block; border-radius: 7px; padding: 0.75rem 1rem; margin: 0.6rem 0; }
+    .callout-info { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; }
+    .callout-warn { background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; }
+    .callout-risk { background: #fff1f2; border: 1px solid #fecdd3; border-left: 4px solid #f43f5e; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.865rem; margin: 0.5rem 0; }
+    th { text-align: left; padding: 0.45rem 0.75rem; background: #f1f5f9; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #475569; }
+    td { padding: 0.45rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<h1>Fix: base.html — Design, Header &amp; Dark Mode</h1>
+<div class="meta">
+  <span><strong>ID:</strong> 2026-05-20-base-html-design-header-dark-mode</span>
+  <span><strong>Date:</strong> 2026-05-20</span>
+  <span><strong>Spec:</strong> <code>008-html-spec-mode</code></span>
+  <span><strong>Status:</strong> <span class="badge" style="background:#dcfce7;border:1px solid #86efac;color:#15803d">solved</span></span>
+  <span><strong>Classification:</strong> <span class="badge badge-bug">code-bug</span></span>
+</div>
+
+<section>
+  <h2>Issue</h2>
+  <p>The current <code>base.html</code> output is visually broken and lacks the features needed to make spec HTML files useful as first-class artefacts. Three problems were observed:</p>
+  <ol style="padding-left:1.5rem;margin-bottom:0.6rem">
+    <li><strong>Broken comment block</strong> — the <code>&lt;!-- RELIC COMPONENTS --&gt;</code> block contains Mermaid-style <code>--&gt;</code> arrow strings (e.g. <code>init --&gt; config</code>) that <em>prematurely terminate</em> the HTML comment. The browser renders the example diagram and "CSS UTILITIES" text as visible page content at the very top of the file.</li>
+    <li><strong>No navigation header</strong> — there is no sticky header with a dark mode toggle or quick links to open <code>spec.md</code>, <code>plan.md</code>, <code>tasks.md</code> directly from the rendered HTML.</li>
+    <li><strong>Weak visual design</strong> — the base template is too sparse to guide the LLM toward rich, synthesised output. The result looks like a plain HTML dump rather than a polished spec view.</li>
+  </ol>
+  <div class="callout callout-warn">
+    <strong>⚠</strong> The comment termination bug means that <em>every</em> spec and fix HTML file scaffolded in html mode currently renders broken content at the top of the page. This affects all users in html mode.
+  </div>
+</section>
+
+<section>
+  <h2>Root Cause</h2>
+  <div class="callout callout-risk">
+    <strong>✕ code-bug</strong> — Implementation error in <code>templates/base.html</code>; the spec and contracts are correct.
+  </div>
+  <h3>Bug 1 — HTML comment termination</h3>
+  <p>HTML comments end at the first occurrence of <code>--&gt;</code>. The RELIC COMPONENTS inventory uses Mermaid-style flow syntax in its examples:</p>
+  <pre>graph TD
+init --> config
+config -->|html mode| scaffold</pre>
+  <p>Each <code>--&gt;</code> in those examples terminates the surrounding <code>&lt;!-- ... --&gt;</code> comment. Everything after the first edge arrow becomes raw HTML in the DOM — visible to the user as text and as a rendered <code>&lt;relic-flow&gt;</code> element.</p>
+  <h3>Bug 2 — No header / dark mode / nav links</h3>
+  <p>These were not specified in FR-18 through FR-22 of spec 008. They are implicit in FR-15 ("enrichment, richer structure") but were not implemented in the base template, leaving every LLM-generated spec file lacking basic navigation and theming infrastructure.</p>
+  <h3>Bug 3 — LLM synthesis guidance too weak</h3>
+  <p>The prompt templates instruct the LLM to "update the spec HTML", but do not explicitly prohibit mechanical transcription. The result is copy-paste content rather than synthesised visualisations.</p>
+</section>
+
+<section>
+  <h2>Proposed Changes</h2>
+
+  <h3>1 — Fix the RELIC COMPONENTS documentation block</h3>
+  <p>Replace the HTML comment with a <code>&lt;template id="relic-docs"&gt;</code> element (or a <code>&lt;script type="text/plain"&gt;</code> block). Templates are inert — they are never rendered or parsed as HTML, so <code>--&gt;</code> sequences are safe inside them. Update the component inventory to use a <code>&lt;template&gt;</code> wrapper.</p>
+  <div class="callout callout-info">
+    <strong>ℹ</strong> Alternative: escape all <code>--&gt;</code> to <code>-→</code> or <code>→</code> inside the comment block. The template approach is cleaner and eliminates the class of bug entirely.
+  </div>
+
+  <h3>2 — Add a sticky header with dark mode toggle and nav links</h3>
+  <p>Add to <code>base.html</code>:</p>
+  <ul>
+    <li>A <code>&lt;header&gt;</code> element, sticky at top, with spec ID + title on the left</li>
+    <li>A dark mode toggle button (moon/sun icon, no external asset — pure Unicode or inline SVG)</li>
+    <li>Three icon links: <code>spec.md</code>, <code>plan.md</code>, <code>tasks.md</code> — using relative file:// paths so they open in the browser's default viewer. Each link uses a small emoji/icon (📄 or ≡) and the filename as a tooltip.</li>
+    <li>CSS variables (<code>--bg</code>, <code>--surface</code>, <code>--text</code>, <code>--border</code>, etc.) that the dark mode toggle flips via a <code>data-theme="dark"</code> attribute on <code>&lt;html&gt;</code></li>
+  </ul>
+
+  <h3>3 — Refine overall visual design</h3>
+  <p>Update the CSS in <code>base.html</code>:</p>
+  <ul>
+    <li>Switch all hardcoded colours to CSS custom properties for theme-ability</li>
+    <li>Constrain body max-width to ~900px with centered layout for readability</li>
+    <li>Add a subtle left sidebar / table-of-contents generated from <code>&lt;h2&gt;</code> headings via JS</li>
+    <li>Improve section spacing, typography scale, and table striping</li>
+    <li>Add a <code>&lt;relic-chip&gt;</code> component for compact inline metadata tags</li>
+  </ul>
+
+  <h3>4 — Strengthen LLM synthesis guidance in prompt templates</h3>
+  <p>Update the HTML step in <code>specify.md</code>, <code>clarify.md</code>, <code>plan.md</code>, <code>tasks.md</code>, <code>implement.md</code>, <code>fix.md</code>, <code>solve.md</code> to add explicit anti-transcription language:</p>
+  <div class="callout callout-info">
+    <strong>ℹ</strong> Proposed addition: <em>"Do NOT copy Markdown text verbatim into the HTML. Each section must synthesise the information into the most appropriate visual form: a flow diagram instead of a bullet list, a table instead of prose, a status badge instead of a heading. If a section would be identical to the Markdown, you are doing it wrong."</em>
+  </div>
+
+  <h3>Affected files</h3>
+  <table>
+    <thead><tr><th>File</th><th>Change</th></tr></thead>
+    <tbody>
+      <tr><td><code>templates/base.html</code></td><td>Fix comment block; add header with dark mode + nav links; CSS custom properties; improved design system; optional ToC</td></tr>
+      <tr><td><code>templates/prompts/specify.md</code></td><td>Strengthen HTML step anti-transcription language</td></tr>
+      <tr><td><code>templates/prompts/clarify.md</code></td><td>Same</td></tr>
+      <tr><td><code>templates/prompts/plan.md</code></td><td>Same</td></tr>
+      <tr><td><code>templates/prompts/tasks.md</code></td><td>Same</td></tr>
+      <tr><td><code>templates/prompts/implement.md</code></td><td>Same</td></tr>
+      <tr><td><code>templates/prompts/fix.md</code></td><td>Same (+ fix the Step 0 HTML step instruction)</td></tr>
+      <tr><td><code>templates/prompts/solve.md</code></td><td>Same</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Spec &amp; Shared Artifact Amendments</h2>
+  <div class="callout callout-info">
+    <strong>ℹ</strong> No contract ownership changes. The following artifacts need updating since <code>008</code> owns them:
+  </div>
+  <ul>
+    <li><code>shared/contracts/HtmlComponentContract.md</code> — add <code>&lt;relic-chip&gt;</code> component spec; update component documentation approach (template block, not HTML comment); document dark mode CSS variable contract; document header nav link convention (relative paths to spec .md files)</li>
+    <li><code>shared/domains/ProjectConfigDomain.md</code> — no changes needed</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Changelog Entry (draft)</h2>
+  <pre>## 2026-05-20 — fix: base.html comment termination + design improvements
+
+**Spec:** 008-html-spec-mode
+**Fix:** 2026-05-20-base-html-design-header-dark-mode
+**Classification:** code-bug
+
+Fixed: HTML comment block in base.html contained Mermaid-style --> arrow syntax
+that prematurely terminated the comment, causing example content to render as
+visible page content in all spec HTML files.
+
+Added: sticky header with dark mode toggle (CSS custom properties) and navigation
+links to spec.md, plan.md, tasks.md relative to each spec HTML file.
+
+Improved: CSS design system (custom properties, max-width, typography); added
+relic-chip component; strengthened anti-transcription language in all 7 HTML
+step prompt sections.
+
+Artifacts amended: HtmlComponentContract.md (008 owns — no cross-spec impact).</pre>
+</section>
+
+<section>
+  <h2>Resolved — 2026-05-20</h2>
+  <p>All proposed changes applied. Summary of what was done:</p>
+  <ul>
+    <li><strong>Bug fixed:</strong> <code>templates/base.html</code> — RELIC COMPONENTS documentation moved from an HTML comment (broken by <code>--&gt;</code> arrows) to an inert <code>&lt;template id="relic-docs"&gt;</code> element. The comment termination bug is eliminated for the entire class.</li>
+    <li><strong>Header added:</strong> sticky <code>&lt;header&gt;</code> with spec ID chip, title, nav links to <code>spec.md</code> / <code>plan.md</code> / <code>tasks.md</code>, and a dark mode toggle.</li>
+    <li><strong>Dark mode:</strong> full CSS custom property system (<code>--bg</code>, <code>--surface</code>, <code>--text</code>, <code>--border</code>, <code>--accent</code>, etc.) with <code>data-theme</code> attribute switching; preference persisted in <code>localStorage</code>.</li>
+    <li><strong>New component:</strong> <code>&lt;relic-chip&gt;</code> — compact inline monospace tag with 6 colour options.</li>
+    <li><strong>Design improvements:</strong> 900px max-width centred layout, table row striping, improved typography, progress bar colour tracks completion %, <code>grid-2</code> / <code>grid-3</code> layout utilities.</li>
+    <li><strong>Prompt templates:</strong> anti-transcription rules added to HTML step in <code>specify.md</code>, <code>clarify.md</code>, <code>plan.md</code>, <code>tasks.md</code>, <code>implement.md</code>, <code>fix.md</code>.</li>
+    <li><strong>Spec HTML updated:</strong> <code>009-external-spec-integration.html</code> rewritten using new design language.</li>
+    <li><strong>Contract updated:</strong> <code>HtmlComponentContract.md</code> documents template approach, <code>&lt;relic-chip&gt;</code>, dark mode variable contract, header nav convention.</li>
+  </ul>
+</section>
+
+</body>
+</html>

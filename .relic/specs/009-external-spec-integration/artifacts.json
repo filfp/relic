@@ -1,0 +1,30 @@
+{
+  "owns": [
+    "shared/domains/ExternalSpecDomain.md",
+    "shared/contracts/ExternalConfigContract.md"
+  ],
+  "reads": [
+    "shared/domains/ProjectConfigDomain.md",
+    "shared/contracts/ContextResultContract.md",
+    "shared/contracts/ScaffoldResultContract.md"
+  ],
+  "touches_files": [
+    "packages/utility/src/project-config.ts",
+    "packages/utility/src/index.ts",
+    "packages/utility/src/__tests__/project-config.test.ts",
+    "packages/core/src/commands/external.ts",
+    "packages/core/src/commands/init.ts",
+    "packages/core/src/commands/context.ts",
+    "packages/core/src/commands/validate.ts",
+    "packages/core/src/index.ts",
+    "packages/core/src/__tests__/external.test.ts",
+    "packages/cli-node/src/bin.ts",
+    "packages/cli-node/src/bin.debug.ts",
+    "templates/prompts/specify.md",
+    "templates/prompts/clarify.md",
+    "templates/prompts/plan.md",
+    "templates/prompts/tasks.md",
+    "templates/prompts/implement.md",
+    "templates/prompts/fix.md"
+  ]
+}

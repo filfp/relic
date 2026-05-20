@@ -65,11 +65,16 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 
 **`base.html` component library**
 
-- FR-18: `base.html` must include an embedded utility CSS library (Tailwind CSS standalone build or equivalent) — no CDN links. This keeps HTML files concise and visually consistent without verbose inline styles.
-- FR-19: `base.html` must include self-contained reusable JS/HTML components for at minimum: charts (bar, pie, line), flow diagrams, dependency graphs, status badges, tables, callouts, and progress bars. All JS libraries (e.g. Mermaid.js) must be embedded inline.
+- FR-18: `base.html` must define a full CSS custom property system (`--bg`, `--surface`, `--surface-2`, `--border`, `--text`, `--text-2`, `--text-3`, `--accent`, `--accent-bg`, `--code-bg`) for both light and dark themes. No CDN links. All styling is inline.
+- FR-19: `base.html` must include self-contained reusable JS/HTML components for at minimum: charts (bar, pie, line), flow diagrams, status badges, chip tags, tables, callouts, and progress bars. All JS is embedded inline.
 - FR-20: Each component must be invocable with a short, declarative API so that HTML authoring requires minimal tokens per visualisation.
-- FR-21: `base.html` must include a `<!-- RELIC COMPONENTS -->` inventory comment block listing all available components with their invocation syntax. This is the LLM's reference when authoring spec/fix HTML files.
-- FR-22: Spec HTML files (`<spec-id>.html`) reference `base.html` via `../../base.html` (relative from `.relic/specs/<spec-id>/`). Fix HTML files (`<fix-id>.html`) reference it via `../base.html` (relative from `.relic/fixes/`).
+- FR-21: `base.html` must include a `<template id="relic-docs">` element (inert, never rendered) listing all available components with their invocation syntax and the LLM authoring rules. **Must not use an HTML comment block** — Mermaid-style `-->` arrows in examples would prematurely terminate an HTML comment, breaking the document.
+- FR-22: Spec HTML files (`<spec-id>.html`) and fix HTML files (`<fix-id>.html`) are **self-contained** — all component CSS and JS from `base.html` are embedded inline when the file is created. There is no runtime reference to an external `base.html`.
+- FR-24: `base.html` must include a sticky header (`position: fixed`) containing: spec ID chip (left), spec title (centre-left), navigation links to `spec.md` / `plan.md` / `tasks.md` (right), and a dark mode toggle button (far right). Clicking a nav link must open the linked file **inline within the same page** using the embedded markdown reader — the browser must not navigate away to a raw text view. A `← back` button must appear in the header (replacing the nav links) while the reader is active; clicking it restores the original HTML view. The reader reads markdown from embedded `<script type="text/plain" id="relic-src-*">` source blocks (primary) with a `fetch()` fallback for HTTP-served files.
+- FR-25: The dark mode toggle must switch a `data-theme="dark"` attribute on `<html>` and persist the preference in `localStorage`. The system must also respect `prefers-color-scheme: dark` as the default when no localStorage value is set. All CSS must use `var(--)` custom properties so dark mode is inherited by any custom HTML the LLM adds.
+- FR-26: `base.html` must include a `<relic-chip>` component for compact inline metadata tags (spec IDs, file types, status labels, etc.) rendered in a monospace font with a coloured background. Colors: `default` (slate), `blue`, `green`, `amber`, `red`, `purple`.
+- FR-27: `relic validate` must be updated to permit `<spec-id>.html` as a legal file in a spec folder when `mode = "html"`.
+- FR-28: `<spec-id>.html` must contain three `<script type="text/plain">` source blocks (`relic-src-spec`, `relic-src-plan`, `relic-src-tasks`) with the current content of the corresponding Markdown files. The LLM populates these during every HTML step of every workflow command. `base.html` ships the three blocks as empty placeholders; `relic scaffold` does not pre-populate them (the LLM does so on first `specify`/`plan` run). Currently the preamble's "exactly four files" rule causes validate to flag it as illegal. This is an intersection: `validate.ts` is also in `touches_files` for specs 005 and 009 — coordinate via changelog before modifying.
 
 **Template embedding**
 
@@ -84,6 +89,7 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 - NFR-5: No new runtime `dependencies` in `packages/cli-node/package.json`. Initial HTML file generation uses string interpolation in TypeScript.
 - NFR-6: Per Constitution Principle II, the HTML update logic for workflow commands lives in `templates/prompts/*.md`, not in TypeScript.
 - NFR-7: `<spec-id>.html` and `<fix-id>.html` are committed. They are first-class artefacts equivalent in standing to the Markdown files and may replace Markdown review.
+- NFR-8: HTML files authored by the LLM must **synthesise** information — never mechanically transcribe Markdown. Each section must represent information in its most visual form (flow diagram instead of bullet list, table instead of prose, progress bar instead of count). Prompt templates must enforce this via explicit anti-transcription rules in the HTML step.
 
 ---
 
@@ -93,7 +99,9 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 - As a developer, I want spec and fix HTML files named by their ID, so that multiple tabs can be open simultaneously without name collisions.
 - As a developer, I want HTML files committed alongside the Markdown files, so that they can serve as a richer alternative to Markdown review — with charts, flows, and diagrams.
 - As an LLM agent, I want to know the project mode from `relic context`, so that I can decide whether to execute the HTML step at the end of a workflow command.
-- As an LLM agent, I want a pre-built component library in `base.html` with utility CSS, so that I can write short declarative component calls rather than authoring raw SVG, JS, or verbose inline styles — keeping token cost low.
+- As an LLM agent, I want a pre-built component library in `base.html` with CSS custom properties, so that I can write short declarative component calls rather than authoring raw SVG, JS, or verbose inline styles — and have any custom CSS I write automatically inherit dark mode.
+- As a developer, I want a dark mode toggle in the HTML header, so that I can read spec files comfortably in any lighting condition without manually editing the file.
+- As a developer, I want navigation links to `spec.md`, `plan.md`, `tasks.md` in the HTML header, so that I can move between the HTML view and the Markdown source without a file browser.
 - As an LLM agent, I want every spec workflow command (specify, clarify, plan, tasks, implement) to have an HTML step, so that the HTML file stays in sync with the spec's current state after every session.
 - As an LLM agent, I want the fix and solve commands to have an HTML step, so that fix documents are also richly visualised when HTML mode is active.
 - As a developer, I want `.relic/base.html` to be customisable after first write, so that I can extend the component library with project-specific visualisations.
@@ -112,10 +120,16 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 - Expose `mode` in `relic context` JSON output
 - `relic scaffold` creates initial `<spec-id>.html` shell from `base.html` in HTML mode
 - `/relic.fix` creates `<fix-id>.html` in HTML mode **instead of** `<fix-id>.md` — one file per fix, format determined by mode
-- `templates/base.html` — self-contained component library with inline JS and embedded utility CSS (Tailwind standalone or equivalent), embedded via `embed-templates.ts`
-- Spec HTML files reference `base.html` via `../../base.html`; fix HTML files via `../base.html`
+- `templates/base.html` — self-contained component library with inline JS and CSS custom property system; embedded via `embed-templates.ts`
+- Sticky header in `base.html`: spec ID chip, title, nav links (spec.md / plan.md / tasks.md), dark mode toggle
+- Dark mode: `data-theme` attribute + CSS custom properties + localStorage persistence
+- `<relic-chip>` component for compact inline metadata tags
+- `<template id="relic-docs">` documentation element (replaces HTML comment approach)
+- Spec HTML files and fix HTML files are self-contained (all CSS/JS embedded inline from base.html at scaffold time)
 - Add HTML step to `specify.md`, `clarify.md`, `plan.md`, `tasks.md`, `implement.md` prompt templates (spec HTML)
 - Add HTML step to `fix.md` and `solve.md` prompt templates (fix HTML)
+- Anti-transcription rules in all HTML step prompt sections (NFR-8)
+- Update `relic validate` to permit `<spec-id>.html` in spec folders when `mode = "html"` *(intersection: coordinate with 005 and 009 before touching `validate.ts`)*
 - Update `ScaffoldResultContract` to document conditional `<spec-id>.html` in `files_created`
 - Update `UpgradeDomain.md` (spec 004 cross-artifact mutation, changelog required)
 
@@ -146,7 +160,7 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 
 ## Open Questions
 
-*(none)*
+- [ ] **OQ-6 — validate.ts intersection:** FR-27 requires updating `relic validate` to permit `<spec-id>.html` in spec folders. `validate.ts` is in `touches_files` for specs 005 and 009. Must coordinate before modifying — raise via `/relic.clarify` on 005 or 009 (or a dedicated changelog entry) before implementing FR-27.
 
 ---
 
@@ -157,7 +171,12 @@ This spec also consolidates the per-project configuration file: `engines.json` (
 - **OQ-3 resolved:** HTML files are living LLM-enriched documents, not static compilations. AI workflow commands write to them; CLI only creates the initial shell from `base.html`.
 - **OQ-4 resolved:** `base.html` is the initial scaffold and component library; `<spec-id>.html` / `<fix-id>.html` are the spec/fix files that the LLM updates. CLI never overwrites them after creation.
 - **OQ-5 resolved:** HTML files are committed. They are first-class artefacts equivalent in standing to the Markdown files.
-- **Component library decision:** `base.html` ships with an embedded Tailwind standalone CSS and inline JS primitives for charts, flows, diagrams, and other visualisations. The component inventory is documented in a `<!-- RELIC COMPONENTS -->` block inside `base.html`.
+- **Component docs decision (replaces original):** The component inventory is stored in a `<template id="relic-docs">` element — not an HTML comment. An HTML comment containing Mermaid-style `-->` arrows would prematurely terminate the comment, causing example diagrams to render as visible page content. `<template>` elements are inert and immune to this class of bug.
+- **CSS architecture decision:** `base.html` uses a CSS custom property system (`--bg`, `--surface`, etc.) instead of hardcoded colour values, enabling dark mode via `data-theme` attribute toggling. Components' internal colours remain hardcoded for simplicity; the custom properties are for custom HTML authored by the LLM.
+- **Dark mode decision:** Toggle persists in `localStorage` under `relic-theme`. System preference (`prefers-color-scheme`) is honoured as the default when no stored preference exists.
+- **relic-chip decision:** A new `<relic-chip>` component is added for compact inline metadata tags (spec IDs, file types, short labels). Distinct from `<relic-status>` in that it uses monospace font, smaller padding, and is not meant to convey workflow state.
+- **Self-contained loading decision:** Spec and fix HTML files embed all CSS/JS from `base.html` inline at creation time. They do not reference an external `base.html` at runtime. This ensures files open correctly regardless of where they are accessed from (git checkout, email attachment, etc.). The earlier design (relative reference to `../../base.html`) was dropped.
+- **Anti-transcription decision:** The HTML step prompt sections in all 7 workflow templates include mandatory anti-transcription rules. The LLM must represent each section in its most visual form. If a section would look identical to the Markdown source, it must be reconsidered.
 - **Naming decision:** HTML files are named by their ID (`<spec-id>.html`, `<fix-id>.html`), not generically, to avoid tab name collisions.
 - **Fix HTML decision:** When `mode = "html"`, `/relic.fix` creates `<fix-id>.html` instead of `<fix-id>.md`. One file per fix; format determined by mode at creation time. The HTML document contains all fields from `FixDocumentContract.md` rendered via components. `HtmlComponentContract.md` supersedes `FixDocumentContract.md` for the HTML mode fix format. Spec 003's contract is not modified.
 - **Command coverage decision:** All spec workflow commands (specify, clarify, plan, tasks, implement) and fix workflow commands (fix, solve) get the HTML step. There is no filesystem watcher — HTML stays in sync because all mutating commands update it.

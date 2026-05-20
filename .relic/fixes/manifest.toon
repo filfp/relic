@@ -9,3 +9,6 @@
 2026-04-22-upgrade-spawn-bunfs-path | 2026-04-22-upgrade-spawn-bunfs-path.md |  | 
 2026-05-09-upgrade-version-channel-detection-broken | 2026-05-09-upgrade-version-channel-detection-broken.md |  | 
 2026-05-20-publish-credentials-stale-after-repo-rename | 2026-05-20-publish-credentials-stale-after-repo-rename.md |  | 
+base-html-design-header-dark-mode | 2026-05-20-base-html-design-header-dark-mode.html | code-bug 008-html-spec-mode base-html dark-mode design | HTML comment block arrows terminate comment early; missing header with dark mode toggle and spec navigation links; weak LLM synthesis guidance.
+relic use --fix ignores html mode extension | 2026-05-20-use-fix-html-extension.html | code-bug 003-fix-solve-workflow | relic use --fix hardcodes .md extension — fails when mode is html since fix documents are .html files
+nav links open raw markdown; inline reader needed | 2026-05-20-nav-links-inline-markdown-reader.html | misspecification 008-html-spec-mode | Nav links in spec HTML header use plain <a href> pointing to .md files — browser displays raw text. Needs inline markdown reader with back navigation.

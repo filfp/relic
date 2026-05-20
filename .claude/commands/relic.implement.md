@@ -43,3 +43,23 @@ relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_co
 ```
 
 Do not open or edit `changelog.md` directly.
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `<spec-id>.html` in the spec directory.
+3. Update the Tasks and Plan sections with progress from this implementation session:
+   - Use `<relic-progress>` to show overall and per-phase task completion.
+   - Use `<relic-status value="done">` on completed phases.
+   - Use `<relic-callout type="info">` to note any implementation decisions made during this session.
+   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+4. Write the updated `<spec-id>.html` back.
+
+If `mode` is `"md"`, skip this step entirely.
