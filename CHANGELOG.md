@@ -11,6 +11,26 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.16] — 2026-05-20
+
+### Added
+- `/relic.ask` — a new read-only slash command that queries the full Relic knowledge
+  base (shared artifacts, specs, and fix documents) and answers natural-language
+  questions in the terminal without creating or modifying any file. Use it to check
+  ownership, find existing contracts, or inspect assumptions before committing to a
+  workflow command like `/relic.specify` or `/relic.clarify`.
+- `relic ask` stub registered in the debug binary (`bin.debug.ts`).
+
+### Removed
+- Reverted spec 007-remote-ollama-engine and all associated code (direct model
+  invocation via OpenAI-compatible API). Pure model invocation without an agentic
+  runtime delivers no value — workflow commands need an agent to execute them.
+  Removed: `model-client.ts`, `model-runner.ts`, `history-compressor.ts`,
+  `model-config.ts`, `solve.ts`, `constitution.ts`, and their tests. Restored
+  `bin.debug.ts` (deleted by the reverted spec).
+
+---
+
 ## [0.8.15] — 2026-05-09
 
 ### Fixed
