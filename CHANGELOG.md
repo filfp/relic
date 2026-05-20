@@ -11,6 +11,25 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.19] — 2026-05-20
+
+### Added
+- **Inline markdown reader for HTML spec navigation** — header links now render
+  `spec.md` / `plan.md` / `tasks.md` inside the HTML view using embedded source
+  blocks (with a fetch fallback), plus a back button to restore the main view.
+
+### Changed
+- **HTML base design system overhaul** — dark mode toggle with CSS custom
+  properties + persistence, sticky header layout, new `<relic-chip>` component,
+  component docs moved into `<template id="relic-docs">`, improved typography and
+  table striping.
+
+### Fixed
+- **`relic use --fix` respects html mode** — fix files now resolve to `.html`
+  when `mode = "html"` instead of being hardcoded to `.md`.
+
+---
+
 ## [0.8.18] — 2026-05-20
 
 ### Fixed
