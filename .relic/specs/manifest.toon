@@ -1,9 +1,9 @@
 # specs index
-Workflow Test Suite | 001-workflow-test-suite/ | testing, bun, ci, commands, quality | Unit and integration tests for all workflow commands and core utilities using Bun test runner.
-Agent Permission Config | 002-agent-permission-config/ | engines, permission, claude, copilot, codex, templates, refactor | Shared utility and engines packages to consolidate prompt templates and pre-approve engine permissions.
-Fix Solve Workflow | 003-fix-solve-workflow/ | workflow, fix, solve, session, audit, ownership | Two-stage cross-spec fix pipeline: diagnose problems, validate ownership, apply approved fixes.
-CLI Self Upgrade | 004-cli-self-upgrade/ | upgrade, distribution, npm, pypi, binary, engines, cli | relic upgrade command to detect install channel, check for updates, upgrade binary, and refresh hooks.
-Toon Manifest Format | 005-toon-manifest-format/ | format, manifest, toon, token-efficiency, search, llm | Compact line-oriented text format for manifest indexes reducing token overhead for LLM consumption.
-Structured Write Command | 006-structured-write-command/ | write, command, structured, changelog, index, validation | relic write command to standardize all index and changelog mutations via JSON payloads.
-Ask Knowledge Query | 007-ask-knowledge-query/ | ask query search read-only knowledge terminal non-destructive slash-command | Read-only /relic.ask command that queries the shared knowledge layer and answers questions in the terminal without creating or modifying any file.
-HTML Spec Mode | 008-html-spec-mode/ | html config mode scaffold visualization template engines | Introduces config.json (replacing engines.json), a mode setting, and HTML spec scaffolding that compiles all spec files into a single rich HTML document.
+Workflow Test Suite | 001-workflow-test-suite/ |  | 
+Agent Permission Config | 002-agent-permission-config/ |  | 
+Fix Solve Workflow | 003-fix-solve-workflow/ |  | 
+CLI Self Upgrade | 004-cli-self-upgrade/ |  | 
+Toon Manifest Format | 005-toon-manifest-format/ |  | 
+Structured Write Command | 006-structured-write-command/ |  | 
+Ask Knowledge Query | 007-ask-knowledge-query/ |  | 
+HTML Spec Mode | 008-html-spec-mode/ |  | 
