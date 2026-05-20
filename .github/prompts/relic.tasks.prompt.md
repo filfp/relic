@@ -48,13 +48,21 @@ relic context
 
 If `mode` is `"html"`:
 
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory.
-3. Update the Tasks section with the task list from this session:
-   - Use `<relic-progress>` for per-phase task completion ratios.
-   - Use `<relic-table>` for the full task list with IDs and descriptions.
-   - Do not mechanically transcribe the Markdown — synthesise and enrich.
-4. Write the updated `<spec-id>.html` back.
+3. Update the Tasks section with **synthesised** content from this session.
+   **Anti-transcription rules (mandatory):**
+   - Do NOT copy the task checklist verbatim as an HTML list.
+   - Use `<relic-progress>` per phase to show completion ratios at a glance.
+   - Use `<relic-table>` for the task list (ID, description, status as `<relic-chip>`).
+   - Group tasks by phase; use `<relic-status>` on each phase heading.
+   - If a section would look identical to the Markdown source, you are doing it wrong.
+   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
+4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
+   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
+   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (empty string if not yet created).
+   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md`.
+5. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
 

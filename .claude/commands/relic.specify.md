@@ -100,14 +100,23 @@ relic context
 
 If `mode` is `"html"`:
 
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory (path is in the `relic scaffold` output from Step 1).
-3. Update it with enriched content reflecting the work done in this session:
-   - Use `<relic-status>` to show the spec's current status.
-   - Use `<relic-table>` for the requirements or shared artifact lists.
-   - Use `<relic-callout>` to highlight scope boundaries or key decisions.
-   - Do not mechanically transcribe the Markdown — synthesise and enrich.
-4. Write the updated `<spec-id>.html` back.
+3. Update it with **synthesised** content reflecting the work done in this session.
+   **Anti-transcription rules (mandatory):**
+   - Do NOT copy Markdown text verbatim into the HTML.
+   - Replace bullet lists of steps with a `<relic-flow>` diagram.
+   - Replace prose describing tabular data with a `<relic-table>`.
+   - Replace "3 of 5 tasks complete" with `<relic-progress>`.
+   - Use `<relic-chip>` for inline metadata instead of parenthetical text.
+   - If a section would look identical to the Markdown source, you are doing it wrong — find a visual form.
+   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
+4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
+   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
+   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (use empty string if the file does not exist yet).
+   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (use empty string if the file does not exist yet).
+   These source blocks power the nav link reader — clicking a header nav link renders the file inline from these blocks.
+5. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
 
