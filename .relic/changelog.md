@@ -507,3 +507,7 @@ Added mode field ("md" | "html") to the relic context JSON output shape. Populat
 ## [2026-05-20T03:13:47.731Z] /relic.implement — 008-html-spec-mode: amend UpgradeDomain.md — rename engines.json and engines-registry.ts
 
 Replaced all references to .relic/engines.json with .relic/config.json and engines-registry.ts with project-config.ts. The engines list is now part of config.json shape { engines, mode } and is accessed via readEngines()/writeEngines() from project-config.ts. Added migration note and mode field documentation. This is a cross-spec mutation — UpgradeDomain.md is owned by spec 004.
+
+## [2026-05-20T15:38:23.983Z] /relic.solve — 008 / 2026-05-20-specify-html-step-never-executed: move HTML step before confirm section in all 7 templates; enforce mode at top of fix.md
+
+HTML step was appended after the terminal confirm/report section in all 7 prompt templates — AI agents never reached it, leaving HTML files empty after workflow sessions. Fixed by moving the HTML step before the confirm checklist in specify, clarify, plan, tasks, implement; and before Step 8 in solve. For fix.md, added Step 0 to determine mode at the top before any file creation, with a mode-conditional branch in Step 5 so the correct .html or .md path is committed from the start of the session.

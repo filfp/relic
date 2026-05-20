@@ -17,21 +17,26 @@ if needed, and closes the fix. Run `/relic.fix <issue>` first if no fix is activ
 relic context
 ```
 
-Read the `current_fix` field.
+Read the `current_fix` and `mode` fields.
 
 - **`current_fix` is null** → Stop. Report: *"No active fix. Run `/relic.fix <issue>` first to
   diagnose the issue and create a fix document."*
 - **`current_fix` is set** → Continue.
 
+Note `mode` — it determines whether the fix document is `.html` or `.md`, and how to close it.
+
 ---
 
 ## Step 2 — Load the fix document
 
-Read `.relic/fixes/<current_fix>.md` in full. Note:
+**If `mode = "html"`:** Read `.relic/fixes/<current_fix>.html` in full.
+**If `mode = "md"`:** Read `.relic/fixes/<current_fix>.md` in full.
+
+Note:
 - **Owning spec** — which spec governs this fix
-- **Classification** (under `## Root Cause`) — `code-bug | misspecification | misunderstanding | wrong-spec`
-- **Code changes** (under `## Proposed Changes`) — the code changes to apply
-- **Shared artifact changes** (under `## Proposed Changes`) — which shared artifacts (if any) need updating
+- **Classification** (under Root Cause) — `code-bug | misspecification | misunderstanding | wrong-spec`
+- **Code changes** (under Proposed Changes) — the code changes to apply
+- **Shared artifact changes** (under Proposed Changes) — which shared artifacts (if any) need updating
 
 ---
 
@@ -90,8 +95,17 @@ Do not open or edit `changelog.md` directly.
 
 ## Step 7 — Close the fix
 
-Set `Status: solved` in `.relic/fixes/<current_fix>.md` (change the `**Status:** pending` line).
+**If `mode = "html"`:**
+- Update `.relic/fixes/<current_fix>.html`: replace `<relic-status value="pending">` with
+  `<relic-status value="done">solved</relic-status>`, mark proposed changes as applied, add a
+  "Resolved" section with a brief note on what was changed.
+- Do **not** modify or create `<current_fix>.md` — it does not exist in html mode.
 
+**If `mode = "md"`:**
+- Set `Status: solved` in `.relic/fixes/<current_fix>.md` (change the `**Status:** pending` line).
+- Do not create or modify any `.html` file.
+
+Then clear the active fix:
 ```bash
 relic use --clear-fix
 ```
@@ -105,27 +119,3 @@ Output:
 2. **Knowledge layer updates** — spec/plan/shared artifact changes made (or "none")
 3. **Changelog entry** — the entry written to `changelog.md` (or "none — no cross-artifact mutation")
 4. **Follow-up required** — list of specs needing `/relic.clarify` (or "none")
-
----
-
-## HTML Step (conditional)
-
-Run:
-```bash
-relic context
-```
-
-If `mode` is `"html"`:
-
-1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
-2. Read `.relic/fixes/<current_fix>.html`.
-3. Update it to reflect the solved state:
-   - Replace `<relic-status value="pending">` with `<relic-status value="done">solved</relic-status>`.
-   - Mark proposed changes as applied in the flow diagram or affected files table.
-   - Add a "Resolved" section with a brief note on what was changed.
-4. Write the updated `.relic/fixes/<current_fix>.html` back.
-5. Do **not** modify `<current_fix>.md` — it does not exist in html mode.
-
-If `mode` is `"md"`:
-- Set `Status: solved` in `.relic/fixes/<current_fix>.md` as described in Step 7 above.
-- Do not create or modify any `.html` file.

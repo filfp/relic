@@ -39,21 +39,6 @@ Apply the user's clarification to `spec.md`:
 - If a shared artifact changes, update it.
 - Update `artifacts.json` if ownership or file touches change.
 
-## After changes — changelog (cross-artifact mutations only)
-
-Only write a changelog entry if a shared artifact **owned by this spec** was amended in this
-clarify session. Do not write one for: spec.md edits, open question resolution, new artifact
-creation, or artifacts.json updates.
-
-If a cross-artifact mutation occurred, run:
-```bash
-relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic.clarify","description":"<why it changed>"}'
-```
-
-Do not open or edit `changelog.md` directly.
-
----
-
 ## HTML Step (conditional)
 
 Run:
@@ -73,3 +58,16 @@ If `mode` is `"html"`:
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
+
+## After changes — changelog (cross-artifact mutations only)
+
+Only write a changelog entry if a shared artifact **owned by this spec** was amended in this
+clarify session. Do not write one for: spec.md edits, open question resolution, new artifact
+creation, or artifacts.json updates.
+
+If a cross-artifact mutation occurred, run:
+```bash
+relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic.clarify","description":"<why it changed>"}'
+```
+
+Do not open or edit `changelog.md` directly.

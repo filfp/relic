@@ -35,13 +35,6 @@ Fill in `specs/{{SPEC_ID}}/tasks.md`:
 - Order tasks so dependencies come first.
 - Prefix tasks that depend on other specs with `[blocked by: <spec-id>]`.
 
-## What NOT to do
-
-- Do not write code.
-- Do not modify `plan.md` — if the plan is wrong, run `/relic.plan` again.
-
----
-
 ## HTML Step (conditional)
 
 Run:
@@ -60,3 +53,8 @@ If `mode` is `"html"`:
 4. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
+
+## What NOT to do
+
+- Do not write code.
+- Do not modify `plan.md` — if the plan is wrong, run `/relic.plan` again.
