@@ -159,6 +159,27 @@
     .overflow-auto { overflow: auto; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+
+    /* ── Markdown reader ──────────────────────────────────────────────── */
+    #relic-reader { padding: 0.5rem 0 3rem; }
+    #relic-reader h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; margin-bottom: 1.25rem; }
+    #relic-reader h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin: 1.75rem 0 0.75rem; }
+    #relic-reader h3 { font-size: 0.95rem; font-weight: 600; color: var(--text-2); margin: 1.25rem 0 0.5rem; }
+    #relic-reader h4 { font-size: 0.875rem; font-weight: 600; color: var(--text-2); margin: 1rem 0 0.35rem; }
+    #relic-reader p  { margin-bottom: 0.75rem; }
+    #relic-reader ul, #relic-reader ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    #relic-reader li { margin-bottom: 0.25rem; }
+    #relic-reader blockquote { border-left: 3px solid var(--accent); background: var(--accent-bg); color: var(--text-2); padding: 0.5rem 1rem; margin: 0.75rem 0; border-radius: 0 6px 6px 0; }
+    #relic-reader blockquote p { margin-bottom: 0; }
+    #relic-reader hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+    #relic-reader table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.875rem; }
+    #relic-reader th { text-align: left; padding: 0.4rem 0.75rem; background: var(--surface-2); border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-2); }
+    #relic-reader td { padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    #relic-reader tr:nth-child(even) td { background: var(--surface-2); }
+    #relic-reader tr:last-child td { border-bottom: none; }
+    #relic-reader .reader-msg { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-top: 1rem; }
+    /* back button — hidden by default, shown in reader mode */
+    .h-back { display: none; cursor: pointer; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -236,10 +257,24 @@ HEADER & DARK MODE
   The sticky header contains:
     • spec ID chip (left)
     • spec title (centre-left)
-    • nav links: spec.md  plan.md  tasks.md (relative paths — same directory as this file)
+    • nav links: spec.md  plan.md  tasks.md — clicking opens the file INLINE (not raw text)
+    • back button (hidden; shown when a .md file is open in the reader panel)
     • dark mode toggle (right) — persisted in localStorage
   All colours use CSS custom properties (--bg, --surface, --text, --border, --accent, etc.)
   so any custom CSS the LLM adds automatically inherits dark-mode support when it uses var(--*).
+
+INLINE MARKDOWN READER
+  The nav links open .md files in a styled reader panel within the same page.
+  The reader reads from three embedded <script type="text/plain"> source blocks:
+    #relic-src-spec   ← content of spec.md
+    #relic-src-plan   ← content of plan.md
+    #relic-src-tasks  ← content of tasks.md
+  If a source block is empty, the reader falls back to fetch() (works on HTTP;
+  blocked in Chrome on file:// due to CORS). If both fail, a graceful message is shown.
+
+  LLM OBLIGATION: after updating the HTML sections, always embed the CURRENT content
+  of spec.md, plan.md, and tasks.md into the three source blocks. This is the primary
+  delivery path for the reader — fetch() is only a fallback.
 
 LLM AUTHORING RULES
   1. DO NOT copy Markdown text verbatim into HTML.
@@ -252,6 +287,7 @@ LLM AUTHORING RULES
   4. Prefer relic-* components over raw HTML. Use raw HTML only for layouts (grid, flex).
   5. Use CSS custom properties (var(--text), var(--surface), etc.) for any custom styles
      so they work in both light and dark modes.
+  6. Always populate the three relic-src-* source blocks (see INLINE MARKDOWN READER above).
 </template>
 
 <script>
@@ -547,8 +583,15 @@ LLM AUTHORING RULES
     <a class="h-link" href="plan.md" title="Open plan.md">⊞ plan</a>
     <a class="h-link" href="tasks.md" title="Open tasks.md">☑ tasks</a>
   </nav>
+  <button class="h-back h-link" id="relic-back" title="Back to spec view">← back</button>
   <button class="h-toggle" id="relic-toggle" title="Toggle dark mode">🌙</button>
 </header>
+
+<!-- Embedded markdown sources — populated by LLM during every HTML step.
+     The inline markdown reader reads from these before falling back to fetch(). -->
+<script type="text/plain" id="relic-src-spec"></script>
+<script type="text/plain" id="relic-src-plan"></script>
+<script type="text/plain" id="relic-src-tasks"></script>
 
 <div id="relic-body">
 
@@ -578,5 +621,174 @@ LLM AUTHORING RULES
 </section>
 
 </div>
+
+<script>
+/* ── Inline Markdown Reader ─────────────────────────────────────────────── */
+(function () {
+
+  /* Escape HTML special chars */
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* Inline formatting: code > bold > italic > links (order matters) */
+  function inl(s) {
+    return s
+      .replace(/`([^`]+)`/g, (_,c) => `<code>${esc(c)}</code>`)
+      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  }
+
+  /* Block markdown-to-HTML parser */
+  function md2html(src) {
+    const lines = src.split('\n');
+    const out = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      /* Fenced code block */
+      if (/^```/.test(line)) {
+        const code = [];
+        i++;
+        while (i < lines.length && !/^```/.test(lines[i])) { code.push(esc(lines[i])); i++; }
+        out.push(`<pre><code>${code.join('\n')}</code></pre>`);
+        i++; continue;
+      }
+
+      /* Headings */
+      const hm = line.match(/^(#{1,4}) (.+)/);
+      if (hm) { out.push(`<h${hm[1].length}>${inl(hm[2])}</h${hm[1].length}>`); i++; continue; }
+
+      /* Horizontal rule */
+      if (/^---+\s*$|^\*\*\*+\s*$/.test(line)) { out.push('<hr>'); i++; continue; }
+
+      /* Blockquote */
+      if (/^> ?/.test(line)) {
+        const bq = [];
+        while (i < lines.length && /^> ?/.test(lines[i])) { bq.push(lines[i].replace(/^> ?/, '')); i++; }
+        out.push(`<blockquote>${md2html(bq.join('\n'))}</blockquote>`);
+        continue;
+      }
+
+      /* GFM pipe table */
+      if (/^\|/.test(line)) {
+        const rows = [];
+        while (i < lines.length && /^\|/.test(lines[i])) {
+          if (/^\|[-|: ]+\|$/.test(lines[i])) { i++; continue; }
+          rows.push(lines[i].split('|').slice(1,-1).map(c=>c.trim()));
+          i++;
+        }
+        if (rows.length) {
+          const [head,...body] = rows;
+          out.push(`<table><thead><tr>${head.map(c=>`<th>${inl(c)}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${inl(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`);
+        }
+        continue;
+      }
+
+      /* Unordered list */
+      if (/^[-*+] /.test(line)) {
+        const items = [];
+        while (i < lines.length && /^[-*+] /.test(lines[i])) {
+          items.push(`<li>${inl(lines[i].replace(/^[-*+] /, ''))}</li>`); i++;
+        }
+        out.push(`<ul>${items.join('')}</ul>`);
+        continue;
+      }
+
+      /* Ordered list */
+      if (/^\d+\. /.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\. /.test(lines[i])) {
+          items.push(`<li>${inl(lines[i].replace(/^\d+\. /, ''))}</li>`); i++;
+        }
+        out.push(`<ol>${items.join('')}</ol>`);
+        continue;
+      }
+
+      /* Empty line */
+      if (!line.trim()) { i++; continue; }
+
+      /* Paragraph — collect consecutive non-block lines */
+      const para = [];
+      while (
+        i < lines.length && lines[i].trim() &&
+        !/^[#>|`]/.test(lines[i]) &&
+        !/^[-*+] /.test(lines[i]) &&
+        !/^\d+\. /.test(lines[i]) &&
+        !/^---+\s*$/.test(lines[i])
+      ) { para.push(lines[i]); i++; }
+      if (para.length) out.push(`<p>${inl(para.join('\n').replace(/\n/g, '<br>'))}</p>`);
+    }
+    return out.join('\n');
+  }
+
+  /* Open a markdown file in the reader panel */
+  async function openReader(filename, srcId, label) {
+    const hTitle = document.querySelector('#relic-header .h-title');
+    const hNav   = document.querySelector('#relic-header .h-nav');
+    const hBack  = document.getElementById('relic-back');
+    const body   = document.getElementById('relic-body');
+    if (!hTitle || !hNav || !hBack || !body) return;
+
+    const origTitle = hTitle.textContent;
+    const origHTML  = body.innerHTML;
+
+    /* 1. Try embedded source block */
+    let md = null;
+    const srcEl = document.getElementById(srcId);
+    if (srcEl && srcEl.textContent.trim()) {
+      md = srcEl.textContent.trim();
+    } else {
+      /* 2. Try fetch (works on HTTP or Firefox file://) */
+      try {
+        const resp = await fetch(filename);
+        if (resp.ok) md = await resp.text();
+      } catch (_) { /* CORS on file:// — expected in Chrome */ }
+    }
+
+    if (md) {
+      body.innerHTML = `<div id="relic-reader">${md2html(md)}</div>`;
+    } else {
+      body.innerHTML = `<div class="reader-msg">
+        <h2 style="margin-top:0">${filename}</h2>
+        <p>The markdown source is not embedded in this file yet and could not be fetched
+        (common when opening via <code>file://</code> in Chrome due to CORS restrictions).</p>
+        <p>To fix: run any workflow command — the HTML step will embed the source automatically.</p>
+        <p><a href="${filename}" target="_blank">Open ${filename} in a new tab →</a></p>
+      </div>`;
+    }
+
+    /* Switch header: nav → back */
+    hTitle.textContent = label;
+    hNav.style.display = 'none';
+    hBack.style.display = 'inline-flex';
+    hBack.onclick = () => {
+      body.innerHTML = origHTML;
+      hTitle.textContent = origTitle;
+      hNav.style.display = '';
+      hBack.style.display = 'none';
+      hBack.onclick = null;
+    };
+
+    window.scrollTo(0, 0);
+  }
+
+  /* Wire up nav links after DOM is ready */
+  document.addEventListener('DOMContentLoaded', () => {
+    const NAV = [
+      { href: 'spec.md',   srcId: 'relic-src-spec',   label: 'spec.md'   },
+      { href: 'plan.md',   srcId: 'relic-src-plan',   label: 'plan.md'   },
+      { href: 'tasks.md',  srcId: 'relic-src-tasks',  label: 'tasks.md'  },
+    ];
+    NAV.forEach(({ href, srcId, label }) => {
+      document.querySelectorAll(`a.h-link[href="${href}"]`).forEach(a => {
+        a.addEventListener('click', e => { e.preventDefault(); openReader(href, srcId, label); });
+      });
+    });
+  });
+
+})();
+</script>
 </body>
 </html>

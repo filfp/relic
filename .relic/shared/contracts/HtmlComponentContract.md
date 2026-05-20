@@ -55,9 +55,34 @@ The LLM must use `var(--*)` for any custom CSS to ensure dark-mode compatibility
 
 ### Header nav link convention
 
-The sticky header in `base.html` includes three navigation links: `spec.md`, `plan.md`, `tasks.md`. These are relative paths — they resolve correctly because spec HTML files live in the same directory as the spec Markdown files (`.relic/specs/<spec-id>/`). Fix HTML files (`.relic/fixes/<fix-id>.html`) do not have corresponding Markdown files in the same directory; the LLM should remove or replace these links when writing a fix HTML document.
+The sticky header in `base.html` includes three navigation links: `spec.md`, `plan.md`, `tasks.md`. Clicking a link opens the file **inline within the same page** using the embedded markdown reader — the browser does not navigate away. A `← back` button appears in the header (replacing the nav links) while the reader is open; clicking it restores the original spec HTML view.
+
+Fix HTML files (`.relic/fixes/<fix-id>.html`) do not have corresponding Markdown files in the same directory; the LLM should remove or replace the nav links when writing a fix HTML document.
 
 The dark mode toggle persists the preference in `localStorage` under the key `relic-theme`.
+
+### Inline markdown reader contract
+
+`base.html` embeds a self-contained markdown-to-HTML parser and reader panel. No CDN dependency — all JS is inlined.
+
+**Source blocks** — three inert `<script type="text/plain">` elements hold the raw Markdown source that the reader loads:
+
+| ID | Content |
+|---|---|
+| `relic-src-spec` | Current content of `spec.md` |
+| `relic-src-plan` | Current content of `plan.md` |
+| `relic-src-tasks` | Current content of `tasks.md` |
+
+**Load priority:**
+1. Read from the embedded source block (primary — works on any origin including `file://`).
+2. Fall back to `fetch(filename)` if the source block is empty (works on HTTP; blocked by CORS on `file://` in Chrome).
+3. If both fail, show a graceful error with an "Open in new tab" link.
+
+**LLM obligation:** After updating the HTML content sections, the LLM MUST replace the content of all three source blocks with the current text of the corresponding Markdown files. This is the primary delivery path for the reader — not fetch.
+
+**Parser capabilities:** headings (H1–H4), bold, italic, inline code, fenced code blocks, unordered lists, ordered lists, GFM pipe tables, blockquotes, horizontal rules, paragraphs, links.
+
+**Back navigation:** when the reader is open, `#relic-back` (`.h-back`) is shown and `.h-nav` is hidden. Clicking back restores `#relic-body.innerHTML` and reverts the header.
 
 ## File Naming Convention
 

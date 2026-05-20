@@ -58,7 +58,11 @@ If `mode` is `"html"`:
    - Use `<relic-chip>` for inline metadata instead of parenthetical text.
    - If a section would look identical to the Markdown source, you are doing it wrong.
    - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
-4. Write the updated `<spec-id>.html` back.
+4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
+   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
+   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (empty string if not yet created).
+   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (empty string if not yet created).
+5. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
 
