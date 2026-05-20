@@ -6,6 +6,13 @@ import {
   runAddEngine,
   runUse,
   runScan,
+  runSpecify,
+  runFix,
+  runClarify,
+  runPlan,
+  runAnalyse,
+  runTasks,
+  runImplement,
   runContext,
   runScaffold,
   runValidate,
@@ -58,6 +65,98 @@ program
     await runAddEngine({ engine: engine as Engine, projectDir });
     const engines = readEnginesRegistry(relicDir);
     writeEnginesRegistry(relicDir, [...engines, engine]);
+  });
+
+program
+  .command("specify")
+  .description("Create a new spec")
+  .option("--title <title>", "Spec title")
+  .action(async (opts: { title?: string }) => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runSpecify({ title: opts.title, relicDir });
+  });
+
+program
+  .command("fix")
+  .description("Fix a bug using the spec as context")
+  .option("--spec <id>", "Spec ID (overrides branch inference and RELIC_SPEC env)")
+  .option("--issue <description>", "Issue description to append to the assembled context")
+  .action(async (opts: { spec?: string; issue?: string }) => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runFix({ spec: opts.spec, issue: opts.issue, relicDir });
+  });
+
+program
+  .command("clarify")
+  .description("Append details or change contracts for a spec (check intersections)")
+  .option("--spec <id>", "Spec ID")
+  .action(async () => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runClarify({ relicDir });
+  });
+
+program
+  .command("plan")
+  .description("Create an implementation plan")
+  .option("--spec <id>", "Spec ID")
+  .action(async () => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runPlan({ relicDir });
+  });
+
+program
+  .command("analyse")
+  .description("Non-destructive consistency check")
+  .option("--spec <id>", "Spec ID")
+  .action(async () => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runAnalyse({ relicDir });
+  });
+
+program
+  .command("tasks")
+  .description("Generate tasks from the current plan")
+  .option("--spec <id>", "Spec ID")
+  .action(async () => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runTasks({ relicDir });
+  });
+
+program
+  .command("implement")
+  .description("Build the plan")
+  .option("--spec <id>", "Spec ID")
+  .action(async () => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runImplement({ relicDir });
   });
 
 program

@@ -1,14 +1,11 @@
 import { join } from "path";
 import { readdirSync, statSync } from "fs";
 import { fileExists, dirExists } from "@relic/utility";
-import { runModel } from "../core/model-runner.ts";
 
 export interface ScanOptions {
   projectDir: string;
   relicDir: string;
   json: boolean;
-  manifest?: boolean;
-  noStream?: boolean;
 }
 
 interface KeyFile {
@@ -210,7 +207,9 @@ function listArtifacts(relicDir: string, subdir: string): string[] {
   }
 }
 
-function buildManifest(projectDir: string, relicDir: string): Manifest {
+export async function runScan(options: ScanOptions): Promise<void> {
+  const { projectDir, relicDir, json } = options;
+
   const techStack = detectStack(projectDir);
   const keyFiles = findKeyFiles(projectDir);
   const { tree, totalFiles } = buildFileTree(projectDir);
@@ -222,7 +221,7 @@ function buildManifest(projectDir: string, relicDir: string): Manifest {
     assumptions: listArtifacts(relicDir, "assumptions"),
   };
 
-  return {
+  const manifest: Manifest = {
     project_dir: projectDir,
     relic_dir: relicDir,
     tech_stack: techStack,
@@ -234,69 +233,41 @@ function buildManifest(projectDir: string, relicDir: string): Manifest {
       excluded: Array.from(EXCLUDED_DIRS),
     },
   };
-}
 
-function renderManifestHuman(manifest: Manifest): string {
-  const lines: string[] = [];
-  lines.push(`Project:      ${manifest.project_dir}`);
-  lines.push(`Tech stack:   ${manifest.tech_stack.length > 0 ? manifest.tech_stack.join(", ") : "(none detected)"}`);
-  lines.push("");
-
-  if (manifest.key_files.length > 0) {
-    lines.push("Key files:");
-    for (const f of manifest.key_files) {
-      lines.push(`  [${f.role}] ${f.path}`);
-    }
-    lines.push("");
-  }
-
-  const totalArtifacts =
-    manifest.existing_artifacts.domains.length +
-    manifest.existing_artifacts.contracts.length +
-    manifest.existing_artifacts.rules.length +
-    manifest.existing_artifacts.assumptions.length;
-
-  lines.push(`Existing artifacts: ${totalArtifacts}`);
-  if (totalArtifacts > 0) {
-    for (const [type, list] of Object.entries(manifest.existing_artifacts)) {
-      for (const a of list) lines.push(`  [${type}] ${a}`);
-    }
-    lines.push("");
-  }
-
-  lines.push(`File tree (${manifest.stats.total_files} files):`);
-  lines.push(manifest.file_tree);
-  lines.push("");
-
-  return lines.join("\n");
-}
-
-export async function runScan(options: ScanOptions): Promise<void> {
-  const { projectDir, relicDir, json, manifest: manifestFlag = false, noStream } = options;
-
-  // Backward compat: --json alone implies --manifest --json
-  const showManifest = manifestFlag || (!manifestFlag && json);
-
-  if (showManifest) {
-    const manifest = buildManifest(projectDir, relicDir);
-    if (json) {
-      console.log(JSON.stringify(manifest, null, 2));
-      return;
-    }
-    // Human-readable manifest output
-    process.stdout.write(renderManifestHuman(manifest));
-    console.log("Next step: run /relic.scan inside your AI agent to generate shared artifacts.");
+  if (json) {
+    console.log(JSON.stringify(manifest, null, 2));
     return;
   }
 
-  // AI workflow: build manifest, pass as context to model
-  const manifest = buildManifest(projectDir, relicDir);
-  const manifestString = renderManifestHuman(manifest);
+  // Human-readable output
+  console.log(`Project:      ${projectDir}`);
+  console.log(`Tech stack:   ${techStack.length > 0 ? techStack.join(", ") : "(none detected)"}`);
+  console.log("");
 
-  await runModel({
-    command: "scan",
-    userMessage: manifestString,
-    relicDir,
-    noStream,
-  });
+  if (keyFiles.length > 0) {
+    console.log("Key files:");
+    for (const f of keyFiles) {
+      console.log(`  [${f.role}] ${f.path}`);
+    }
+    console.log("");
+  }
+
+  const totalArtifacts =
+    existingArtifacts.domains.length +
+    existingArtifacts.contracts.length +
+    existingArtifacts.rules.length +
+    existingArtifacts.assumptions.length;
+
+  console.log(`Existing artifacts: ${totalArtifacts}`);
+  if (totalArtifacts > 0) {
+    for (const [type, list] of Object.entries(existingArtifacts)) {
+      for (const a of list) console.log(`  [${type}] ${a}`);
+    }
+    console.log("");
+  }
+
+  console.log(`File tree (${totalFiles} files):`);
+  console.log(tree);
+  console.log("");
+  console.log("Next step: run /relic.scan inside your AI agent to generate shared artifacts.");
 }
