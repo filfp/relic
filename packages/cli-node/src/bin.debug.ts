@@ -20,6 +20,7 @@ import {
   runToonMigrate,
   runUpgrade,
   runWrite,
+  runAsk,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -144,6 +145,18 @@ program
       process.exit(1);
     }
     await runTasks({ relicDir });
+  });
+
+program
+  .command("ask")
+  .description("Query the shared knowledge layer (read-only)")
+  .action(async () => {
+    const relicDir = findRelicDir(process.cwd());
+    if (!relicDir) {
+      console.error("Not in a Relic project. Run: relic init");
+      process.exit(1);
+    }
+    await runAsk({ relicDir });
   });
 
 program

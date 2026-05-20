@@ -5,3 +5,4 @@ Fix Solve Workflow | 003-fix-solve-workflow/ | workflow, fix, solve, session, au
 CLI Self Upgrade | 004-cli-self-upgrade/ | upgrade, distribution, npm, pypi, binary, engines, cli | relic upgrade command to detect install channel, check for updates, upgrade binary, and refresh hooks.
 Toon Manifest Format | 005-toon-manifest-format/ | format, manifest, toon, token-efficiency, search, llm | Compact line-oriented text format for manifest indexes reducing token overhead for LLM consumption.
 Structured Write Command | 006-structured-write-command/ | write, command, structured, changelog, index, validation | relic write command to standardize all index and changelog mutations via JSON payloads.
+Ask Knowledge Query | 007-ask-knowledge-query/ | ask query search read-only knowledge terminal non-destructive slash-command | Read-only /relic.ask command that queries the shared knowledge layer and answers questions in the terminal without creating or modifying any file.
