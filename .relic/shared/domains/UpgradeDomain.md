@@ -23,16 +23,21 @@ knowledge is never modified during an upgrade.
   - `pypi`: `uv tool upgrade relic-cli` (fallback: `pip install --upgrade relic-cli`)
 
 - **Engine hook refresh** — re-writes AI agent hook files using the new binary's embedded
-  templates. Engines are read from `.relic/engines.json` (see below). Reuses `@relic/engines`
+  templates. Engines are read from `.relic/config.json` (see below) via `readEngines()`. Reuses `@relic/engines`
   write logic exactly as `relic add-engine` does.
 
-- **`.relic/engines.json`** — a committed JSON array recording which engines were
-  registered via `relic init --engine` or `relic add-engine`. Written/updated by both
-  commands. Schema: `["claude", "copilot", "codex"]` (array of engine name strings,
-  no duplicates). Must not be confused with personal session state — it is committed
-  so the whole team knows which engines are configured.
-  Example: `["claude", "copilot"]`
-  Absent in projects predating this spec — upgrade warns and skips hook refresh.
+- **`.relic/config.json`** — a committed JSON object recording project configuration,
+  including which engines were registered via `relic init --engine` or `relic add-engine`.
+  Written/updated by both commands. Shape: `{ "engines": ["claude", "copilot"], "mode": "md" }`.
+  - `engines`: array of engine name strings, no duplicates — replaces the former `engines.json` array.
+  - `mode`: scaffold output mode — `"md"` (default) or `"html"`. See `ProjectConfigDomain.md`.
+  Access functions: `readEngines(relicDir)`, `writeEngines(relicDir, engines)`, `readMode(relicDir)`.
+  Implemented in `packages/utility/src/project-config.ts` (replaces `engines-registry.ts`).
+  Auto-migration: if `.relic/engines.json` exists and `.relic/config.json` does not, any read
+  silently migrates — reads the array, writes `config.json`, removes `engines.json`.
+  Must not be confused with personal session state — it is committed so the whole team knows
+  which engines and mode are configured.
+  Absent in projects predating spec 008 (or projects that have not yet run `relic init`) — upgrade warns and skips hook refresh.
 
 - **Version check** — fetches the channel-specific registry endpoint for the latest version:
   - `npm`: `https://registry.npmjs.org/relic-cli/latest` → `.version`
@@ -65,15 +70,16 @@ The following are immutable from the upgrade command's perspective:
 
 ## Engine Registry
 
-`.relic/engines.json` is the source of truth for which engines are active in a project.
+`.relic/config.json` is the source of truth for which engines are active in a project.
 
 | Rule | Detail |
 |---|---|
 | Written by | `relic init --engine <name>` and `relic add-engine <name>` |
-| Format | JSON array of strings: `["claude", "copilot"]` |
+| Format | `{ "engines": ["claude", "copilot"], "mode": "md" }` |
 | Committed | Yes — team-shared state, not gitignored |
 | Idempotent | Adding the same engine twice must not produce duplicates |
 | Missing | Upgrade warns and skips hook refresh; `--check` and binary upgrade unaffected |
+| Migration | If only `engines.json` exists, it is auto-migrated to `config.json` on first read |
 
 ## Upgrade Flags
 

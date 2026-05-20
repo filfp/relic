@@ -97,3 +97,25 @@ Do not open or edit `specs/manifest.toon` directly.
 - `artifacts.json` is populated with correct `owns`, `reads`, `touches_files`.
 - New spec entry written via `relic write --specs` (confirmed by JSON output).
 - Any intersection concerns are flagged in Open Questions.
+
+---
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `<spec-id>.html` in the spec directory.
+3. Update it with enriched content reflecting the work done in this session:
+   - Use `<relic-status>` to show the spec's current status.
+   - Use `<relic-table>` for the requirements or shared artifact lists.
+   - Use `<relic-callout>` to highlight scope boundaries or key decisions.
+   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+4. Write the updated `<spec-id>.html` back.
+
+If `mode` is `"md"`, skip this step entirely.

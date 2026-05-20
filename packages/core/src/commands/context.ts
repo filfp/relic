@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { join } from "path";
-import { findRelicDir, fileExists, dirExists, readJson, readSession } from "@relic/utility";
+import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode } from "@relic/utility";
 import { inferSpecFromBranch, availableSpecs } from "@relic/utility";
 import type { ArtifactsJson } from "../types.ts";
 
@@ -22,6 +22,7 @@ interface ContextResult {
   active_spec_source: "arg" | "env" | "session" | "git-branch";
   spec_dir: string;
   current_fix: string | null;
+  mode: "md" | "html";
   files: {
     preamble: boolean;
     constitution: boolean;
@@ -110,6 +111,7 @@ export async function runContext(options: ContextOptions): Promise<void> {
     active_spec_source: source,
     spec_dir: specDir,
     current_fix: currentFix,
+    mode: readMode(relicDir),
     files: {
       preamble: fileExists(join(relicDir, "preamble.md")),
       constitution: fileExists(join(relicDir, "constitution.md")),
@@ -125,6 +127,7 @@ export async function runContext(options: ContextOptions): Promise<void> {
   if (options.text) {
     console.log(`Spec:    ${specId}  (resolved from: ${source})`);
     console.log(`Fix:     ${currentFix ?? "(none)"}`);
+    console.log(`Mode:    ${result.mode}`);
     console.log(`Dir:     ${specDir}`);
     console.log(`Relic:   ${relicDir}`);
     console.log("");

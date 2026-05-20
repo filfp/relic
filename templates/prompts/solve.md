@@ -105,3 +105,27 @@ Output:
 2. **Knowledge layer updates** — spec/plan/shared artifact changes made (or "none")
 3. **Changelog entry** — the entry written to `changelog.md` (or "none — no cross-artifact mutation")
 4. **Follow-up required** — list of specs needing `/relic.clarify` (or "none")
+
+---
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `.relic/fixes/<current_fix>.html`.
+3. Update it to reflect the solved state:
+   - Replace `<relic-status value="pending">` with `<relic-status value="done">solved</relic-status>`.
+   - Mark proposed changes as applied in the flow diagram or affected files table.
+   - Add a "Resolved" section with a brief note on what was changed.
+4. Write the updated `.relic/fixes/<current_fix>.html` back.
+5. Do **not** modify `<current_fix>.md` — it does not exist in html mode.
+
+If `mode` is `"md"`:
+- Set `Status: solved` in `.relic/fixes/<current_fix>.md` as described in Step 7 above.
+- Do not create or modify any `.html` file.

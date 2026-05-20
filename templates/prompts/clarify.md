@@ -51,3 +51,25 @@ relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_co
 ```
 
 Do not open or edit `changelog.md` directly.
+
+---
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `<spec-id>.html` in the spec directory.
+3. Update it with enriched content reflecting the clarifications applied in this session:
+   - Update requirements sections with changed or new requirements.
+   - Use `<relic-callout type="info">` for resolved open questions.
+   - Use `<relic-callout type="warn">` for newly introduced constraints or risks.
+   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+4. Write the updated `<spec-id>.html` back.
+
+If `mode` is `"md"`, skip this step entirely.

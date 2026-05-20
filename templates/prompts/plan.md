@@ -70,3 +70,25 @@ Do not open or edit `changelog.md` directly.
 - Do not write a plan that claims ownership of an artifact already owned by another spec.
 - Do not skip the intersection check.
 - Do not write code.
+
+---
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `<spec-id>.html` in the spec directory.
+3. Update the Plan section with enriched content from this planning session:
+   - Use `<relic-flow>` to render the architecture or implementation phase dependency graph.
+   - Use `<relic-table>` for the file changes table.
+   - Use `<relic-callout type="warn">` for intersection notes or cross-spec mutation warnings.
+   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+4. Write the updated `<spec-id>.html` back.
+
+If `mode` is `"md"`, skip this step entirely.

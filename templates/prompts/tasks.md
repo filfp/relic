@@ -39,3 +39,24 @@ Fill in `specs/{{SPEC_ID}}/tasks.md`:
 
 - Do not write code.
 - Do not modify `plan.md` — if the plan is wrong, run `/relic.plan` again.
+
+---
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Read `<spec-id>.html` in the spec directory.
+3. Update the Tasks section with the task list from this session:
+   - Use `<relic-progress>` for per-phase task completion ratios.
+   - Use `<relic-table>` for the full task list with IDs and descriptions.
+   - Do not mechanically transcribe the Markdown — synthesise and enrich.
+4. Write the updated `<spec-id>.html` back.
+
+If `mode` is `"md"`, skip this step entirely.

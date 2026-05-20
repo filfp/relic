@@ -63,8 +63,8 @@ describe("FR-4: dev channel", () => {
   });
 });
 
-describe("FR-14: missing engines.json", () => {
-  test("--prompts emits FR-14 warning when engines.json is absent", async () => {
+describe("FR-14: missing config.json engines", () => {
+  test("--prompts emits warning when config.json has no engines", async () => {
     await runUpgrade({
       check: false,
       promptsOnly: true,
@@ -75,10 +75,10 @@ describe("FR-14: missing engines.json", () => {
     });
     const result = JSON.parse(output[0]!);
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0]).toContain("engines.json");
+    expect(result.warnings[0]).toContain("config.json");
   });
 
-  test("--prompts does not throw when engines.json is absent", async () => {
+  test("--prompts does not throw when config.json has no engines", async () => {
     await expect(
       runUpgrade({
         check: false,
@@ -91,7 +91,7 @@ describe("FR-14: missing engines.json", () => {
     ).resolves.toBeUndefined();
   });
 
-  test("--prompts does not call runAddEngine when engines.json is absent", async () => {
+  test("--prompts does not call runAddEngine when config.json has no engines", async () => {
     await runUpgrade({
       check: false,
       promptsOnly: true,
@@ -181,9 +181,9 @@ describe("--check", () => {
   });
 });
 
-describe("--prompts with populated engines.json", () => {
+describe("--prompts with populated config.json", () => {
   test("calls runAddEngine for each registered engine", async () => {
-    writeFileSync(join(relicDir, "engines.json"), JSON.stringify(["claude", "copilot"]));
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: ["claude", "copilot"], mode: "md" }));
     await runUpgrade({
       check: false,
       promptsOnly: true,
@@ -202,7 +202,7 @@ describe("--prompts with populated engines.json", () => {
   });
 
   test("hooks_refreshed lists all registered engines", async () => {
-    writeFileSync(join(relicDir, "engines.json"), JSON.stringify(["claude", "copilot"]));
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: ["claude", "copilot"], mode: "md" }));
     await runUpgrade({
       check: false,
       promptsOnly: true,
@@ -216,8 +216,8 @@ describe("--prompts with populated engines.json", () => {
     expect(result.warnings).toEqual([]);
   });
 
-  test("unknown engine in engines.json emits warning and skips runAddEngine", async () => {
-    writeFileSync(join(relicDir, "engines.json"), JSON.stringify(["claude", "unknown-bot"]));
+  test("unknown engine in config.json emits warning and skips runAddEngine", async () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: ["claude", "unknown-bot"], mode: "md" }));
     await runUpgrade({
       check: false,
       promptsOnly: true,
@@ -233,7 +233,7 @@ describe("--prompts with populated engines.json", () => {
     expect(runAddEngineMock).toHaveBeenCalledTimes(1);
   });
 
-  test("--prompts with missing engines.json: warnings contain engines.json message, hooks_refreshed is empty", async () => {
+  test("--prompts with empty config.json engines: warnings contain config.json message, hooks_refreshed is empty", async () => {
     await runUpgrade({
       check: false,
       promptsOnly: true,
@@ -244,7 +244,7 @@ describe("--prompts with populated engines.json", () => {
     });
     const result = JSON.parse(output[0]!);
     expect(result.hooks_refreshed).toEqual([]);
-    expect(result.warnings.some((w: string) => w.includes("engines.json"))).toBe(true);
+    expect(result.warnings.some((w: string) => w.includes("config.json"))).toBe(true);
   });
 });
 
