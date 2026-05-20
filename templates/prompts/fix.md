@@ -135,3 +135,29 @@ Output:
 4. **Next step:** *"Review the fix document, then run `/relic.solve` to apply the changes. If the
    classification is `misspecification` or `misunderstanding`, run `/relic.clarify` after solving
    to update the spec."*
+
+---
+
+## HTML Step (conditional)
+
+Run:
+```bash
+relic context
+```
+
+If `mode` is `"html"`:
+
+The fix document is `<fix-id>.html` in `.relic/fixes/` — **not** `<fix-id>.md`. There is exactly one file per fix; format is determined by mode at creation time.
+
+1. Read `.relic/base.html` and note the `<!-- RELIC COMPONENTS -->` inventory.
+2. Instead of writing `<fix-id>.md`, create `<fix-id>.html` in `.relic/fixes/` with the following structure (all fields from `FixDocumentContract` expressed via components):
+   - `<relic-status value="pending">pending</relic-status>` — fix status badge
+   - Owning spec and date as metadata
+   - **Issue** — prose description
+   - **Root Cause** — `<relic-callout type="info">` with classification badge (`code-bug` / `misspecification` / `misunderstanding` / `wrong-spec`) and explanation
+   - **Proposed Changes** — `<relic-flow>` for code-change flow; `<relic-table>` for affected files
+   - **Spec / shared artifact amendments** — `<relic-callout>` per amendment (if any)
+   - **Changelog entry (draft)** — verbatim `<pre>` code block
+3. The HTML file is the single source of truth for this fix when mode=html. Do not create `<fix-id>.md`.
+
+If `mode` is `"md"`, create `<fix-id>.md` per `FixDocumentContract.md` as described in the steps above — no HTML file.

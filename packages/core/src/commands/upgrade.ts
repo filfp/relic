@@ -1,7 +1,7 @@
 import { spawnSync } from "child_process";
 import { join } from "path";
 import {
-  readEnginesRegistry,
+  readEngines,
   readText,
   writeText,
   fileExists,
@@ -162,11 +162,11 @@ async function refreshHooks(
   projectDir: string,
   result: UpgradeResult
 ): Promise<void> {
-  const engines = readEnginesRegistry(relicDir);
+  const engines = readEngines(relicDir);
 
   if (engines.length === 0) {
     result.warnings.push(
-      "Warning: .relic/engines.json not found or empty. " +
+      "Warning: .relic/config.json has no registered engines. " +
         "Run `relic add-engine <engine>` to register your engines, then re-run upgrade."
     );
     return;
@@ -175,7 +175,7 @@ async function refreshHooks(
   for (const engine of engines) {
     if (!(SUPPORTED_ENGINES as string[]).includes(engine)) {
       result.warnings.push(
-        `Warning: unknown engine "${engine}" in engines.json — skipping. ` +
+        `Warning: unknown engine "${engine}" in config.json — skipping. ` +
           `Supported engines: ${SUPPORTED_ENGINES.join(", ")}`
       );
       continue;

@@ -1,5 +1,5 @@
 import { join } from "path";
-import { dirExists, ensureDir, writeText, writeJson, writeEnginesRegistry } from "@relic/utility";
+import { dirExists, ensureDir, writeText, writeJson, writeEngines } from "@relic/utility";
 import { TEMPLATES } from "../generated/templates.ts";
 import { runAddEngine, type Engine } from "@relic/engines";
 
@@ -76,8 +76,8 @@ export async function runInit(options: InitOptions): Promise<void> {
   }
 
   if (options.engines.length > 0) {
-    writeEnginesRegistry(relicDir, options.engines.map(String));
-    console.log(`  .relic/engines.json  (registered engines: ${options.engines.join(", ")})`);
+    writeEngines(relicDir, options.engines.map(String));
+    console.log(`  .relic/config.json  (registered engines: ${options.engines.join(", ")})`);
   }
 
   console.log("");

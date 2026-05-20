@@ -14,6 +14,8 @@ The JSON output of `relic context`. Used by AI agents to determine which spec is
   "spec_id": "001-auth",
   "active_spec_source": "arg|env|session|git-branch",
   "spec_dir": "<absolute path>",
+  "current_fix": "2026-04-13-null-session-crash",
+  "mode": "md",
   "files": {
     "preamble": true,
     "constitution": true,
@@ -25,15 +27,15 @@ The JSON output of `relic context`. Used by AI agents to determine which spec is
   },
   "shared_artifacts": [
     { "path": "shared/domains/UserAuth.md", "role": "owns|reads", "exists": true }
-  ],
-  "current_fix": "2026-04-13-null-session-crash"
+  ]
 }
 ```
 
 `current_fix` is `null` when no fix is active; the fix ID string when `session.fix` is set
 in `.relic/session.json`. `active_spec_source` reports `session` when the spec was resolved
-from `session.json`. AI commands use these fields to detect fix/spec context and switch
-behaviour accordingly.
+from `session.json`. `mode` is `"md"` or `"html"` read from `.relic/config.json` (defaults
+to `"md"` if config is absent). AI commands use these fields to detect fix/spec context,
+switch behaviour accordingly, and determine whether the HTML step is active.
 
 ## Consumers
 - All AI workflow commands (`/relic.specify`, `/relic.plan`, `/relic.fix`, etc.) — call `relic context` first to orient themselves

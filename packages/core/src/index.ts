@@ -23,6 +23,8 @@ export { runWrite } from "./commands/write.ts";
 export type { WriteOptions, WriteResult, WriteTarget } from "./commands/write.ts";
 export { runAsk } from "./commands/ask.ts";
 export type { AskOptions } from "./commands/ask.ts";
+export { runMode } from "./commands/mode.ts";
+export type { ModeOptions } from "./commands/mode.ts";
 export { loadRegistry, buildOwnershipMap } from "./core/artifact-registry.ts";
 export { detectIntersections, formatIntersectionReport } from "./core/intersection.ts";
 export { appendChangelog, filterChangelog, appendChangelogEntry } from "./core/changelog.ts";

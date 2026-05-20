@@ -6,3 +6,4 @@ DistributionDomain | DistributionDomain.md | distribution npm pypi publish versi
 TemplateDomain | TemplateDomain.md | template embed scaffold prompt engine init | Build-time template embedding; runtime template access via the TEMPLATES map.
 FixDomain | FixDomain.md | fix solve diagnosis session-fix session ownership cross-spec | Two-stage fix pipeline: /relic.fix diagnoses and proposes; /relic.solve applies after human review.
 UpgradeDomain | UpgradeDomain.md | upgrade install npm pypi channel engine hooks version refresh | Self-upgrade lifecycle: install channel detection, version check, binary upgrade, and engine hook refresh without touching project knowledge.
+ProjectConfigDomain | ProjectConfigDomain.md | config engines mode html scaffold project-config | Per-project config.json — replaces engines.json, adds mode field for md/html scaffold output, and governs base.html lifecycle.

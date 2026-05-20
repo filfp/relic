@@ -9,6 +9,7 @@ import {
   writeJson,
   readSession,
   writeSession,
+  readMode,
 } from "@relic/utility";
 import {
   nextSpecId,
@@ -123,6 +124,16 @@ export async function runScaffold(options: ScaffoldOptions): Promise<void> {
   if (!fileExists(artifactsPath)) {
     writeJson(artifactsPath, { owns: [], reads: [], touches_files: [] });
     filesCreated.push("artifacts.json");
+  }
+
+  // In html mode, create <spec-id>.html from base.html template if absent
+  if (readMode(relicDir) === "html") {
+    const htmlDest = join(specDir, `${specId}.html`);
+    if (!fileExists(htmlDest)) {
+      const raw = TEMPLATES["base.html"] ?? "";
+      writeText(htmlDest, applyTemplate(raw, specId, title, date));
+      filesCreated.push(`${specId}.html`);
+    }
   }
 
   // Update session.json with active spec

@@ -1,0 +1,34 @@
+{
+  "owns": [
+    "shared/domains/ProjectConfigDomain.md",
+    "shared/contracts/ScaffoldResultContract.md",
+    "shared/contracts/HtmlComponentContract.md"
+  ],
+  "reads": [
+    "shared/domains/UpgradeDomain.md",
+    "shared/domains/TemplateDomain.md",
+    "shared/contracts/FixDocumentContract.md"
+  ],
+  "touches_files": [
+    "packages/utility/src/project-config.ts",
+    "packages/utility/src/engines-registry.ts",
+    "packages/utility/src/index.ts",
+    "packages/core/src/commands/init.ts",
+    "packages/core/src/commands/scaffold.ts",
+    "packages/core/src/commands/context.ts",
+    "packages/core/src/commands/mode.ts",
+    "packages/core/src/commands/upgrade.ts",
+    "packages/core/src/index.ts",
+    "packages/cli-node/src/bin.ts",
+    "packages/cli-node/src/bin.debug.ts",
+    "templates/base.html",
+    "templates/prompts/specify.md",
+    "templates/prompts/clarify.md",
+    "templates/prompts/plan.md",
+    "templates/prompts/tasks.md",
+    "templates/prompts/implement.md",
+    "templates/prompts/fix.md",
+    "templates/prompts/solve.md",
+    "scripts/embed-templates.ts"
+  ]
+}

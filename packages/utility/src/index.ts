@@ -21,7 +21,15 @@ export {
 export type { SessionState } from "./session.ts";
 export { readSession, writeSession } from "./session.ts";
 
-export { readEnginesRegistry, writeEnginesRegistry } from "./engines-registry.ts";
+export type { ProjectConfig } from "./project-config.ts";
+export {
+  readProjectConfig,
+  writeProjectConfig,
+  readEngines,
+  writeEngines,
+  readMode,
+  writeMode,
+} from "./project-config.ts";
 
 export { fetchWithTimeout } from "./fetch.ts";
 
