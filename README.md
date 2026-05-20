@@ -188,4 +188,4 @@ relic init → /relic.scan → /relic.constitution → /relic.specify
 
 ## Repository
 
-[github.com/filipefpaulo/relic](https://github.com/filipefpaulo/relic)
+[github.com/filfp/relic](https://github.com/filfp/relic)

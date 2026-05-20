@@ -20,8 +20,8 @@ classifiers = [
 relic = "relic.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/filipefpaulo/relic"
-Repository = "https://github.com/filipefpaulo/relic"
+Homepage = "https://github.com/filfp/relic"
+Repository = "https://github.com/filfp/relic"
 
 [tool.hatch.build.targets.wheel]
 packages = ["relic"]

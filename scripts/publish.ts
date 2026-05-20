@@ -76,4 +76,4 @@ console.log(`Next:`);
 console.log(`  1. Open a PR and ensure doc-guard passes (CHANGELOG.md must have a ## [${version}] entry)`);
 console.log(`  2. Merge the PR — the ${tag} tag is created automatically on merge to main`);
 console.log(`  3. The tag push triggers CI to publish to: ${repository ?? "npm + pypi"}`);
-console.log(`  https://github.com/filipefpaulo/relic/pull/new/${releaseBranch}`);
+console.log(`  https://github.com/filfp/relic/pull/new/${releaseBranch}`);

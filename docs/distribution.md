@@ -147,7 +147,7 @@ Windows binaries are cross-compiled on `ubuntu-latest` (no signing needed).
 
 The PyPI project is configured with a GitHub OIDC trusted publisher (no API token needed):
 - Project: `relic-cli`
-- Owner: `filipefpaulo`
+- Owner: `filfp`
 - Repository: `relic`
 - Workflow: `publish-pypi.yml`
 

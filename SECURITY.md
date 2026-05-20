@@ -14,7 +14,7 @@ Only the latest published version of `relic-cli` receives security fixes.
 Please **do not** open a public GitHub issue for security vulnerabilities.
 
 Report privately via GitHub's built-in mechanism:
-**[Report a vulnerability](https://github.com/filipefpaulo/relic/security/advisories/new)**
+**[Report a vulnerability](https://github.com/filfp/relic/security/advisories/new)**
 
 Include:
 - A description of the vulnerability and its potential impact
