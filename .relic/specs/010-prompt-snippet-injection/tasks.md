@@ -7,7 +7,7 @@
 
 ## Notes
 
-**Plan divergence:** `plan.md` was written before the 010/011 spec split. Phase 2 (skill files) and Phase 5 (Claude engine skill write loop) in `plan.md` are now **out of scope for 010** — they belong to `011-skill-extraction`. Tasks below reflect 010's actual scope only.
+**Plan divergence:** `plan.md` was renumbered after the 010/011 spec split removed Phases 2 (skill files) and 5 (Claude engine write loop), which now belong to `011-skill-extraction`. Tasks below reflect 010's actual scope only; phase numbers here match the renumbered plan (Phases 1–5).
 
 **Template overlap with 011:** Both specs modify `templates/prompts/*.md` and `scripts/embed-engine-templates.ts`. 010's changes must land first:
 - 010 adds `<!-- include: relic snippet ... -->` directives (static block replacements)
@@ -28,7 +28,7 @@
 
 ---
 
-## Phase 3 — embed-engine-templates.ts Extension (SNIPPETS only)
+## Phase 2 — embed-engine-templates.ts Extension (SNIPPETS only)
 
 *Add SNIPPETS registry bake. Skill entries in ENGINE_TEMPLATES are out of scope (see 011).*
 
@@ -37,7 +37,7 @@
 
 ---
 
-## Phase 4 — relic snippet Command
+## Phase 3 — relic snippet Command
 
 *New CLI command and supporting module. ≤ 30 lines of resolution logic (NFR-2).*
 
@@ -49,7 +49,7 @@
 
 ---
 
-## Phase 6 — Template Updates (snippet directives only)
+## Phase 4 — Template Updates (snippet directives only)
 
 *Replace static repeated blocks with `<!-- include: relic snippet <name> -->` directives. Do NOT add `<!-- use: relic.* -->` skill directives — that is 011's job.*
 
@@ -68,7 +68,7 @@
 
 ---
 
-## Phase 7 — Build + Verify
+## Phase 5 — Build + Verify
 
 - [ ] **T-22** Run `bun run build:templates` — confirm `packages/engines/src/generated/engine-templates.ts` regenerates cleanly
 - [ ] **T-23** Verify `export const SNIPPETS` block appears in `engine-templates.ts` with all 4 snippet keys

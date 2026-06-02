@@ -610,12 +610,11 @@ The principle for this spec: **static text → snippets.**
 
 | Block | Current state | Track | Rationale |
 |---|---|---|---|
-| Preamble guard (2-line blockquote) | Verbatim in 6 templates | **Snippet** | Pure static text, no decision logic |
-| Preamble guard extended (fix.md) | Verbatim in 1 template | **Snippet** | Same — slightly different static text |
-| "Read `.relic/constitution.md`" instruction | Verbatim in 5 templates | **Snippet** | 1-line static instruction |
-| HTML mode check + outer step skeleton | Verbatim in 5 templates | **Snippet** | Static structural instructions |
-| HTML anti-transcription common rules | Verbatim in 5 templates | **Snippet** | Static rules |
-| HTML inline reader source blocks | Verbatim in 5 templates | **Snippet** | Static population instructions |
+| Preamble guard (both variants) | Verbatim in 7 templates | **Snippet → `preamble-guard.md`** | Consolidated by FR-17 into one universal variant |
+| "Read `.relic/constitution.md`" instruction | Verbatim in 5 templates | **Snippet → `constitution-load.md`** | 1-line static instruction |
+| HTML mode check + outer step skeleton | Verbatim in 5 templates | **Not extracted** | Wrapper stays verbatim in templates; only inner content blocks become snippets |
+| HTML anti-transcription common rules | Verbatim in 5 templates | **Snippet → `html-anti-transcription-common.md`** | Static rules |
+| HTML inline reader source blocks | Verbatim in 5 templates | **Snippet → `html-inline-reader.md`** | Static population instructions |
 
 ---
 
@@ -623,13 +622,12 @@ The principle for this spec: **static text → snippets.**
 
 | Snippet file | Content | Lines saved |
 |---|---|---|
-| `preamble-guard.md` | Standard preamble blockquote | 2 lines × 6 templates = 12 |
-| `preamble-guard-extended.md` | Extended version (fix.md only) | 4 lines × 1 template = 4 |
+| `preamble-guard.md` | 4-line extended preamble (universal — consolidated from both 2-line and 4-line variants via FR-17) | 4 lines × 7 templates = 28 |
 | `constitution-load.md` | "Read `.relic/constitution.md`" instruction | 1 line × 5 templates = 5 |
-| `html-inline-reader.md` | Source block population instructions | ~8 lines × 5 templates = 40 |
 | `html-anti-transcription-common.md` | 3 universal anti-transcription rules | 3 lines × 5 templates = 15 |
+| `html-inline-reader.md` | Source block population instructions | ~8 lines × 5 templates = 40 |
 
-~76 lines of duplication eliminated. Each change to these blocks touches 1 file instead of up to 6.
+~88 lines of duplication eliminated. Each change to these blocks touches 1 file instead of up to 7.
 
 ---
 
@@ -905,7 +903,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 ## Notes
 
-**Plan divergence:** `plan.md` was written before the 010/011 spec split. Phase 2 (skill files) and Phase 5 (Claude engine skill write loop) in `plan.md` are now **out of scope for 010** — they belong to `011-skill-extraction`. Tasks below reflect 010's actual scope only.
+**Plan divergence:** `plan.md` was renumbered after the 010/011 spec split removed Phases 2 (skill files) and 5 (Claude engine write loop), which now belong to `011-skill-extraction`. Tasks below reflect 010's actual scope only; phase numbers here match the renumbered plan (Phases 1–5).
 
 **Template overlap with 011:** Both specs modify `templates/prompts/*.md` and `scripts/embed-engine-templates.ts`. 010's changes must land first:
 - 010 adds `<!-- include: relic snippet ... -->` directives (static block replacements)
@@ -926,7 +924,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 ---
 
-## Phase 3 — embed-engine-templates.ts Extension (SNIPPETS only)
+## Phase 2 — embed-engine-templates.ts Extension (SNIPPETS only)
 
 *Add SNIPPETS registry bake. Skill entries in ENGINE_TEMPLATES are out of scope (see 011).*
 
@@ -935,7 +933,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 ---
 
-## Phase 4 — relic snippet Command
+## Phase 3 — relic snippet Command
 
 *New CLI command and supporting module. ≤ 30 lines of resolution logic (NFR-2).*
 
@@ -947,7 +945,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 ---
 
-## Phase 6 — Template Updates (snippet directives only)
+## Phase 4 — Template Updates (snippet directives only)
 
 *Replace static repeated blocks with `<!-- include: relic snippet <name> -->` directives. Do NOT add `<!-- use: relic.* -->` skill directives — that is 011's job.*
 
@@ -966,7 +964,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 ---
 
-## Phase 7 — Build + Verify
+## Phase 5 — Build + Verify
 
 - [ ] **T-22** Run `bun run build:templates` — confirm `packages/engines/src/generated/engine-templates.ts` regenerates cleanly
 - [ ] **T-23** Verify `export const SNIPPETS` block appears in `engine-templates.ts` with all 4 snippet keys
@@ -1020,18 +1018,17 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 <section>
   <h2>Snippet Set</h2>
-  <relic-callout type="info">4–5 snippet files (exact count after FR-17 consolidation audit). Each change touches 1 file instead of up to 6.</relic-callout>
+  <relic-callout type="success">4 snippet files after FR-17 consolidation. Each change touches 1 file instead of up to 7.</relic-callout>
   <relic-table
-    headers='["Snippet file","Content","Lines saved","Consolidation?"]'
+    headers='["Snippet file","Content","Lines saved"]'
     rows='[
-      ["<code>preamble-guard.md</code>","Standard preamble blockquote","2 × 6 = 12","<relic-chip color=\"amber\">audit: merge candidate</relic-chip>"],
-      ["<code>preamble-guard-extended.md</code>","Extended version (fix.md only)","4 × 1 = 4","<relic-chip color=\"amber\">audit: merge candidate</relic-chip>"],
-      ["<code>constitution-load.md</code>","&ldquo;Read .relic/constitution.md&rdquo; instruction","1 × 5 = 5",""],
-      ["<code>html-inline-reader.md</code>","Source block population instructions","~8 × 5 = 40",""],
-      ["<code>html-anti-transcription-common.md</code>","3 universal anti-transcription rules","3 × 5 = 15",""]
+      ["<code>preamble-guard.md</code>","4-line extended preamble (universal — consolidated from both 2-line and 4-line variants via FR-17)","4 × 7 = 28"],
+      ["<code>constitution-load.md</code>","&ldquo;Read .relic/constitution.md&rdquo; instruction","1 × 5 = 5"],
+      ["<code>html-anti-transcription-common.md</code>","3 universal anti-transcription rules","3 × 5 = 15"],
+      ["<code>html-inline-reader.md</code>","Source block population instructions","~8 × 5 = 40"]
     ]'>
   </relic-table>
-  <p class="text-muted text-sm mt-2"><strong>~76 lines</strong> of duplication eliminated. FR-17 audit may reduce to 4 files by merging the two preamble variants.</p>
+  <p class="text-muted text-sm mt-2"><strong>~88 lines</strong> of duplication eliminated.</p>
 </section>
 
 
@@ -1062,8 +1059,8 @@ No changelog entry needed for plan creation. The owned contract was created duri
   <h3>Snippet Composition</h3>
   <relic-callout type="info">Snippets may include other snippets via nested <code>&lt;!-- include: --&gt;</code> directives. Composition via inclusion only — no <code>&#123;&#123;PLACEHOLDER&#125;&#125;</code> variable substitution.</relic-callout>
 
-  <h3>Preamble Consolidation In Scope</h3>
-  <relic-callout type="info">The plan phase audit must evaluate merging <code>preamble-guard.md</code> + <code>preamble-guard-extended.md</code> into one universal preamble snippet. Light content changes are acceptable if they reduce snippet count without losing required behaviour. Fewer snippets is always better than maximum fidelity to the original template structure.</relic-callout>
+  <h3>Preamble Consolidation — Resolved</h3>
+  <relic-callout type="success">FR-17 resolved: <code>preamble-guard.md</code> and <code>preamble-guard-extended.md</code> merged into one universal 4-line preamble snippet. The extended variant (stricter language) applied universally. Snippet count reduced from 5 to 4.</relic-callout>
 
 </section>
 
@@ -1082,7 +1079,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
       ["FR-6","After extraction, every directive must produce the same effective content as the verbatim block it replaced — no behavioural changes.",""],
       ["FR-7","Snippets may include other snippets via nested <code>&lt;!-- include: --&gt;</code> directives — composition via inclusion, no variable substitution. LLM resolves depth-first. Circular references detected by <code>relic snippet</code>.","<relic-chip color=\"amber\">updated</relic-chip>"],
       ["FR-14","<code>relic snippet &lt;name&gt;</code> CLI command outputs named snippet from baked <code>SNIPPETS</code> registry. LLM calls at runtime; developers use for inspection. Unknown name → non-zero exit.","<relic-chip color=\"amber\">updated</relic-chip>"],
-      ["FR-17","Plan phase audit must evaluate consolidating <code>preamble-guard.md</code> + <code>preamble-guard-extended.md</code> into one universal snippet. Light content changes acceptable if snippet count is reduced.","<relic-chip color=\"green\">new</relic-chip>"]
+      ["FR-17","Snippet audit must consolidate <code>preamble-guard.md</code> + <code>preamble-guard-extended.md</code> into one universal snippet. <strong>Resolved:</strong> merged into single 4-line <code>preamble-guard.md</code>.","<relic-chip color=\"green\">resolved</relic-chip>"]
     ]'>
   </relic-table>
   <h3>Non-Functional <relic-chip>NFR-1 to NFR-4</relic-chip></h3>
@@ -1099,7 +1096,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 <section>
   <h2>Tasks</h2>
-  <relic-callout type="warn"><strong>Plan divergence:</strong> <code>plan.md</code> was written before the 010/011 split. Phase 2 (skill files) and Phase 5 (Claude engine skill write) are now <relic-chip color="blue">011-skill-extraction</relic-chip>. Tasks below cover 010's actual scope only.</relic-callout>
+  <relic-callout type="info"><strong>Phase numbering:</strong> <code>plan.md</code> was renumbered after the 010/011 split removed Phases 2 and 5 (now <relic-chip color="blue">011-skill-extraction</relic-chip>). Task phases here match the renumbered plan (Phases 1–5).</relic-callout>
   <relic-callout type="info"><strong>Ordering constraint:</strong> 010's <code>&lt;!-- include: --&gt;</code> replacements must land before 011 applies <code>&lt;!-- use: --&gt;</code> skill directives to the same templates.</relic-callout>
 
   <h3>Phase 1 — Snippet Files <relic-chip>0 / 4</relic-chip></h3>
@@ -1113,7 +1110,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
     ]'>
   </relic-table>
 
-  <h3>Phase 3 — embed-engine-templates.ts (SNIPPETS only) <relic-chip>0 / 2</relic-chip></h3>
+  <h3>Phase 2 — embed-engine-templates.ts (SNIPPETS only) <relic-chip>0 / 2</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[
@@ -1122,7 +1119,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
     ]'>
   </relic-table>
 
-  <h3>Phase 4 — relic snippet Command <relic-chip>0 / 3</relic-chip></h3>
+  <h3>Phase 3 — relic snippet Command <relic-chip>0 / 3</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[
@@ -1132,7 +1129,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
     ]'>
   </relic-table>
 
-  <h3>Phase 6 — Template Updates (snippet directives only) <relic-chip>0 / 12</relic-chip></h3>
+  <h3>Phase 4 — Template Updates (snippet directives only) <relic-chip>0 / 12</relic-chip></h3>
   <relic-callout type="info">Replace static repeated blocks only. Do NOT add <code>&lt;!-- use: relic.* --&gt;</code> skill directives — that is 011's job.</relic-callout>
   <relic-table
     headers='["ID","Template","Directives to add","Status"]'
@@ -1152,7 +1149,7 @@ No changelog entry needed for plan creation. The owned contract was created duri
     ]'>
   </relic-table>
 
-  <h3>Phase 7 — Build + Verify <relic-chip>0 / 6</relic-chip></h3>
+  <h3>Phase 5 — Build + Verify <relic-chip>0 / 6</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[

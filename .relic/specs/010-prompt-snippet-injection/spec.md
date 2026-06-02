@@ -22,12 +22,11 @@ The principle for this spec: **static text → snippets.**
 
 | Block | Current state | Track | Rationale |
 |---|---|---|---|
-| Preamble guard (2-line blockquote) | Verbatim in 6 templates | **Snippet** | Pure static text, no decision logic |
-| Preamble guard extended (fix.md) | Verbatim in 1 template | **Snippet** | Same — slightly different static text |
-| "Read `.relic/constitution.md`" instruction | Verbatim in 5 templates | **Snippet** | 1-line static instruction |
-| HTML mode check + outer step skeleton | Verbatim in 5 templates | **Snippet** | Static structural instructions |
-| HTML anti-transcription common rules | Verbatim in 5 templates | **Snippet** | Static rules |
-| HTML inline reader source blocks | Verbatim in 5 templates | **Snippet** | Static population instructions |
+| Preamble guard (both variants) | Verbatim in 7 templates | **Snippet → `preamble-guard.md`** | Consolidated by FR-17 into one universal variant |
+| "Read `.relic/constitution.md`" instruction | Verbatim in 5 templates | **Snippet → `constitution-load.md`** | 1-line static instruction |
+| HTML mode check + outer step skeleton | Verbatim in 5 templates | **Not extracted** | Wrapper stays verbatim in templates; only inner content blocks become snippets |
+| HTML anti-transcription common rules | Verbatim in 5 templates | **Snippet → `html-anti-transcription-common.md`** | Static rules |
+| HTML inline reader source blocks | Verbatim in 5 templates | **Snippet → `html-inline-reader.md`** | Static population instructions |
 
 ---
 
@@ -35,13 +34,12 @@ The principle for this spec: **static text → snippets.**
 
 | Snippet file | Content | Lines saved |
 |---|---|---|
-| `preamble-guard.md` | Standard preamble blockquote | 2 lines × 6 templates = 12 |
-| `preamble-guard-extended.md` | Extended version (fix.md only) | 4 lines × 1 template = 4 |
+| `preamble-guard.md` | 4-line extended preamble (universal — consolidated from both 2-line and 4-line variants via FR-17) | 4 lines × 7 templates = 28 |
 | `constitution-load.md` | "Read `.relic/constitution.md`" instruction | 1 line × 5 templates = 5 |
-| `html-inline-reader.md` | Source block population instructions | ~8 lines × 5 templates = 40 |
 | `html-anti-transcription-common.md` | 3 universal anti-transcription rules | 3 lines × 5 templates = 15 |
+| `html-inline-reader.md` | Source block population instructions | ~8 lines × 5 templates = 40 |
 
-~76 lines of duplication eliminated. Each change to these blocks touches 1 file instead of up to 6.
+~88 lines of duplication eliminated. Each change to these blocks touches 1 file instead of up to 7.
 
 ---
 

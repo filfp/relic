@@ -150,12 +150,11 @@ relic snippet unknown-name     # should exit non-zero with [snippet] Unknown sni
 
 ## Shared Artifact Changes
 
-Both owned contracts are already written and up to date. No new artifacts created. No existing artifacts modified by this plan.
+The owned contract is already written and up to date. No new artifacts created. No existing artifacts modified by this plan.
 
 | Artifact | Status |
 |---|---|
 | `shared/contracts/SnippetIncludeContract.md` | Current — written during clarify sessions |
-| `shared/contracts/SkillExtractionContract.md` | Current — written during clarify sessions |
 
 ---
 
@@ -173,4 +172,4 @@ All `touches_files` overlaps are with specs that have already been fully impleme
 
 ## Changelog Reference
 
-No changelog entry needed for plan creation. Both owned contracts were created during the clarify sessions and their changelog entries were written at that time.
+No changelog entry needed for plan creation. The owned contract was created during the clarify sessions and its changelog entry was written at that time.
