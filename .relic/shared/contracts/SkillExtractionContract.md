@@ -1,7 +1,7 @@
 # SkillExtractionContract
 
 **Type:** contract
-**Inferred from:** spec 010-prompt-snippet-injection (clarify session 2026-05-25)
+**Inferred from:** spec 010-prompt-snippet-injection (clarify session 2026-05-25); ownership transferred to spec 011-skill-extraction (clarify 2026-06-02)
 **Confidence:** high
 
 ## Description
@@ -86,4 +86,4 @@ This is a machine-readable HTML comment — invisible in rendered Markdown, reco
 
 ## Owned by
 
-010-prompt-snippet-injection
+011-skill-extraction

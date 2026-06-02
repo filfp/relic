@@ -547,3 +547,7 @@ Architecture changed from build-time substitution to LLM-runtime invocation. Dir
 ## [2026-05-25T19:50:12.637Z] /relic.clarify — 010-prompt-snippet-injection: SkillExtractionContract — <!-- use: --> directive replaces prose skill references
 
 How command templates reference skills changed: prose instructions (Run /relic.search-context) replaced by <!-- use: relic.search-context --> HTML comment directive. Machine-readable, Markdown-invisible, recognised by LLM as skill invocation instruction.
+
+## [2026-06-02T16:01:39.135Z] /relic.clarify — 010 → 011: SkillExtractionContract.md ownership transferred
+
+Spec 010 split into two: 010 retains snippet injection (Track 1) only; skills (Track 2) extracted to new spec 011-skill-extraction. SkillExtractionContract.md ownership transferred from 010 to 011. SnippetIncludeContract.md remains owned by 010.

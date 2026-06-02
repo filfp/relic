@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>010-prompt-snippet-injection — Prompt Modularization</title>
+  <title>011-skill-extraction — Skill Extraction</title>
   <style>
     /* ── CSS custom properties ────────────────────────────────────── */
     :root {
@@ -186,8 +186,11 @@
 
 <!--
   RELIC COMPONENTS REFERENCE
+  ==========================
   Stored in a <template> element below — inert, never rendered.
   The LLM reads #relic-docs before authoring any spec/fix HTML section.
+  Using <template> (not an HTML comment) prevents --> sequences in examples from
+  breaking the document structure.
 -->
 <template id="relic-docs">
 RELIC COMPONENTS
@@ -262,7 +265,7 @@ HEADER & DARK MODE
 
 INLINE MARKDOWN READER
   The nav links open .md files in a styled reader panel within the same page.
-  The reader reads from three embedded &lt;script type="text/plain"&gt; source blocks:
+  The reader reads from three embedded <script type="text/plain"> source blocks:
     #relic-src-spec   ← content of spec.md
     #relic-src-plan   ← content of plan.md
     #relic-src-tasks  ← content of tasks.md
@@ -573,8 +576,8 @@ LLM AUTHORING RULES
 </script>
 
 <header id="relic-header">
-  <span class="h-id">010-prompt-snippet-injection</span>
-  <span class="h-title">Prompt Modularization</span>
+  <span class="h-id">011-skill-extraction</span>
+  <span class="h-title">Skill Extraction</span>
   <nav class="h-nav">
     <a class="h-link" href="spec.md" title="Open spec.md">≡ spec</a>
     <a class="h-link" href="plan.md" title="Open plan.md">⊞ plan</a>
@@ -586,23 +589,23 @@ LLM AUTHORING RULES
 
 <!-- Embedded markdown sources — populated by LLM during every HTML step.
      The inline markdown reader reads from these before falling back to fetch(). -->
-<script type="text/plain" id="relic-src-spec"># Spec: Prompt Snippet Injection
+<script type="text/plain" id="relic-src-spec"># Spec: Skill Extraction
 
-**Spec ID:** 010-prompt-snippet-injection
-**Created:** 2026-05-25
+**Spec ID:** 011-skill-extraction
+**Created:** 2026-06-02
 **Status:** draft
 
 ---
 
 ## Overview
 
-The 12 prompt templates in `templates/prompts/` suffer from static content duplication — the same preamble guard, HTML rules, and inline reader instructions appear verbatim across 6–10 files. A one-line change to any of these blocks requires editing up to 10 files.
+Spec 010 introduced snippet injection — static text blocks extracted into reusable `<!-- include: relic snippet <name> -->` directives. That work left one problem unsolved: **procedural steps are trapped inside commands**. The artifact search cascade, for example, only fires when the user explicitly invokes `/relic.specify` or `/relic.plan`. If the LLM is working outside a relic command flow (debugging, implementing, answering a question), it has no access to those procedures.
 
-This spec delivers **Track 1 — Snippet injection (LLM-runtime composition):** a `templates/snippets/` directory of named Markdown fragments. Templates reference snippets with `<!-- include: relic snippet <name> -->` directives. These directives are **not resolved at build time** — they travel verbatim in the baked template and the LLM resolves them at runtime by calling `relic snippet <name>`. Snippets may compose other snippets via nested directives, enabling reusable building blocks of any complexity.
+This spec delivers **Track 2 — Skill extraction (proactive, standalone commands):** a `templates/skills/` directory of standalone procedure files written to `.claude/commands/` by `relic init`/`add-engine`. These skills can be invoked by the LLM **at any time** — not just inside a relic command flow — and command templates reference them by name via `<!-- use: relic.<skill-name> -->` directives instead of embedding the procedure inline.
 
-**Track 2 (Skill extraction)** is a separate concern handled by spec 011-skill-extraction.
+The principle for this spec: **procedures → skills.**
 
-The principle for this spec: **static text → snippets.**
+**Prerequisite:** Spec 010-prompt-snippet-injection must be implemented first. Skills use `<!-- include: relic snippet <name> -->` directives for shared static context blocks.
 
 ---
 
@@ -610,26 +613,17 @@ The principle for this spec: **static text → snippets.**
 
 | Block | Current state | Track | Rationale |
 |---|---|---|---|
-| Preamble guard (2-line blockquote) | Verbatim in 6 templates | **Snippet** | Pure static text, no decision logic |
-| Preamble guard extended (fix.md) | Verbatim in 1 template | **Snippet** | Same — slightly different static text |
-| "Read `.relic/constitution.md`" instruction | Verbatim in 5 templates | **Snippet** | 1-line static instruction |
-| HTML mode check + outer step skeleton | Verbatim in 5 templates | **Snippet** | Static structural instructions |
-| HTML anti-transcription common rules | Verbatim in 5 templates | **Snippet** | Static rules |
-| HTML inline reader source blocks | Verbatim in 5 templates | **Snippet** | Static population instructions |
+| Artifact search cascade (Step A + Step B) | Embedded in specify, plan | **Skill** | 12-line procedure; useful any time the LLM needs to discover relevant artifacts, not just inside relic commands |
+| Intersection check procedure | Embedded in specify, clarify, plan, tasks | **Skill** | Procedural; should fire whenever files are about to be modified, not just inside relic commands |
 
 ---
 
-## Audit — Initial Snippet Set
+## Audit — Initial Skill Set
 
-| Snippet file | Content | Lines saved |
-|---|---|---|
-| `preamble-guard.md` | Standard preamble blockquote | 2 lines × 6 templates = 12 |
-| `preamble-guard-extended.md` | Extended version (fix.md only) | 4 lines × 1 template = 4 |
-| `constitution-load.md` | "Read `.relic/constitution.md`" instruction | 1 line × 5 templates = 5 |
-| `html-inline-reader.md` | Source block population instructions | ~8 lines × 5 templates = 40 |
-| `html-anti-transcription-common.md` | 3 universal anti-transcription rules | 3 lines × 5 templates = 15 |
-
-~76 lines of duplication eliminated. Each change to these blocks touches 1 file instead of up to 6.
+| Skill file | Procedure | Currently embedded in | After extraction |
+|---|---|---|---|
+| `search-context.md` | Two-step artifact discovery (Step A targeted search → Step B full brain scan fallback) | specify, plan (verbatim) | Standalone skill; specify and plan replace embedded procedure with `<!-- use: relic.search-context -->` |
+| `check-intersections.md` | Load all `specs/*/artifacts.json`, compare `owns` and `touches_files` for conflicts | specify, clarify, plan, tasks (paraphrased) | Standalone skill; command templates use `<!-- use: relic.check-intersections -->` |
 
 ---
 
@@ -637,29 +631,29 @@ The principle for this spec: **static text → snippets.**
 
 ### Functional
 
-- **FR-1:** A `templates/snippets/` directory holds named Markdown fragment files. Each file is a self-contained block of prompt text (no front-matter, no directives — plain Markdown).
-- **FR-2:** Any template in `templates/prompts/` may reference a snippet using `<!-- include: relic snippet <name> -->`, where `<name>` is the snippet's registered identifier (filename without `.md`). The directive must appear on its own line. It is an LLM instruction, not a build-time substitution — the LLM reads it and calls `relic snippet <name>` to load the snippet content into its working context.
-- **FR-3:** `scripts/embed-engine-templates.ts` bakes templates into `ENGINE_TEMPLATES` **as-is**. `<!-- include: relic snippet <name> -->` directives are preserved verbatim in the baked output and in the `.claude/commands/` files written to user projects. No directive resolution occurs at build time. The embed script change for snippet support is minimal: it only needs to bake the `SNIPPETS` registry (see FR-14). Adding skill standalone entries to ENGINE_TEMPLATES is out of scope for this spec (see 011).
-- **FR-4:** Snippets are **not** added as standalone entries in `ENGINE_TEMPLATES`. They are accessed at runtime via `relic snippet <name>`.
-- **FR-5:** `relic snippet <name>` with an unknown name exits with a non-zero code and an error message. There is no build-time validation of directive names — errors surface when the LLM attempts to load the snippet.
-- **FR-6:** After extraction, every `<!-- include: relic snippet <name> -->` in a template must produce the same effective content as the verbatim block it replaced when the LLM resolves it — no behavioural changes, only source consolidation.
-- **FR-7:** Snippets may themselves contain `<!-- include: relic snippet <name> -->` directives, enabling composition: complex reusable blocks built from simpler primitives. No variable substitution (`{{PLACEHOLDER}}`-style tokens) is supported — composition via inclusion only. The LLM resolves nested directives depth-first. Circular references are detected: if snippet A includes snippet B which includes snippet A, `relic snippet` must report an error.
-- **FR-14:** A `relic snippet <name>` CLI command outputs the content of a named snippet to stdout. The LLM calls this during template execution to load snippet content; developers may also call it directly to inspect snippets. Snippets are baked into the CLI binary (as a `SNIPPETS` map by `scripts/embed-engine-templates.ts`) — the command reads from that registry, not from loose files on disk. Unknown name → non-zero exit with error.
-- **FR-17:** The snippet audit must evaluate consolidating `preamble-guard.md` and `preamble-guard-extended.md` into a single universal preamble snippet. Light content changes during consolidation are acceptable if they reduce the snippet count without losing any required behaviour. The consolidated snippet replaces both. This applies the principle: fewer snippets is better than maximum fidelity to the original template structure.
+- **FR-1:** A `templates/skills/` directory holds skill definition files. Each skill is a standalone procedure the LLM can invoke as a slash command, independent of any relic workflow command.
+- **FR-2:** Skills are written to `.claude/commands/` by both `relic init` and `relic add-engine`, alongside the existing command files. They are first-class slash commands. The write logic routes through `packages/engines/src/engines/claude/index.ts` — the engines package layer — ensuring that extending to additional engines in future versions requires no changes to `init.ts` or `add-engine` logic directly.
+- **FR-3:** Skills must be named to reflect their standalone utility (e.g., `relic.search-context`, `relic.check-intersections`) — not tied to a specific parent command.
+- **FR-4:** Command templates that previously embedded a procedure inline must instead reference the skill by name using a `<!-- use: relic.<skill-name> -->` directive. This directive replaces both embedded procedure blocks and prose references ("Run `/relic.search-context` before proceeding."). The skill file is the single source of truth for that procedure.
+- **FR-5:** Because skills appear in `.claude/commands/`, the LLM can invoke them at any time — when a user is debugging, reviewing, implementing, or doing anything where artifact knowledge is relevant — not only when they explicitly use a relic command.
+- **FR-6:** Skills may use `<!-- include: relic snippet <name> -->` directives (to load shared static context blocks defined by spec 010) and `<!-- use: relic.<skill-name> -->` directives (to invoke other skills). Both are resolved by the LLM at runtime.
+- **FR-7:** `templates/preamble.md` is updated to: (a) mandate `/relic.search-context` invocation via a `<!-- use: relic.search-context -->` directive, replacing the embedded search cascade; (b) document the directive system for the LLM — explaining that `<!-- include: relic snippet <name> -->` means "call `relic snippet <name>` and apply the result" and `<!-- use: relic.<skill-name> -->` means "invoke `/relic.<skill-name>` now."
+- **FR-8:** `scripts/embed-engine-templates.ts` is extended to walk `templates/skills/*.md` and add those files to `ENGINE_TEMPLATES` with keys `skills/<name>.md`. `writeClaude()` detects skill keys by prefix and writes them to `.claude/commands/relic.<name>.md`. This is an additive change on top of spec 010's SNIPPETS registry bake.
+- **FR-9:** The `<!-- use: relic.<skill-name> -->` directive applied in command templates is the canonical replacement for all prose instructions like "Run `/relic.search-context` before proceeding." All such prose references in command templates must be replaced with this directive form. The directive is an HTML comment — invisible in rendered Markdown, recognised by the LLM as a workflow instruction.
 
 ### Non-Functional
 
-- **NFR-1:** The embed script change must not break the existing build pipeline. `bun run build:templates` must produce byte-identical output for any template that contains no directives.
-- **NFR-2:** The snippet resolution logic must be readable in under 30 lines. No parser libraries — a line-by-line scan and file-read is sufficient.
-- **NFR-3:** Snippet files are plain Markdown, editable without any tooling knowledge beyond a text editor.
-- **NFR-4:** The directive syntax `<!-- include: relic snippet <name> -->` renders invisibly in GitHub Markdown previews — HTML comments are hidden by the renderer.
+- **NFR-1:** After extraction, the total number of standalone `.claude/commands/` entries increases by exactly 2 (one per extracted skill). No existing command file is removed.
+- **NFR-2:** Skill files are plain Markdown, editable without any tooling knowledge beyond a text editor.
+- **NFR-3:** Both `relic init` and `relic add-engine` write skill files. No `relic add-skills` command — only first-party skills exist.
 
 ---
 
 ## User Stories
 
-- As a Relic maintainer, I want to update the preamble guard wording in one file and have it propagate to all 6 templates on the next build, so I never touch 6 files for a one-line change.
-- As a Relic maintainer, I want the HTML inline reader instructions to live in one place, so they stay consistent across all 5 commands that use them.
+- As a Relic developer, I want to use `/relic.search-context` when I'm debugging a module — even though I never opened `/relic.fix` — so I can discover relevant contracts and domains without starting a relic workflow.
+- As the LLM, I want to invoke `/relic.check-intersections` whenever I'm about to modify files in a relic project, regardless of which user prompt triggered the session, so I don't accidentally break owned artifacts.
+- As a Relic maintainer, I want to update the intersection check procedure in one file and have it apply to all command templates automatically, so I never maintain the same logic in 4 places.
 
 ---
 
@@ -667,438 +661,131 @@ The principle for this spec: **static text → snippets.**
 
 ### In Scope
 
-- `templates/snippets/` directory and the snippet files from the audit (exact count determined by consolidation in FR-17).
-- Directive syntax: `<!-- include: relic snippet <name> -->` — LLM-runtime invocation, not build-time substitution.
-- Minimal modification of `scripts/embed-engine-templates.ts` — adds `SNIPPETS` registry bake only; no skill entries (see 011), no directive resolution logic.
-- Modification of the relevant `templates/prompts/*.md` files to replace verbatim blocks with `<!-- include: relic snippet -->` directives.
-- `relic snippet <name>` CLI command — LLM calls this at runtime; developers use it for inspection.
-- Circular reference detection in `relic snippet` when resolving nested includes.
-- `packages/engines/src/index.ts` — export `SNIPPETS` from `@relic/engines`.
+- `templates/skills/` directory and the 2 skill files from the audit.
+- Both `relic init` and `relic add-engine` write skills to `.claude/commands/` via `packages/engines/src/engines/claude/index.ts`.
+- `scripts/embed-engine-templates.ts` — additive extension to walk `templates/skills/` and add skill entries to `ENGINE_TEMPLATES` (on top of spec 010's SNIPPETS bake).
+- Command templates updated to replace prose skill references and embedded procedures with `<!-- use: relic.<skill-name> -->` directives.
+- `templates/preamble.md` — replace embedded search cascade with `<!-- use: relic.search-context -->` and document both directive types for the LLM.
+- Skills may use both `<!-- include: relic snippet <name> -->` and `<!-- use: relic.<skill-name> -->` directives.
 
 ### Out of Scope
 
-- Skill files, skill write logic, `<!-- use: relic.<skill-name> -->` directive applications — handled by spec 011.
-- `templates/preamble.md` updates (skill mandate) — handled by spec 011.
-- `scripts/embed-templates.ts` (scaffold templates) — minimal repetition, not addressed here.
-- Variable substitution in snippets (`{{PLACEHOLDER}}`-style tokens).
-- Build-time directive resolution — directives travel with the baked template and are resolved by the LLM at runtime.
+- Snippet files and the `relic snippet` CLI command — handled by spec 010.
+- Skill support for Copilot or Codex engines — v1 is Claude only; engines package is wired for future extension.
+- Build-time directive resolution — directives remain LLM-runtime instructions.
+- Third-party skill extension — only first-party skills exist in `templates/skills/`.
 
 ---
 
 ## Shared Artifacts
 
 **Owns:**
-- `shared/contracts/SnippetIncludeContract.md` — directive syntax for both `<!-- include: -->` and `<!-- use: -->` forms, resolution rules, error behaviour, and the canonical snippet registry. (Note: `<!-- use: -->` syntax defined here; its application to skill templates is implemented by spec 011.)
+- `shared/contracts/SkillExtractionContract.md` — skill definition rules, naming conventions, how skills are referenced from command templates, how they are written to AI engine directories, and the canonical skill registry. (Ownership transferred from spec 010 — see changelog.)
 
 **Reads:**
-- `shared/domains/TemplateDomain.md` (owned by 004) — governs how templates are embedded; the snippet system extends this domain's build-time contract.
+- `shared/contracts/SnippetIncludeContract.md` (owned by 010) — directive syntax for `<!-- include: -->` and `<!-- use: -->`; skills use both forms.
+- `shared/domains/TemplateDomain.md` (owned by 004) — governs how templates are embedded; the skill system extends this domain's build-time contract.
 
 ---
 
 ## Intersection Check
 
-| File / artifact | Spec 010 action | Conflict? |
+| File / artifact | Spec 011 action | Conflict? |
 |---|---|---|
-| `scripts/embed-engine-templates.ts` | Modify — add `SNIPPETS` registry bake | Spec 004 does not list this file. No conflict. Spec 011 also touches this file (additive skill entries — coordinated). |
-| `templates/prompts/*.md` | Modify — replace static blocks with `<!-- include: -->` directives | Not exclusively owned by another spec. Spec 011 also modifies these (skill directive replacements — additive, sequential). |
-| `templates/snippets/` | Create — new directory | Entirely new path. No conflict. |
-| `packages/core/src/commands/snippet.ts` | Create — `runSnippet` with cycle detection | New file. No conflict. |
-| `packages/core/src/index.ts` | Modify — add `export { runSnippet }` | Listed in specs 002, 004, 005, 006, 007, 008, 009 (all implemented). Additive export only. |
-| `packages/cli-node/src/bin.ts` | Modify — add `relic snippet <name>` command | Listed in specs 003–009 (all implemented). Additive new command. |
-| `packages/engines/src/index.ts` | Modify — add `export { SNIPPETS }` | Not listed in any other spec. No conflict. |
-| `packages/engines/src/generated/engine-templates.ts` | Auto-generated — gains `SNIPPETS` export | Not listed in any other spec. No conflict. |
+| `scripts/embed-engine-templates.ts` | Modify — add skill entries baking loop | Spec 010 also touches this (SNIPPETS bake). **Coordinated** — additive loop after existing SNIPPETS loop; applied after 010 is implemented. |
+| `templates/prompts/*.md` | Modify — replace procedures with `<!-- use: -->` directives | Spec 010 also modifies these (snippet directives). **Coordinated** — additive, sequential; applied after 010's snippet replacements. |
+| `templates/skills/` | Create — new directory | Entirely new path. No conflict. |
+| `packages/engines/src/engines/claude/index.ts` | Add skill write loop (prefix detection) | Not listed in any other spec. No conflict. |
+| `templates/preamble.md` | Replace search cascade with `<!-- use: relic.search-context -->` + directive docs | Not listed in any other spec's `touches_files`. No conflict. |
+| `packages/engines/src/generated/engine-templates.ts` | Auto-generated — gains skill entries | Spec 010 also touches this. **Coordinated** — skill entries are an additive section alongside SNIPPETS export. |
+| `shared/contracts/SkillExtractionContract.md` | Owns — ownership transferred from spec 010 | No conflict. |
+| `shared/contracts/SnippetIncludeContract.md` | Read only | Owned by spec 010. No ownership claim. |
 | `shared/domains/TemplateDomain.md` | Read only | Owned by spec 004. No ownership claim. |
 
 ---
 
 ## Decisions
 
-- **Runtime resolution, not build-time:** `<!-- include: relic snippet <name> -->` directives are NOT resolved by the embed script. They travel verbatim in the baked template. The LLM sees the directive and calls `relic snippet <name>` at runtime. Rejected: build-time substitution (bakes a single compiled version, loses composability; adds build complexity).
-- **Directive syntax — two forms defined in SnippetIncludeContract.md:** `<!-- include: relic snippet <name> -->` (load snippet) and `<!-- use: relic.<skill-name> -->` (invoke skill). Both syntaxes are owned by this spec's contract. Applying `<!-- use: -->` directives to templates is implemented by spec 011.
-- **Snippets support composition, not substitution:** Snippets may include other snippets, building complex context blocks from primitives. No `{{PLACEHOLDER}}` variable substitution.
-- **Snippet consolidation is in scope:** Light content changes during extraction are acceptable where they reduce the total snippet count (FR-17).
-- **`relic snippet <name>` CLI command:** Outputs named snippet content from the baked `SNIPPETS` registry. Registered in `packages/cli-node/src/bin.ts`.
-- **Snippets not in ENGINE_TEMPLATES:** Accessed at runtime via `relic snippet`; not written to `.claude/commands/`.
-- **Skills are a separate spec:** Skill file creation, Claude engine write logic, preamble mandate, and `<!-- use: -->` template applications are fully scoped to spec 011. This spec owns only the snippet track and the directive syntax definitions.
+- **Skill write via engines package:** `packages/engines/src/engines/claude/index.ts` owns the write logic, using prefix detection on ENGINE_TEMPLATES keys (`skills/<name>.md`). Future engines add a handler here; `init.ts` and `add-engine` remain unchanged.
+- **Both `relic init` and `relic add-engine` write skills:** Both entry points must produce a complete, usable skill set. No `relic add-skills` command.
+- **Preamble mandate:** `templates/preamble.md` removes the embedded search cascade and replaces it with an authoritative mandate to invoke `/relic.search-context`. The skill is the single source of truth for the cascade procedure.
+- **`<!-- use: relic.<skill-name> -->` is the canonical form:** All prose references to skills are replaced with this directive in command templates. Machine-readable, invisible in rendered Markdown.
+- **Claude only in v1:** Skills are written to `.claude/commands/` only. Copilot and Codex engines return an empty skill set.
+- **Prerequisite on spec 010:** Skill files use `<!-- include: relic snippet preamble-guard -->` for their opening preamble. Spec 010 must be implemented first.
+
+---
+
+## Open Questions
+
+- [ ] **OQ-1:** Are there additional skill candidates beyond `search-context` and `check-intersections`? Review all command templates at plan time for any remaining embedded procedures.
+- [ ] **OQ-2:** Should 011 produce its own Phase 7 build verification step, or does it run the same `bun run build:templates` + relic init test from spec 010's plan?
 </script>
-<script type="text/plain" id="relic-src-plan"># Plan: Prompt Modularization
-
-**Spec:** 010-prompt-snippet-injection
-**Status:** ready to implement
-
----
-
-## Architecture Overview
-
-The implementation extends the existing `embed-engine-templates.ts` → `ENGINE_TEMPLATES` pipeline in three minimal ways:
-
-1. **SNIPPETS registry** — `embed-engine-templates.ts` walks `templates/snippets/` and bakes a `SNIPPETS: Record<string, string>` map (key = filename without `.md`). Exported alongside `ENGINE_TEMPLATES` in `packages/engines/src/generated/engine-templates.ts`. Exposed from `@relic/engines`.
-
-2. **Skill standalone entries** — `embed-engine-templates.ts` also walks `templates/skills/` and adds those files to `ENGINE_TEMPLATES` with keys `skills/<name>.md`. `writeClaude()` detects skill keys by prefix and writes them to `.claude/commands/relic.<name>.md`.
-
-3. **`relic snippet` command** — reads from the baked `SNIPPETS` registry, expands nested `<!-- include: relic snippet <name> -->` directives depth-first, detects cycles, outputs to stdout.
-
-**No build-time directive resolution.** Directives travel verbatim through the entire pipeline (bake → `.claude/commands/` deploy → LLM execution). Templates remain fully portable and self-describing.
-
----
-
-## FR-17 Preamble Consolidation Decision
-
-Audited the two preamble variants:
-
-| Snippet | Lines | Current usage |
-|---|---|---|
-| Standard: `> Read .relic/preamble.md. It defines where artifacts belong. Violating those rules...` | 2 | specify, clarify, plan, analyse, tasks, implement, scan, use, constitution, solve, ask |
-| Extended: `> Read .relic/preamble.md and .relic/constitution.md in full. The preamble defines structural invariants... constitution amendment authorising the deviation must exist...` | 4 | fix only |
-
-**Decision: merge to one universal `preamble-guard.md` using the extended language.** The extended preamble is strictly more cautious — applying it universally adds two lines to non-fix commands without any behavioural regression. This reduces the snippet set from 5 to 4, satisfying FR-17's "fewer is better" principle.
-
----
-
-## Implementation Phases
-
-### Phase 1 — Snippet Files (no code, no build step)
-
-Create `templates/snippets/` with 4 files:
-
-| File | Content | Replaces |
-|---|---|---|
-| `preamble-guard.md` | 4-line extended preamble blockquote | Both the 2-line standard and 4-line extended variants |
-| `constitution-load.md` | `1. Read \`.relic/constitution.md\`.` — the exact one-line instruction | The verbatim line in 5+ templates |
-| `html-anti-transcription-common.md` | The 3 universal anti-transcription rules (Do NOT copy verbatim; use tables/chips/progress; if it looks like Markdown source, you're doing it wrong) | The 3-rule block in 5 templates |
-| `html-inline-reader.md` | The full "Populate the inline reader source blocks" instruction with 3 `<script type="text/plain">` replacement instructions | The ~8-line block in 5 templates |
-
-Content for each snippet is extracted verbatim from the current templates where it first appears. No content invented.
-
-### Phase 2 — Skill Files (no code, no build step)
-
-Create `templates/skills/` with 2 files:
-
-**`search-context.md`** — `/relic.search-context` slash command. Contains the two-step artifact discovery procedure extracted from `specify.md` and `plan.md`:
-- Step A: `relic search <keyword1> <keyword2> ...`, read high-score entries, stop if coverage is sufficient
-- Step B (fallback): `relic search --deep`, read `tldr` fields only, selectively load relevant files
-- The file is a complete, standalone Markdown document with its own `<!-- include: relic snippet preamble-guard -->` preamble.
-
-**`check-intersections.md`** — `/relic.check-intersections` slash command. Contains the intersection check procedure extracted from `clarify.md` and `plan.md`:
-- Load all `specs/*/artifacts.json`
-- Compare `owns` and `touches_files` for conflicts with the current spec's planned changes
-- Flag any conflict explicitly; do not proceed until resolved
-- Also uses `<!-- include: relic snippet preamble-guard -->` as its opening preamble.
-
-Both skill files demonstrate snippet composition inside skills (FR-13).
-
-### Phase 3 — embed-engine-templates.ts Extension
-
-Extend the script to emit two additional exports in `packages/engines/src/generated/engine-templates.ts`:
-
-- **SNIPPETS map**: Walk `templates/snippets/*.md`. Key = filename without `.md` (e.g., `preamble-guard`). Value = file content. Emitted as a second `export const SNIPPETS: Record<string, string> = { ... }` block.
-- **Skill entries in ENGINE_TEMPLATES**: Walk `templates/skills/*.md`. Key = `skills/<name>.md`. Value = file content. Added to the existing `ENGINE_TEMPLATES` map using the same key → escaped-content pattern.
-
-Implementation: add two additional `collectFiles(dir)` → escape → push loops after the existing prompts loop. The output template string gets a second export block.
-
-Also update `packages/engines/src/index.ts`:
-```typescript
-export { SNIPPETS } from "./generated/engine-templates.ts";
-```
-
-### Phase 4 — relic snippet Command
-
-**`packages/core/src/commands/snippet.ts`** (new file):
-
-```
-resolveSnippet(name, snippets, visiting: ReadonlySet<string>): string
-  - if visiting.has(name) → stderr "[snippet] Circular include: <chain>" → exit(1)
-  - if snippets[name] === undefined → stderr "[snippet] Unknown snippet: <name>" → exit(1)
-  - create next = new Set(visiting).add(name)
-  - replace all <!-- include: relic snippet <dep> --> with resolveSnippet(dep, snippets, next)
-  - return expanded string
-
-runSnippet(name: string): void
-  - import SNIPPETS from @relic/engines
-  - stdout.write(resolveSnippet(name, SNIPPETS, new Set()))
-```
-
-Resolution logic target: ≤ 30 lines (NFR-2 constraint).
-
-**`packages/core/src/index.ts`:** add `export { runSnippet } from "./commands/snippet.ts"`.
-
-**`packages/cli-node/src/bin.ts`:** add `relic snippet <name>` command:
-```typescript
-program
-  .command("snippet <name>")
-  .description("Output named snippet content from baked SNIPPETS registry")
-  .action((name: string) => { runSnippet(name); });
-```
-
-### Phase 5 — Claude Engine: Skill Write Logic
-
-**`packages/engines/src/engines/claude/index.ts`:**
-
-After the existing `PROMPT_NAMES` write loop, add skill detection by ENGINE_TEMPLATES key prefix:
-
-```typescript
-const skillEntries = Object.entries(ENGINE_TEMPLATES)
-  .filter(([key]) => key.startsWith("skills/"));
-for (const [key, content] of skillEntries) {
-  const name = key.slice("skills/".length).replace(/\.md$/, "");
-  writeText(join(commandsDir, `relic.${name}.md`), content);
-}
-```
-
-This is prefix-based — adding new skill files to `templates/skills/` automatically causes them to be written, with no code change needed.
-
-Update the console.log to report skill count separately from command count.
-
-**`packages/core/src/commands/init.ts`:** No changes needed. `runInit` already calls `runAddEngine` → `writeClaude`. Skills are written automatically via the extended `writeClaude`.
-
-### Phase 6 — Template Updates
-
-Update templates in order of highest duplication impact:
-
-**`templates/preamble.md`:**
-- Replace the embedded two-step search cascade with `<!-- use: relic.search-context -->`
-- Add a directive documentation section explaining both directive types to the LLM:
-  - `<!-- include: relic snippet <name> -->` → call `relic snippet <name>` and apply the output as context
-  - `<!-- use: relic.<skill-name> -->` → invoke `/relic.<skill-name>` at this point in the workflow
-
-**Each of the 12 `templates/prompts/*.md` files:**
-- Replace the opening preamble blockquote (2-line or 4-line) with `<!-- include: relic snippet preamble-guard -->`
-- Replace the `Read .relic/constitution.md` instruction with `<!-- include: relic snippet constitution-load -->` (where applicable)
-- Replace the HTML anti-transcription rules block with `<!-- include: relic snippet html-anti-transcription-common -->`
-- Replace the "Populate the inline reader source blocks" instruction with `<!-- include: relic snippet html-inline-reader -->`
-- In `specify.md` and `plan.md`: replace the Step A/B artifact search procedure with `<!-- use: relic.search-context -->`
-- In `specify.md`, `clarify.md`, `plan.md`, `tasks.md`: replace the intersection check prose with `<!-- use: relic.check-intersections -->`
-- Replace any prose like "Run `/relic.search-context` before proceeding" with `<!-- use: relic.search-context -->`
-
-Templates without an HTML mode section (`scan`, `use`, `ask`, `constitution`) skip the html snippet directives.
-
-`fix.md` note: the universal `preamble-guard.md` already contains the constitution mention, so `fix.md` only needs `<!-- include: relic snippet preamble-guard -->` for its opening — no separate constitution-load directive needed.
-
-### Phase 7 — Build + Verify
-
-```bash
-bun run build:templates
-
-# Verify SNIPPETS registry emitted
-grep "export const SNIPPETS" packages/engines/src/generated/engine-templates.ts
-
-# Verify skill entries in ENGINE_TEMPLATES
-grep "skills/search-context" packages/engines/src/generated/engine-templates.ts
-
-# Test snippet command
-relic snippet preamble-guard   # should output 4-line extended preamble
-relic snippet unknown-name     # should exit non-zero with [snippet] Unknown snippet: unknown-name
-
-# Verify .claude/commands/ includes skills on relic init
-relic init --dir /tmp/test-relic-skills --force
-ls /tmp/test-relic-skills/.claude/commands/ | grep "relic\."
-# expected: relic.check-intersections.md  relic.search-context.md  relic.specify.md  ...
-```
-
----
-
-## File Changes
-
-| File | Action | Phase |
-|---|---|---|
-| `templates/snippets/preamble-guard.md` | Create | 1 |
-| `templates/snippets/constitution-load.md` | Create | 1 |
-| `templates/snippets/html-anti-transcription-common.md` | Create | 1 |
-| `templates/snippets/html-inline-reader.md` | Create | 1 |
-| `templates/skills/search-context.md` | Create | 2 |
-| `templates/skills/check-intersections.md` | Create | 2 |
-| `scripts/embed-engine-templates.ts` | Modify — add SNIPPETS + skills baking loops | 3 |
-| `packages/engines/src/generated/engine-templates.ts` | Auto-generated — gains SNIPPETS export + skill entries | 3 |
-| `packages/engines/src/index.ts` | Modify — add `export { SNIPPETS }` | 3 |
-| `packages/core/src/commands/snippet.ts` | Create — runSnippet with cycle detection | 4 |
-| `packages/core/src/index.ts` | Modify — add `export { runSnippet }` | 4 |
-| `packages/cli-node/src/bin.ts` | Modify — register `relic snippet <name>` command | 4 |
-| `packages/engines/src/engines/claude/index.ts` | Modify — add skill write loop (prefix detection) | 5 |
-| `templates/preamble.md` | Modify — search mandate + directive docs | 6 |
-| `templates/prompts/specify.md` | Modify — preamble, constitution, html×2, search skill, intersections skill | 6 |
-| `templates/prompts/clarify.md` | Modify — preamble, constitution, intersections skill | 6 |
-| `templates/prompts/plan.md` | Modify — preamble, constitution, html×2, search skill, intersections skill | 6 |
-| `templates/prompts/analyse.md` | Modify — preamble, constitution | 6 |
-| `templates/prompts/tasks.md` | Modify — preamble, constitution, html×2, intersections skill | 6 |
-| `templates/prompts/implement.md` | Modify — preamble, constitution, html×2 | 6 |
-| `templates/prompts/fix.md` | Modify — preamble (universal, contains constitution), html×2 | 6 |
-| `templates/prompts/scan.md` | Modify — preamble | 6 |
-| `templates/prompts/use.md` | Modify — preamble | 6 |
-| `templates/prompts/constitution.md` | Modify — preamble | 6 |
-| `templates/prompts/solve.md` | Modify — preamble, constitution | 6 |
-| `templates/prompts/ask.md` | Modify — preamble | 6 |
-| `packages/core/src/commands/init.ts` | No changes needed | — |
-
----
-
-## Shared Artifact Changes
-
-Both owned contracts are already written and up to date. No new artifacts created. No existing artifacts modified by this plan.
-
-| Artifact | Status |
-|---|---|
-| `shared/contracts/SnippetIncludeContract.md` | Current — written during clarify sessions |
-| `shared/contracts/SkillExtractionContract.md` | Current — written during clarify sessions |
-
----
-
-## Intersection Notes
-
-All `touches_files` overlaps are with specs that have already been fully implemented. No active spec conflicts.
-
-| File | Overlapping specs | Resolution |
-|---|---|---|
-| `scripts/embed-engine-templates.ts` | spec 002 (implemented) | Additive: new loops only; existing ENGINE_TEMPLATES output unchanged for no-directive templates |
-| `templates/prompts/*.md` | specs 003, 005, 006, 007, 008, 009 (all implemented) | Additive: directives replace verbatim text; effective content identical when resolved by LLM |
-| `templates/preamble.md` | spec 005 (implemented) | Additive: new section + directive replaces search cascade |
-| `packages/cli-node/src/bin.ts` | specs 003–009 (all implemented) | Additive: new command only, no existing commands modified |
-| `packages/engines/src/engines/claude/index.ts` | spec 007 (implemented) | Additive: new skill write loop after existing command loop |
-| `packages/core/src/commands/init.ts` | specs 003, 004, 005, 008, 009 (all implemented) | No changes needed — skill write is automatic via writeClaude |
-
-**NFR-5 check:** `.claude/commands/` gains exactly 2 new files (`relic.search-context.md`, `relic.check-intersections.md`). No existing command files removed or modified.
-
----
-
-## Changelog Reference
-
-No changelog entry needed for plan creation. Both owned contracts were created during the clarify sessions and their changelog entries were written at that time.
-</script>
-<script type="text/plain" id="relic-src-tasks"># Tasks: Prompt Snippet Injection
-
-**Spec ID:** 010-prompt-snippet-injection
-**Generated from plan:** 2026-05-25
-
----
-
-## Tasks
-
-- [ ] Task 1
-- [ ] Task 2
-
----
-
-## Notes
-
-*Task-level caveats, dependencies, or ordering constraints.*
-</script>
+<script type="text/plain" id="relic-src-plan"></script>
+<script type="text/plain" id="relic-src-tasks"></script>
 
 <div id="relic-body">
 
 <section>
   <h2>Overview</h2>
-  <relic-callout type="info"><strong>Scope narrowed.</strong> This spec covers <strong>Track 1 — Snippet injection</strong> only. Track 2 (Skill extraction) is <relic-chip color="blue">011-skill-extraction</relic-chip>.</relic-callout>
-  <p>
-    The 12 prompt templates in <code>templates/prompts/</code> suffer from static content duplication — the same preamble guard,
-    HTML rules, and inline reader instructions appear verbatim across 6–10 files. A one-line change to any of these blocks
-    requires editing up to 10 files.
-  </p>
-  <p>
-    This spec introduces a <code>templates/snippets/</code> directory of named Markdown fragments.
-    Templates reference snippets with <code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code> directives resolved
-    by the LLM at runtime via <code>relic snippet &lt;name&gt;</code>. Directives travel verbatim through the build pipeline — no substitution at build time.
-  </p>
+  <relic-callout type="info"><strong>Prerequisite:</strong> Spec <relic-chip color="blue">010-prompt-snippet-injection</relic-chip> must be implemented first. Skills use <code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code> directives for their preamble blocks.</relic-callout>
+  <p>Spec 010 extracted static text into snippets. One problem remains: <strong>procedural steps are trapped inside commands</strong>. The artifact search cascade only fires when the user explicitly invokes <code>/relic.specify</code> or <code>/relic.plan</code>. If the LLM is working outside a relic command flow, it has no access to those procedures.</p>
+  <p>This spec delivers <strong>Track 2 — Skill extraction</strong>: a <code>templates/skills/</code> directory of standalone procedure files written to <code>.claude/commands/</code> by <code>relic init</code>/<code>add-engine</code>. The principle: <strong>procedures → skills.</strong></p>
   <relic-table
-    headers='["Stage","Who","Action"]'
+    headers='["Block","Current state","→","Rationale"]'
     rows='[
-      ["1. Author","Relic maintainer","Write snippets in <code>templates/snippets/*.md</code>"],
-      ["2. Build","<code>embed-engine-templates.ts</code>","Bake <code>SNIPPETS</code> registry into <code>ENGINE_TEMPLATES</code>. Directives travel verbatim."],
-      ["3. Deploy","<code>relic init</code> / <code>add-engine</code>","Write <code>.claude/commands/relic.*.md</code> with directives intact"],
-      ["4. Execute","LLM","Sees <code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code> → calls <code>relic snippet &lt;name&gt;</code> and applies content"]
+      ["Artifact search cascade (Step A + B)","Embedded in specify, plan","<relic-chip color=\"purple\">Skill</relic-chip>","12-line procedure; useful whenever the LLM needs to discover artifacts — not just inside relic commands"],
+      ["Intersection check procedure","Embedded in specify, clarify, plan, tasks","<relic-chip color=\"purple\">Skill</relic-chip>","Should fire whenever files are about to be modified, regardless of which command triggered the session"]
     ]'>
   </relic-table>
-</section>
-
-<section>
-  <h2>Block Classification</h2>
-  <p>Every repeated static block in the current templates — all are snippet candidates (Track 1). Procedural steps are out of scope; see <relic-chip color="blue">011-skill-extraction</relic-chip>.</p>
+  <h3>Initial Skill Registry</h3>
   <relic-table
-    headers='["Block","Repeats","→ Track","Rationale"]'
+    headers='["Skill file","Slash command","Procedure","Was embedded in"]'
     rows='[
-      ["Preamble guard (2-line blockquote)","6 templates","<relic-chip color=\"blue\">Snippet</relic-chip>","Pure static text, no decision logic"],
-      ["Preamble guard extended (fix.md)","1 template","<relic-chip color=\"blue\">Snippet</relic-chip>","Same — slightly different static text"],
-      ["&ldquo;Read constitution.md&rdquo; instruction","5 templates","<relic-chip color=\"blue\">Snippet</relic-chip>","1-line static instruction"],
-      ["HTML mode check + step skeleton","5 templates","<relic-chip color=\"blue\">Snippet</relic-chip>","Static structural instructions"],
-      ["HTML anti-transcription common rules","5 templates","<relic-chip color=\"blue\">Snippet</relic-chip>","Static rules"],
-      ["HTML inline reader source blocks","5 templates","<relic-chip color=\"blue\">Snippet</relic-chip>","Static population instructions"]
+      ["<code>search-context.md</code>","<code>/relic.search-context</code>","Two-step artifact discovery: targeted keyword search (Step A) → full brain scan fallback (Step B)","specify, plan (verbatim)"],
+      ["<code>check-intersections.md</code>","<code>/relic.check-intersections</code>","Load all <code>specs/*/artifacts.json</code>, compare <code>owns</code> + <code>touches_files</code> for conflicts","specify, clarify, plan, tasks (paraphrased)"]
     ]'>
   </relic-table>
-</section>
-
-<section>
-  <h2>Snippet Set</h2>
-  <relic-callout type="info">4–5 snippet files (exact count after FR-17 consolidation audit). Each change touches 1 file instead of up to 6.</relic-callout>
-  <relic-table
-    headers='["Snippet file","Content","Lines saved","Consolidation?"]'
-    rows='[
-      ["<code>preamble-guard.md</code>","Standard preamble blockquote","2 × 6 = 12","<relic-chip color=\"amber\">audit: merge candidate</relic-chip>"],
-      ["<code>preamble-guard-extended.md</code>","Extended version (fix.md only)","4 × 1 = 4","<relic-chip color=\"amber\">audit: merge candidate</relic-chip>"],
-      ["<code>constitution-load.md</code>","&ldquo;Read .relic/constitution.md&rdquo; instruction","1 × 5 = 5",""],
-      ["<code>html-inline-reader.md</code>","Source block population instructions","~8 × 5 = 40",""],
-      ["<code>html-anti-transcription-common.md</code>","3 universal anti-transcription rules","3 × 5 = 15",""]
-    ]'>
-  </relic-table>
-  <p class="text-muted text-sm mt-2"><strong>~76 lines</strong> of duplication eliminated. FR-17 audit may reduce to 4 files by merging the two preamble variants.</p>
-</section>
-
-
-<section>
-  <h2>Clarify Sessions — Architecture Decisions</h2>
-  <relic-callout type="success">All 6 open questions resolved. Architecture finalised. Spec ready for plan phase.</relic-callout>
-
-  <h3>Architecture Reversal — Runtime, Not Build-Time</h3>
-  <relic-callout type="warn"><strong>Fundamental change:</strong> Directives are NOT resolved at build time. They travel verbatim in baked templates. The LLM sees the directive and calls <code>relic snippet &lt;name&gt;</code> at runtime. This makes templates self-describing — the LLM reads the directive as an instruction.</relic-callout>
-  <relic-table
-    headers='["","Approach","Consequence"]'
-    rows='[
-      ["<relic-chip color=\"red\">rejected</relic-chip>","Build-time resolution by <code>embed-engine-templates.ts</code>","Bakes a single compiled version; loses composability; adds build complexity"],
-      ["<relic-chip color=\"green\">chosen</relic-chip>","LLM-runtime resolution via <code>relic snippet &lt;name&gt;</code>","Templates are self-describing; composability at any depth; embed script stays minimal"]
-    ]'>
-  </relic-table>
-
-  <h3>Dual Directive Syntax</h3>
-  <relic-table
-    headers='["Directive","Meaning","Used for"]'
-    rows='[
-      ["<code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code>","LLM calls <code>relic snippet &lt;name&gt;</code> and applies the content as context","Static text blocks — preamble, constitution, HTML rules"],
-      ["<code>&lt;!-- use: relic.&lt;skill-name&gt; --&gt;</code>","LLM invokes <code>/relic.&lt;skill-name&gt;</code> at that point in the workflow","Procedural steps — search cascade, intersection check"]
-    ]'>
-  </relic-table>
-  <p class="text-muted text-sm">Both are HTML comments — invisible in GitHub Markdown previews, machine-readable by the LLM.</p>
-
-  <h3>Snippet Composition</h3>
-  <relic-callout type="info">Snippets may include other snippets via nested <code>&lt;!-- include: --&gt;</code> directives. Composition via inclusion only — no <code>&#123;&#123;PLACEHOLDER&#125;&#125;</code> variable substitution.</relic-callout>
-
-  <h3>Preamble Consolidation In Scope</h3>
-  <relic-callout type="info">The plan phase audit must evaluate merging <code>preamble-guard.md</code> + <code>preamble-guard-extended.md</code> into one universal preamble snippet. Light content changes are acceptable if they reduce snippet count without losing required behaviour. Fewer snippets is always better than maximum fidelity to the original template structure.</relic-callout>
-
 </section>
 
 <section>
   <h2>Requirements</h2>
-  <h3>Functional <relic-chip>FR-1 to FR-7 + FR-14 + FR-17</relic-chip></h3>
-  <relic-callout type="info">FR-8 to FR-16 (skill extraction) moved to <relic-chip color="blue">011-skill-extraction</relic-chip>.</relic-callout>
-  <relic-table
-    headers='["#","Requirement","Changed?"]'
-    rows='[
-      ["FR-1","<code>templates/snippets/</code> holds plain Markdown fragment files — no front-matter, no directives.",""],
-      ["FR-2","Directive <code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code> on its own line. <strong>LLM instruction</strong>, not a build-time substitution — the LLM calls <code>relic snippet &lt;name&gt;</code> at runtime.","<relic-chip color=\"amber\">updated</relic-chip>"],
-      ["FR-3","<code>embed-engine-templates.ts</code> bakes templates <strong>as-is</strong>. Directives travel verbatim. Embed script adds <code>SNIPPETS</code> registry bake only — no skill entries (see 011), no resolution logic.","<relic-chip color=\"amber\">updated</relic-chip>"],
-      ["FR-4","Snippets are NOT added as standalone <code>ENGINE_TEMPLATES</code> entries — accessed at runtime via <code>relic snippet &lt;name&gt;</code>.",""],
-      ["FR-5","<code>relic snippet &lt;name&gt;</code> with unknown name → non-zero exit. No build-time validation.",""],
-      ["FR-6","After extraction, every directive must produce the same effective content as the verbatim block it replaced — no behavioural changes.",""],
-      ["FR-7","Snippets may include other snippets via nested <code>&lt;!-- include: --&gt;</code> directives — composition via inclusion, no variable substitution. LLM resolves depth-first. Circular references detected by <code>relic snippet</code>.","<relic-chip color=\"amber\">updated</relic-chip>"],
-      ["FR-14","<code>relic snippet &lt;name&gt;</code> CLI command outputs named snippet from baked <code>SNIPPETS</code> registry. LLM calls at runtime; developers use for inspection. Unknown name → non-zero exit.","<relic-chip color=\"amber\">updated</relic-chip>"],
-      ["FR-17","Plan phase audit must evaluate consolidating <code>preamble-guard.md</code> + <code>preamble-guard-extended.md</code> into one universal snippet. Light content changes acceptable if snippet count is reduced.","<relic-chip color=\"green\">new</relic-chip>"]
-    ]'>
-  </relic-table>
-  <h3>Non-Functional <relic-chip>NFR-1 to NFR-4</relic-chip></h3>
+  <h3>Functional <relic-chip>FR-1 to FR-9</relic-chip></h3>
   <relic-table
     headers='["#","Requirement"]'
     rows='[
-      ["NFR-1","Build pipeline unchanged for templates with no directives — byte-identical output."],
-      ["NFR-2","Resolution logic ≤ 30 lines. No parser libraries — line-by-line scan."],
-      ["NFR-3","Snippet files editable in any text editor with no tooling knowledge."],
-      ["NFR-4","Directive syntax invisible in GitHub Markdown previews (HTML comment)."]
+      ["FR-1","<code>templates/skills/</code> holds skill definition files — standalone procedures the LLM can invoke as slash commands, independent of any relic workflow command."],
+      ["FR-2","Skills written by both <code>relic init</code> AND <code>relic add-engine</code> via <code>packages/engines/src/engines/claude/index.ts</code>. Engines package layer = future-extensible without modifying <code>init.ts</code> or <code>add-engine</code> directly."],
+      ["FR-3","Skill names reflect standalone utility — <code>relic.search-context</code>, not <code>relic.specify-step2</code>."],
+      ["FR-4","Command templates that embedded a procedure inline must instead use <code>&lt;!-- use: relic.&lt;skill-name&gt; --&gt;</code>. Replaces both embedded procedure blocks and prose references. Skill file = single source of truth."],
+      ["FR-5","Skills appear in <code>.claude/commands/</code> — the LLM can invoke them at any time, including during debugging, reviewing, or implementing, without starting a relic command flow."],
+      ["FR-6","Skills may use both <code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code> (load context) and <code>&lt;!-- use: relic.&lt;skill-name&gt; --&gt;</code> (invoke skill). Both resolved by LLM at runtime."],
+      ["FR-7","<code>templates/preamble.md</code> updated: (a) mandate <code>/relic.search-context</code> via <code>&lt;!-- use: relic.search-context --&gt;</code>; (b) document both directive types for the LLM."],
+      ["FR-8","<code>embed-engine-templates.ts</code> extended to walk <code>templates/skills/*.md</code> and add entries to <code>ENGINE_TEMPLATES</code> with keys <code>skills/&lt;name&gt;.md</code>. <code>writeClaude()</code> detects skill keys by prefix — writes to <code>.claude/commands/relic.&lt;name&gt;.md</code>."],
+      ["FR-9","<code>&lt;!-- use: relic.&lt;skill-name&gt; --&gt;</code> is the canonical form. All prose skill references in command templates replaced with this directive. Machine-readable, Markdown-invisible."]
+    ]'>
+  </relic-table>
+  <h3>Non-Functional <relic-chip>NFR-1 to NFR-3</relic-chip></h3>
+  <relic-table
+    headers='["#","Requirement"]'
+    rows='[
+      ["NFR-1","<code>.claude/commands/</code> entries increase by exactly 2 after extraction. No existing command file removed."],
+      ["NFR-2","Skill files are plain Markdown — editable with no tooling knowledge beyond a text editor."],
+      ["NFR-3","Both <code>relic init</code> and <code>relic add-engine</code> write skills. No <code>relic add-skills</code> command."]
+    ]'>
+  </relic-table>
+</section>
+
+<section>
+  <h2>Decisions</h2>
+  <relic-table
+    headers='["Decision","Detail"]'
+    rows='[
+      ["Skill write via engines package","<code>engines/claude/index.ts</code> owns the write logic with prefix detection on <code>ENGINE_TEMPLATES</code> keys. Future engines add a handler here; <code>init.ts</code> unchanged."],
+      ["Both init + add-engine write skills","Both entry points must produce a complete, usable skill set. No <code>relic add-skills</code> command."],
+      ["Preamble mandate","<code>templates/preamble.md</code> removes embedded search cascade; replaces with <code>&lt;!-- use: relic.search-context --&gt;</code>. Skill = single source of truth."],
+      ["Canonical directive form","<code>&lt;!-- use: relic.&lt;skill-name&gt; --&gt;</code> replaces all prose references. Invisible in rendered Markdown."],
+      ["Claude only in v1","Skills written to <code>.claude/commands/</code> only. Copilot and Codex engines return an empty skill set."],
+      ["Prerequisite on spec 010","Skill files use snippet directives for preamble — spec 010 must be implemented first."]
     ]'>
   </relic-table>
 </section>
@@ -1109,46 +796,45 @@ No changelog entry needed for plan creation. Both owned contracts were created d
   <relic-table
     headers='["Artifact","Type","Purpose"]'
     rows='[
-      ["<code>shared/contracts/SnippetIncludeContract.md</code>","contract","Directive syntax for both <code>&lt;!-- include: --&gt;</code> and <code>&lt;!-- use: --&gt;</code> forms, resolution rules, error behaviour, and canonical snippet registry. (<code>&lt;!-- use: --&gt;</code> syntax defined here; application to skill templates implemented by spec 011.)"]
+      ["<code>shared/contracts/SkillExtractionContract.md</code>","contract","Skill definition rules, naming conventions, how command templates reference skills, how skills are written to AI engine directories, and the canonical skill registry. (Ownership transferred from spec 010.)"]
     ]'>
   </relic-table>
-  <relic-callout type="info"><code>shared/contracts/SkillExtractionContract.md</code> ownership transferred to <relic-chip color="blue">011-skill-extraction</relic-chip>.</relic-callout>
   <h3>Reads</h3>
   <relic-table
-    headers='["Artifact","Type","Purpose"]'
+    headers='["Artifact","Owned by","Purpose"]'
     rows='[
-      ["<code>shared/domains/TemplateDomain.md</code>","domain","Build-time template embedding — the system this spec extends (owned by spec 004)"]
+      ["<code>shared/contracts/SnippetIncludeContract.md</code>","<relic-chip color=\"blue\">010</relic-chip>","Directive syntax for <code>&lt;!-- include: --&gt;</code> and <code>&lt;!-- use: --&gt;</code>; skills use both forms"],
+      ["<code>shared/domains/TemplateDomain.md</code>","<relic-chip color=\"blue\">004</relic-chip>","Build-time template embedding — the skill system extends this domain"]
     ]'>
   </relic-table>
 </section>
 
 <section>
   <h2>Intersection Check</h2>
-  <relic-callout type="success"><code>init.ts</code> and <code>bin.ts</code> conflicts resolved — both changes are additive-only and coordinated with spec 004.</relic-callout>
+  <relic-callout type="info">All intersections with spec 010 are <strong>coordinated</strong> — 011 applies after 010 is implemented. All changes are additive.</relic-callout>
   <relic-table
-    headers='["File / artifact","Spec 010 action","Conflict?"]'
+    headers='["File / artifact","Spec 011 action","Conflict?"]'
     rows='[
-      ["<code>scripts/embed-engine-templates.ts</code>","Modify — add <code>SNIPPETS</code> registry bake","None — spec 004 does not list this file. Spec 011 also touches this file (additive skill entries — coordinated)."],
-      ["<code>templates/prompts/*.md</code>","Modify — replace static blocks with <code>&lt;!-- include: --&gt;</code> directives","None — not exclusively owned by another spec. Spec 011 also modifies these (skill directive replacements — additive, sequential)."],
-      ["<code>templates/snippets/</code>","Create — new directory","None — entirely new path"],
-      ["<code>packages/cli-node/src/bin.ts</code>","Add <code>relic snippet</code> command","<relic-chip color=\"green\">Coordinated</relic-chip> — additive new command, no existing commands changed"],
-      ["<code>packages/engines/src/index.ts</code>","Add <code>export { SNIPPETS }</code>","None — not listed in any other spec"],
-      ["<code>packages/engines/src/generated/engine-templates.ts</code>","Auto-generated — gains <code>SNIPPETS</code> export","None — auto-generated file. Spec 011 also touches this (additive skill entries — coordinated)."],
-      ["<code>packages/core/src/index.ts</code>","Add <code>export { runSnippet }</code>","<relic-chip color=\"green\">Coordinated</relic-chip> — additive export; overlaps with 7 other specs (all implemented)"],
-      ["<code>shared/domains/TemplateDomain.md</code>","Read only","None — owned by spec 004, no ownership claim"]
+      ["<code>scripts/embed-engine-templates.ts</code>","Add skill entries baking loop","<relic-chip color=\"green\">Coordinated</relic-chip> — additive loop after 010 SNIPPETS loop"],
+      ["<code>templates/prompts/*.md</code>","Replace embedded procedures with <code>&lt;!-- use: --&gt;</code> directives","<relic-chip color=\"green\">Coordinated</relic-chip> — additive, applied after 010 snippet replacements"],
+      ["<code>templates/skills/</code>","Create — new directory","None — entirely new path"],
+      ["<code>packages/engines/src/engines/claude/index.ts</code>","Add skill write loop (prefix detection)","None — not listed in any other spec"],
+      ["<code>templates/preamble.md</code>","Replace search cascade with skill mandate + directive docs","None — not listed in any other spec"],
+      ["<code>packages/engines/src/generated/engine-templates.ts</code>","Auto-generated — gains skill entries","<relic-chip color=\"green\">Coordinated</relic-chip> — additive alongside 010 SNIPPETS export"],
+      ["<code>shared/contracts/SkillExtractionContract.md</code>","Owns — transferred from spec 010","No conflict"],
+      ["<code>shared/contracts/SnippetIncludeContract.md</code>","Read only","Owned by spec 010. No ownership claim."],
+      ["<code>shared/domains/TemplateDomain.md</code>","Read only","Owned by spec 004. No ownership claim."]
     ]'>
   </relic-table>
 </section>
 
 <section>
   <h2>Open Questions</h2>
-  <relic-callout type="success">All snippet-related open questions resolved. Skill questions moved to <relic-chip color="blue">011-skill-extraction</relic-chip>.</relic-callout>
   <relic-table
-    headers='["Question","Decision","Status"]'
+    headers='["#","Question","Status"]'
     rows='[
-      ["Snippet path resolution","Named registry reference — <code>relic snippet &lt;name&gt;</code> (singular), not a file path","<relic-chip color=\"green\">resolved</relic-chip>"],
-      ["Nested includes in v1?","Yes — snippets compose via nested <code>&lt;!-- include: --&gt;</code>; depth-first; cycle detection in <code>relic snippet</code>","<relic-chip color=\"green\">resolved</relic-chip>"],
-      ["Two preamble-guard files vs one?","Plan phase audit evaluates merging into one universal snippet (FR-17). Light content changes acceptable.","<relic-chip color=\"green\">resolved</relic-chip>"]
+      ["OQ-1","Are there additional skill candidates beyond <code>search-context</code> and <code>check-intersections</code>? Review all command templates at plan time.","<relic-chip color=\"amber\">open</relic-chip>"],
+      ["OQ-2","Should 011 produce its own Phase 7 build verification step, or reuse the same <code>bun run build:templates</code> + <code>relic init</code> test from spec 010?","<relic-chip color=\"amber\">open</relic-chip>"]
     ]'>
   </relic-table>
 </section>
@@ -1159,23 +845,21 @@ No changelog entry needed for plan creation. Both owned contracts were created d
     <div>
       <h3>In Scope</h3>
       <ul>
-        <li><code>templates/snippets/</code> + 4–5 snippet files (after FR-17 audit)</li>
-        <li>Directive: <code>&lt;!-- include: relic snippet &lt;name&gt; --&gt;</code> — LLM-runtime, not build-time</li>
-        <li>Minimal modify <code>scripts/embed-engine-templates.ts</code> — <code>SNIPPETS</code> registry bake only; no skill entries (see 011)</li>
-        <li>Modify relevant <code>templates/prompts/*.md</code> files — replace static blocks with <code>&lt;!-- include: --&gt;</code> directives</li>
-        <li><code>relic snippet &lt;name&gt;</code> CLI command (LLM runtime + developer inspection)</li>
-        <li>Circular reference detection in <code>relic snippet</code></li>
-        <li>Light content consolidation to reduce snippet count (FR-17)</li>
+        <li><code>templates/skills/</code> directory + 2 skill files</li>
+        <li>Both <code>relic init</code> + <code>add-engine</code> write skills via <code>engines/claude/index.ts</code></li>
+        <li>Additive extension to <code>embed-engine-templates.ts</code> — skill entries only</li>
+        <li>Command templates: replace embedded procedures + prose references with <code>&lt;!-- use: --&gt;</code> directives</li>
+        <li><code>templates/preamble.md</code> — skill mandate + directive documentation</li>
+        <li>Skills may use both <code>&lt;!-- include: --&gt;</code> and <code>&lt;!-- use: --&gt;</code> directives</li>
       </ul>
     </div>
     <div>
       <h3>Out of Scope</h3>
       <ul>
-        <li><code>scripts/embed-templates.ts</code> (scaffold templates)</li>
+        <li>Snippet files and <code>relic snippet</code> CLI — handled by spec 010</li>
+        <li>Skill support for Copilot / Codex — v1 is Claude only</li>
         <li>Build-time directive resolution — LLM runtime only</li>
-        <li>Variable substitution in snippets (<code>&#123;&#123;PLACEHOLDER&#125;&#125;</code>) — composition via inclusion only</li>
-        <li>Skill files, skill write logic, <code>&lt;!-- use: relic.&lt;skill-name&gt; --&gt;</code> directive applications — handled by spec 011</li>
-        <li><code>templates/preamble.md</code> updates (skill mandate) — handled by spec 011</li>
+        <li>Third-party skill extension — only first-party skills in <code>templates/skills/</code></li>
       </ul>
     </div>
   </div>
