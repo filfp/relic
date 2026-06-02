@@ -51,7 +51,7 @@ The principle for this spec: **static text → snippets.**
 
 - **FR-1:** A `templates/snippets/` directory holds named Markdown fragment files. Each file is a self-contained block of prompt text (no front-matter, no directives — plain Markdown).
 - **FR-2:** Any template in `templates/prompts/` may reference a snippet using `<!-- include: relic snippet <name> -->`, where `<name>` is the snippet's registered identifier (filename without `.md`). The directive must appear on its own line. It is an LLM instruction, not a build-time substitution — the LLM reads it and calls `relic snippet <name>` to load the snippet content into its working context.
-- **FR-3:** `scripts/embed-engine-templates.ts` bakes templates into `ENGINE_TEMPLATES` **as-is**. `<!-- include: relic snippet <name> -->` directives are preserved verbatim in the baked output and in the `.claude/commands/` files written to user projects. No directive resolution occurs at build time. The embed script change for snippet support is minimal: it only needs to bake the `SNIPPETS` registry (see FR-14). Adding skill standalone entries to ENGINE_TEMPLATES is out of scope for this spec (see 011).
+- **FR-3:** `scripts/embed-engine-templates.ts` bakes templates into `ENGINE_TEMPLATES` **as-is**. `<!-- include: relic snippet <name> -->` directives are preserved verbatim in the baked output and in the `.claude/commands/` files written to user projects. No directive resolution occurs at build time. The embed script change for snippet support is minimal: it only needs to bake the `SNIPPETS` registry (see FR-14).
 - **FR-4:** Snippets are **not** added as standalone entries in `ENGINE_TEMPLATES`. They are accessed at runtime via `relic snippet <name>`.
 - **FR-5:** `relic snippet <name>` with an unknown name exits with a non-zero code and an error message. There is no build-time validation of directive names — errors surface when the LLM attempts to load the snippet.
 - **FR-6:** After extraction, every `<!-- include: relic snippet <name> -->` in a template must produce the same effective content as the verbatim block it replaced when the LLM resolves it — no behavioural changes, only source consolidation.
@@ -81,7 +81,7 @@ The principle for this spec: **static text → snippets.**
 
 - `templates/snippets/` directory and the snippet files from the audit (exact count determined by consolidation in FR-17).
 - Directive syntax: `<!-- include: relic snippet <name> -->` — LLM-runtime invocation, not build-time substitution.
-- Minimal modification of `scripts/embed-engine-templates.ts` — adds `SNIPPETS` registry bake only; no skill entries (see 011), no directive resolution logic.
+- Minimal modification of `scripts/embed-engine-templates.ts` — adds `SNIPPETS` registry bake only; no directive resolution logic.
 - Modification of the relevant `templates/prompts/*.md` files to replace verbatim blocks with `<!-- include: relic snippet -->` directives.
 - `relic snippet <name>` CLI command — LLM calls this at runtime; developers use it for inspection.
 - Circular reference detection in `relic snippet` when resolving nested includes.
@@ -126,9 +126,8 @@ The principle for this spec: **static text → snippets.**
 ## Decisions
 
 - **Runtime resolution, not build-time:** `<!-- include: relic snippet <name> -->` directives are NOT resolved by the embed script. They travel verbatim in the baked template. The LLM sees the directive and calls `relic snippet <name>` at runtime. Rejected: build-time substitution (bakes a single compiled version, loses composability; adds build complexity).
-- **Directive syntax — two forms defined in SnippetIncludeContract.md:** `<!-- include: relic snippet <name> -->` (load snippet) and `<!-- use: relic.<skill-name> -->` (invoke skill). Both syntaxes are owned by this spec's contract. Applying `<!-- use: -->` directives to templates is implemented by spec 011.
+- **Directive syntax — two forms defined in SnippetIncludeContract.md:** `<!-- include: relic snippet <name> -->` (load snippet) and `<!-- use: relic.<skill-name> -->` (invoke skill). Both syntaxes are owned by this spec's contract.
 - **Snippets support composition, not substitution:** Snippets may include other snippets, building complex context blocks from primitives. No `{{PLACEHOLDER}}` variable substitution.
 - **Snippet consolidation is in scope:** Light content changes during extraction are acceptable where they reduce the total snippet count (FR-17).
 - **`relic snippet <name>` CLI command:** Outputs named snippet content from the baked `SNIPPETS` registry. Registered in `packages/cli-node/src/bin.ts`.
 - **Snippets not in ENGINE_TEMPLATES:** Accessed at runtime via `relic snippet`; not written to `.claude/commands/`.
-- **Skills are a separate spec:** Skill file creation, Claude engine write logic, preamble mandate, and `<!-- use: -->` template applications are fully scoped to spec 011. This spec owns only the snippet track and the directive syntax definitions.
