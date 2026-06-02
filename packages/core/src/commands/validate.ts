@@ -1,6 +1,6 @@
 import { join } from "path";
 import { readdirSync, statSync } from "fs";
-import { findRelicDir, fileExists, dirExists, readJson, readText, decodeToon } from "@relic/utility";
+import { findRelicDir, fileExists, dirExists, readJson, readText, decodeToon, readMode } from "@relic/utility";
 import { loadRegistry } from "../core/artifact-registry.ts";
 import { SHARED_SUBDIRS } from "../types.ts";
 
@@ -32,6 +32,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
   }
 
   const registry = loadRegistry(relicDir);
+  const mode = readMode(relicDir);
 
   const conflicts: ValidateResult["conflicts"] = [];
   const missingOwned: ValidateResult["missing_owned"] = [];
@@ -80,7 +81,8 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
     if (dirExists(spec.path)) {
       const entries = readdirSync(spec.path);
       for (const entry of entries) {
-        if (statSync(join(spec.path, entry)).isFile() && !ALLOWED_SPEC_FILES.has(entry)) {
+        const isHtmlSpecFile = mode === "html" && entry === `${spec.id}.html`;
+        if (statSync(join(spec.path, entry)).isFile() && !ALLOWED_SPEC_FILES.has(entry) && !isHtmlSpecFile) {
           illegalFiles.push({ file: entry, spec: spec.id });
         }
       }
