@@ -23,6 +23,23 @@ A prompt step is a **snippet** when:
 - It only makes sense as part of a larger command
 - It is purely decorative or instructional (no LLM action required)
 
+## Skill Archetypes
+
+Skills come in two archetypes with different invocation patterns:
+
+**Procedural skills** — invoked explicitly, either by the user or by the LLM at a specific point in a command workflow (via `<!-- use: -->` directive). They execute a focused relic procedure and return. Examples: `search-context`, `check-intersections`.
+
+**Proactive skills** — invoked by the LLM autonomously based on conversation context, without user command. They detect a trigger condition, surface the opportunity, and ask the user to confirm before taking any action. They MUST NOT execute relic workflows without explicit user confirmation. Examples: `smart-search`, `suggest-workflow`.
+
+## Proactive Skill Requirements
+
+A proactive skill file MUST contain:
+- A **When to invoke** section describing the trigger conditions in natural language
+- A **Confirmation gate** section — the user must say yes before any workflow fires
+- An explicit **Do NOT** list: do not run workflows, write files, or execute commands without confirmation
+
+Proactive skill trigger conditions are also written to the engine's ambient instruction file (`.claude/CLAUDE.md` for Claude), bounded by `<!-- relic: proactive-skills -->` markers, by both `relic init` and `relic add-engine`. This block is idempotent — regenerated, not appended, if the marker exists.
+
 ## Skill File Structure
 
 Skills live in `templates/skills/<skill-name>.md`. Each file:
@@ -73,14 +90,37 @@ This is a machine-readable HTML comment — invisible in rendered Markdown, reco
 
 ## Canonical Skill Registry
 
+### Procedural Skills
+
 | Skill file | Slash command | Procedure | Was embedded in |
 |---|---|---|---|
 | `search-context.md` | `/relic.search-context` | Two-step artifact discovery (targeted → full scan fallback) | specify, plan |
 | `check-intersections.md` | `/relic.check-intersections` | Load all `artifacts.json`, compare `owns` + `touches_files` | specify, clarify, plan, tasks |
 
+### Proactive Skills
+
+| Skill file | Slash command | Trigger condition | Fires when |
+|---|---|---|---|
+| `smart-search.md` | `/relic.smart-search` | User asks about a domain, concept, rule, or system behaviour relic tracks | LLM detects question about a topic in the relic knowledge base |
+| `suggest-workflow.md` | `/relic.suggest-workflow` | Conversation reveals a bug in spec-owned code or a new feature discussion | LLM detects fix or specify opportunity |
+
+## Snippet vs Skill — The Loading Distinction
+
+| | Snippet | Skill |
+|---|---|---|
+| Timing | **Eager** — text inlined at prompt load time, always present in context | **Lazy** — invoked on demand; procedure runs only when needed |
+| Complexity | Static text only — no CLI commands, no branching | Arbitrary — CLI commands, conditional logic, multi-step procedures |
+| Context cost | Always paid, even when unused | Zero until the LLM decides to invoke |
+| Reference form | `<!-- include: relic snippet <name> -->` | `<!-- use: relic.<skill-name> -->` |
+| Best for | Short static preambles, guards, read-only instructions | Procedural steps that involve running commands or making decisions |
+
+**Migration rule:** Any snippet that contains CLI commands (`relic search`, `relic context`, etc.) or decision logic should be promoted to a skill. The skill is richer and the prompt is lighter.
+
+Specifically: `search-knowledge` snippet → superseded by `search-context` skill for Claude. All `<!-- include: relic snippet search-knowledge -->` directives in prompt templates must be replaced with `<!-- use: relic.search-context -->`.
+
 ## What Skills Are NOT
 
-- Skills are not snippets — they appear as standalone ENGINE_TEMPLATES entries, not inlined.
+- Skills are not snippets — they appear as standalone ENGINE_TEMPLATES entries, not inlined at load time.
 - Skills are not full workflow commands — they do one focused thing and return.
 - Skills are not CLI commands — they are LLM instructions, not TypeScript code.
 
