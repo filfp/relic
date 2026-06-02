@@ -14,6 +14,7 @@ import {
   runUpgrade,
   runWrite,
   runMode,
+  runSnippet,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -205,6 +206,13 @@ program
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (value: string | undefined, opts: { text: boolean }) => {
     await runMode({ value, text: opts.text });
+  });
+
+program
+  .command("snippet <name>")
+  .description("Output named snippet content from baked SNIPPETS registry")
+  .action((name: string) => {
+    runSnippet(name);
   });
 
 program.parse(process.argv);

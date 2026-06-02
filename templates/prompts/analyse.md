@@ -1,7 +1,6 @@
 # /relic.analyse
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+<!-- include: relic snippet preamble-guard -->
 
 ## Before you begin — run these first
 

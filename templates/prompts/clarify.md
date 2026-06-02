@@ -1,7 +1,6 @@
 # /relic.clarify
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+<!-- include: relic snippet preamble-guard -->
 
 ## Before you begin — run these first
 
@@ -19,7 +18,7 @@ You are appending details, changing contracts, or adding behaviors to an existin
 
 ## Before you begin
 
-1. Read `.relic/constitution.md`.
+<!-- include: relic snippet constitution-load -->
 2. Read `specs/{{SPEC_ID}}/spec.md` fully.
 3. Read `specs/{{SPEC_ID}}/artifacts.json`.
 4. Load all referenced shared artifacts.

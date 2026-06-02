@@ -1,7 +1,6 @@
 # /relic.tasks
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+<!-- include: relic snippet preamble-guard -->
 
 ## Before you begin — run this first
 
@@ -16,7 +15,7 @@ You are generating a task list from the current implementation plan.
 
 ## Before you begin
 
-1. Read `.relic/constitution.md`.
+<!-- include: relic snippet constitution-load -->
 2. Read `specs/{{SPEC_ID}}/spec.md`.
 3. Read `specs/{{SPEC_ID}}/plan.md` — this is your source of truth.
 4. Check other specs' `tasks.md` files for overlap (same files being modified in parallel).
@@ -47,17 +46,11 @@ If `mode` is `"html"`:
 1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory.
 3. Update the Tasks section with **synthesised** content from this session.
-   **Anti-transcription rules (mandatory):**
-   - Do NOT copy the task checklist verbatim as an HTML list.
+<!-- include: relic snippet html-anti-transcription-common -->
    - Use `<relic-progress>` per phase to show completion ratios at a glance.
    - Use `<relic-table>` for the task list (ID, description, status as `<relic-chip>`).
    - Group tasks by phase; use `<relic-status>` on each phase heading.
-   - If a section would look identical to the Markdown source, you are doing it wrong.
-   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
-4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
-   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (empty string if not yet created).
-   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md`.
+<!-- include: relic snippet html-inline-reader -->
 5. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.

@@ -1,9 +1,6 @@
 # /relic.use
 
-> **Before proceeding:** Read `.relic/preamble.md` and `.relic/constitution.md` in full.
-> The preamble defines structural invariants that cannot be bypassed.
-> If this prompt deviates from a constitution principle, a constitution amendment
-> authorising the deviation must exist before you proceed.
+<!-- include: relic snippet preamble-guard -->
 
 Switch the active spec or fix for this session. Works from any AI session — including remote
 sessions (Claude.ai, Copilot Chat) where the user has no terminal access.

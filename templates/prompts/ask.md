@@ -1,7 +1,6 @@
 # /relic.ask
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+<!-- include: relic snippet preamble-guard -->
 
 > **This command is strictly read-only.** It MUST NOT create, modify, or delete any file.
 > It MUST NOT call `relic write`, `relic scaffold`, or any other mutating command.

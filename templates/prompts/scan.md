@@ -1,5 +1,7 @@
 # /relic.scan
 
+<!-- include: relic snippet preamble-guard -->
+
 Bootstrap the Relic knowledge layer from an existing codebase. Run this **once** when
 adopting Relic on a project that already has code. It generates the shared artifact layer
 (`.relic/shared/`) so every subsequent spec starts with a populated brain.

@@ -917,10 +917,10 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 *Create `templates/snippets/` with 4 plain Markdown fragment files. No code, no build step.*
 
-- [ ] **T-01** Create `templates/snippets/preamble-guard.md` — 4-line extended preamble blockquote (universal variant, replaces both 2-line and 4-line forms)
-- [ ] **T-02** Create `templates/snippets/constitution-load.md` — the exact 1-line `Read .relic/constitution.md` instruction
-- [ ] **T-03** Create `templates/snippets/html-anti-transcription-common.md` — the 3 universal anti-transcription rules common to all HTML-mode commands
-- [ ] **T-04** Create `templates/snippets/html-inline-reader.md` — the "Populate the inline reader source blocks" instruction with the 3 `<script type="text/plain">` replacement steps
+- [x] **T-01** Create `templates/snippets/preamble-guard.md` — 4-line extended preamble blockquote (universal variant, replaces both 2-line and 4-line forms)
+- [x] **T-02** Create `templates/snippets/constitution-load.md` — the exact 1-line `Read .relic/constitution.md` instruction
+- [x] **T-03** Create `templates/snippets/html-anti-transcription-common.md` — the 3 universal anti-transcription rules common to all HTML-mode commands
+- [x] **T-04** Create `templates/snippets/html-inline-reader.md` — the "Populate the inline reader source blocks" instruction with the 3 `<script type="text/plain">` replacement steps
 
 ---
 
@@ -928,8 +928,8 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 *Add SNIPPETS registry bake. Skill entries in ENGINE_TEMPLATES are out of scope (see 011).*
 
-- [ ] **T-05** Extend `scripts/embed-engine-templates.ts` to walk `templates/snippets/*.md` and emit `export const SNIPPETS: Record<string, string> = { ... }` in `packages/engines/src/generated/engine-templates.ts`. Key = filename without `.md`. Append after the existing `ENGINE_TEMPLATES` block.
-- [ ] **T-06** Add `export { SNIPPETS } from "./generated/engine-templates.ts"` to `packages/engines/src/index.ts`
+- [x] **T-05** Extend `scripts/embed-engine-templates.ts` to walk `templates/snippets/*.md` and emit `export const SNIPPETS: Record<string, string> = { ... }` in `packages/engines/src/generated/engine-templates.ts`. Key = filename without `.md`. Append after the existing `ENGINE_TEMPLATES` block.
+- [x] **T-06** Add `export { SNIPPETS } from "./generated/engine-templates.ts"` to `packages/engines/src/index.ts`
 
 ---
 
@@ -937,11 +937,11 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 *New CLI command and supporting module. ≤ 30 lines of resolution logic (NFR-2).*
 
-- [ ] **T-07** Create `packages/core/src/commands/snippet.ts` with:
+- [x] **T-07** Create `packages/core/src/commands/snippet.ts` with:
   - `resolveSnippet(name, snippets, visiting)` — depth-first expansion, cycle detection (exit 1 on cycle or unknown name), replaces `<!-- include: relic snippet <dep> -->` recursively
   - `runSnippet(name)` — imports `SNIPPETS` from `@relic/engines`, calls `resolveSnippet`, writes result to stdout
-- [ ] **T-08** Add `export { runSnippet } from "./commands/snippet.ts"` to `packages/core/src/index.ts`
-- [ ] **T-09** Register `relic snippet <name>` command in `packages/cli-node/src/bin.ts` — delegates to `runSnippet(name)` from `@relic/core`
+- [x] **T-08** Add `export { runSnippet } from "./commands/snippet.ts"` to `packages/core/src/index.ts`
+- [x] **T-09** Register `relic snippet <name>` command in `packages/cli-node/src/bin.ts` — delegates to `runSnippet(name)` from `@relic/core`
 
 ---
 
@@ -949,29 +949,29 @@ No changelog entry needed for plan creation. The owned contract was created duri
 
 *Replace static repeated blocks with `<!-- include: relic snippet <name> -->` directives. Do NOT add `<!-- use: relic.* -->` skill directives — that is 011's job.*
 
-- [ ] **T-10** Update `templates/prompts/specify.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
-- [ ] **T-11** Update `templates/prompts/clarify.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`
-- [ ] **T-12** Update `templates/prompts/plan.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
-- [ ] **T-13** Update `templates/prompts/analyse.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`
-- [ ] **T-14** Update `templates/prompts/tasks.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
-- [ ] **T-15** Update `templates/prompts/implement.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
-- [ ] **T-16** Update `templates/prompts/fix.md` — replace preamble blockquote with `preamble-guard` (universal preamble already includes constitution mention — no separate `constitution-load` directive needed)
-- [ ] **T-17** Update `templates/prompts/scan.md` — replace preamble blockquote with `preamble-guard`
-- [ ] **T-18** Update `templates/prompts/use.md` — replace preamble blockquote with `preamble-guard`
-- [ ] **T-19** Update `templates/prompts/constitution.md` — replace preamble blockquote with `preamble-guard`
-- [ ] **T-20** Update `templates/prompts/solve.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`
-- [ ] **T-21** Update `templates/prompts/ask.md` — replace preamble blockquote with `preamble-guard`
+- [x] **T-10** Update `templates/prompts/specify.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
+- [x] **T-11** Update `templates/prompts/clarify.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`
+- [x] **T-12** Update `templates/prompts/plan.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
+- [x] **T-13** Update `templates/prompts/analyse.md` — replace preamble blockquote with `preamble-guard` (no standalone constitution step exists in this template)
+- [x] **T-14** Update `templates/prompts/tasks.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
+- [x] **T-15** Update `templates/prompts/implement.md` — replace preamble blockquote with `preamble-guard`, constitution load with `constitution-load`, HTML anti-transcription block with `html-anti-transcription-common`, inline reader block with `html-inline-reader`
+- [x] **T-16** Update `templates/prompts/fix.md` — replace preamble blockquote with `preamble-guard` (universal preamble already includes constitution mention — no separate `constitution-load` directive needed)
+- [x] **T-17** Update `templates/prompts/scan.md` — add `preamble-guard` directive after heading (no existing blockquote)
+- [x] **T-18** Update `templates/prompts/use.md` — replace preamble blockquote with `preamble-guard`
+- [x] **T-19** Update `templates/prompts/constitution.md` — add `preamble-guard` directive after heading (no existing blockquote)
+- [x] **T-20** Update `templates/prompts/solve.md` — replace preamble blockquote with `preamble-guard` (no standalone constitution step exists in this template)
+- [x] **T-21** Update `templates/prompts/ask.md` — replace preamble blockquote with `preamble-guard`
 
 ---
 
 ## Phase 5 — Build + Verify
 
-- [ ] **T-22** Run `bun run build:templates` — confirm `packages/engines/src/generated/engine-templates.ts` regenerates cleanly
-- [ ] **T-23** Verify `export const SNIPPETS` block appears in `engine-templates.ts` with all 4 snippet keys
-- [ ] **T-24** Test `relic snippet preamble-guard` — outputs the 4-line extended preamble to stdout
-- [ ] **T-25** Test `relic snippet unknown-name` — exits non-zero with `[snippet] Unknown snippet: unknown-name`
-- [ ] **T-26** Test nested directive expansion — a snippet that includes another snippet resolves correctly
-- [ ] **T-27** Run `bun run build:binary` — confirm the CLI binary builds and `relic snippet --help` is registered
+- [x] **T-22** Run `bun run build:templates` — confirm `packages/engines/src/generated/engine-templates.ts` regenerates cleanly
+- [x] **T-23** Verify `export const SNIPPETS` block appears in `engine-templates.ts` with all 4 snippet keys
+- [x] **T-24** Test `relic snippet preamble-guard` — outputs the 4-line extended preamble to stdout
+- [x] **T-25** Test `relic snippet unknown-name` — exits non-zero with `[snippet] Unknown snippet: unknown-name`
+- [x] **T-26** Test nested directive expansion — a snippet that includes another snippet resolves correctly
+- [x] **T-27** Run `bun run build:binary` — confirm the CLI binary builds and `relic snippet --help` is registered
 </script>
 
 <div id="relic-body">
@@ -1099,66 +1099,70 @@ No changelog entry needed for plan creation. The owned contract was created duri
   <relic-callout type="info"><strong>Phase numbering:</strong> <code>plan.md</code> was renumbered after the 010/011 split removed Phases 2 and 5 (now <relic-chip color="blue">011-skill-extraction</relic-chip>). Task phases here match the renumbered plan (Phases 1–5).</relic-callout>
   <relic-callout type="info"><strong>Ordering constraint:</strong> 010's <code>&lt;!-- include: --&gt;</code> replacements must land before 011 applies <code>&lt;!-- use: --&gt;</code> skill directives to the same templates.</relic-callout>
 
-  <h3>Phase 1 — Snippet Files <relic-chip>0 / 4</relic-chip></h3>
+  <relic-progress value="27" max="27"></relic-progress>
+  <relic-callout type="success">All 27 tasks complete. Spec fully implemented.</relic-callout>
+  <relic-callout type="info"><strong>Implementation note:</strong> T-13 (analyse.md) and T-20 (solve.md) — no standalone <code>Read .relic/constitution.md</code> step existed in these templates; constitution reading is covered by the extended <code>preamble-guard</code> snippet. T-17 and T-19 (scan.md, constitution.md) — no existing blockquote; directive added after the heading as a new guard.</relic-callout>
+
+  <h3 id="phase1"><relic-status value="done">Phase 1 — Snippet Files</relic-status> <relic-chip color="green">4 / 4</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[
-      ["T-01","Create <code>templates/snippets/preamble-guard.md</code> — 4-line extended preamble blockquote (universal, replaces both 2-line and 4-line variants)","<relic-chip>todo</relic-chip>"],
-      ["T-02","Create <code>templates/snippets/constitution-load.md</code> — exact 1-line Read constitution.md instruction","<relic-chip>todo</relic-chip>"],
-      ["T-03","Create <code>templates/snippets/html-anti-transcription-common.md</code> — 3 universal anti-transcription rules","<relic-chip>todo</relic-chip>"],
-      ["T-04","Create <code>templates/snippets/html-inline-reader.md</code> — inline reader source block population instructions","<relic-chip>todo</relic-chip>"]
+      ["T-01","Create <code>templates/snippets/preamble-guard.md</code> — 4-line extended preamble blockquote (universal, replaces both 2-line and 4-line variants)","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-02","Create <code>templates/snippets/constitution-load.md</code> — exact 1-line Read constitution.md instruction","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-03","Create <code>templates/snippets/html-anti-transcription-common.md</code> — 3 universal anti-transcription rules","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-04","Create <code>templates/snippets/html-inline-reader.md</code> — inline reader source block population instructions","<relic-chip color=\"green\">done</relic-chip>"]
     ]'>
   </relic-table>
 
-  <h3>Phase 2 — embed-engine-templates.ts (SNIPPETS only) <relic-chip>0 / 2</relic-chip></h3>
+  <h3 id="phase2"><relic-status value="done">Phase 2 — embed-engine-templates.ts (SNIPPETS only)</relic-status> <relic-chip color="green">2 / 2</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[
-      ["T-05","Extend <code>embed-engine-templates.ts</code> — walk <code>templates/snippets/*.md</code>, emit <code>export const SNIPPETS</code> block in <code>engine-templates.ts</code>","<relic-chip>todo</relic-chip>"],
-      ["T-06","Add <code>export { SNIPPETS }</code> to <code>packages/engines/src/index.ts</code>","<relic-chip>todo</relic-chip>"]
+      ["T-05","Extend <code>embed-engine-templates.ts</code> — walk <code>templates/snippets/*.md</code>, emit <code>export const SNIPPETS</code> block in <code>engine-templates.ts</code>","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-06","Add <code>export { SNIPPETS }</code> to <code>packages/engines/src/index.ts</code>","<relic-chip color=\"green\">done</relic-chip>"]
     ]'>
   </relic-table>
 
-  <h3>Phase 3 — relic snippet Command <relic-chip>0 / 3</relic-chip></h3>
+  <h3 id="phase3"><relic-status value="done">Phase 3 — relic snippet Command</relic-status> <relic-chip color="green">3 / 3</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[
-      ["T-07","Create <code>packages/core/src/commands/snippet.ts</code> — <code>resolveSnippet</code> (depth-first, cycle detection) + <code>runSnippet</code> (reads SNIPPETS, writes stdout). ≤ 30 lines.","<relic-chip>todo</relic-chip>"],
-      ["T-08","Add <code>export { runSnippet }</code> to <code>packages/core/src/index.ts</code>","<relic-chip>todo</relic-chip>"],
-      ["T-09","Register <code>relic snippet &lt;name&gt;</code> command in <code>packages/cli-node/src/bin.ts</code>","<relic-chip>todo</relic-chip>"]
+      ["T-07","Create <code>packages/core/src/commands/snippet.ts</code> — <code>resolveSnippet</code> (depth-first, cycle detection) + <code>runSnippet</code> (reads SNIPPETS, writes stdout). ≤ 30 lines.","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-08","Add <code>export { runSnippet }</code> to <code>packages/core/src/index.ts</code>","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-09","Register <code>relic snippet &lt;name&gt;</code> command in <code>packages/cli-node/src/bin.ts</code>","<relic-chip color=\"green\">done</relic-chip>"]
     ]'>
   </relic-table>
 
-  <h3>Phase 4 — Template Updates (snippet directives only) <relic-chip>0 / 12</relic-chip></h3>
+  <h3 id="phase4"><relic-status value="done">Phase 4 — Template Updates (snippet directives only)</relic-status> <relic-chip color="green">12 / 12</relic-chip></h3>
   <relic-callout type="info">Replace static repeated blocks only. Do NOT add <code>&lt;!-- use: relic.* --&gt;</code> skill directives — that is 011's job.</relic-callout>
   <relic-table
-    headers='["ID","Template","Directives to add","Status"]'
+    headers='["ID","Template","Directives added","Status"]'
     rows='[
-      ["T-10","<code>specify.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip>todo</relic-chip>"],
-      ["T-11","<code>clarify.md</code>","preamble-guard, constitution-load","<relic-chip>todo</relic-chip>"],
-      ["T-12","<code>plan.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip>todo</relic-chip>"],
-      ["T-13","<code>analyse.md</code>","preamble-guard, constitution-load","<relic-chip>todo</relic-chip>"],
-      ["T-14","<code>tasks.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip>todo</relic-chip>"],
-      ["T-15","<code>implement.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip>todo</relic-chip>"],
-      ["T-16","<code>fix.md</code>","preamble-guard only (universal preamble already contains constitution)","<relic-chip>todo</relic-chip>"],
-      ["T-17","<code>scan.md</code>","preamble-guard","<relic-chip>todo</relic-chip>"],
-      ["T-18","<code>use.md</code>","preamble-guard","<relic-chip>todo</relic-chip>"],
-      ["T-19","<code>constitution.md</code>","preamble-guard","<relic-chip>todo</relic-chip>"],
-      ["T-20","<code>solve.md</code>","preamble-guard, constitution-load","<relic-chip>todo</relic-chip>"],
-      ["T-21","<code>ask.md</code>","preamble-guard","<relic-chip>todo</relic-chip>"]
+      ["T-10","<code>specify.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-11","<code>clarify.md</code>","preamble-guard, constitution-load","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-12","<code>plan.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-13","<code>analyse.md</code>","preamble-guard (no standalone constitution step)","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-14","<code>tasks.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-15","<code>implement.md</code>","preamble-guard, constitution-load, html-anti-transcription-common, html-inline-reader","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-16","<code>fix.md</code>","preamble-guard (extended preamble already contains constitution)","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-17","<code>scan.md</code>","preamble-guard (added after heading — no prior blockquote)","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-18","<code>use.md</code>","preamble-guard","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-19","<code>constitution.md</code>","preamble-guard (added after heading — no prior blockquote)","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-20","<code>solve.md</code>","preamble-guard (no standalone constitution step)","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-21","<code>ask.md</code>","preamble-guard","<relic-chip color=\"green\">done</relic-chip>"]
     ]'>
   </relic-table>
 
-  <h3>Phase 5 — Build + Verify <relic-chip>0 / 6</relic-chip></h3>
+  <h3 id="phase5"><relic-status value="done">Phase 5 — Build + Verify</relic-status> <relic-chip color="green">6 / 6</relic-chip></h3>
   <relic-table
     headers='["ID","Task","Status"]'
     rows='[
-      ["T-22","Run <code>bun run build:templates</code> — confirm <code>engine-templates.ts</code> regenerates cleanly","<relic-chip>todo</relic-chip>"],
-      ["T-23","Verify <code>export const SNIPPETS</code> block in <code>engine-templates.ts</code> with all 4 snippet keys","<relic-chip>todo</relic-chip>"],
-      ["T-24","Test <code>relic snippet preamble-guard</code> — outputs 4-line extended preamble to stdout","<relic-chip>todo</relic-chip>"],
-      ["T-25","Test <code>relic snippet unknown-name</code> — exits non-zero with correct error message","<relic-chip>todo</relic-chip>"],
-      ["T-26","Test nested directive expansion — snippet including snippet resolves correctly","<relic-chip>todo</relic-chip>"],
-      ["T-27","Run <code>bun run build:binary</code> — confirm binary builds and <code>relic snippet --help</code> is registered","<relic-chip>todo</relic-chip>"]
+      ["T-22","Run <code>bun run build:templates</code> — confirm <code>engine-templates.ts</code> regenerates cleanly","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-23","Verify <code>export const SNIPPETS</code> block in <code>engine-templates.ts</code> with all 4 snippet keys","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-24","Test <code>relic snippet preamble-guard</code> — outputs 4-line extended preamble to stdout","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-25","Test <code>relic snippet unknown-name</code> — exits non-zero with correct error message","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-26","Test nested directive expansion — snippet including snippet resolves correctly","<relic-chip color=\"green\">done</relic-chip>"],
+      ["T-27","Run <code>bun run build:binary</code> — confirm binary builds and <code>relic snippet --help</code> is registered","<relic-chip color=\"green\">done</relic-chip>"]
     ]'>
   </relic-table>
 </section>

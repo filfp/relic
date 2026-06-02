@@ -1,7 +1,6 @@
 # /relic.plan
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+<!-- include: relic snippet preamble-guard -->
 
 ## Before you begin — run these first
 
@@ -19,7 +18,7 @@ You are creating an implementation plan for this spec.
 
 ## Before writing the plan
 
-1. Read `.relic/constitution.md`.
+<!-- include: relic snippet constitution-load -->
 2. Read `specs/{{SPEC_ID}}/spec.md` fully.
 3. Discover relevant shared artifacts using the two-step cascade:
 
@@ -77,18 +76,12 @@ If `mode` is `"html"`:
 1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory.
 3. Update the Plan section with **synthesised** content from this planning session.
-   **Anti-transcription rules (mandatory):**
-   - Do NOT copy Markdown text verbatim into the HTML.
+<!-- include: relic snippet html-anti-transcription-common -->
    - Render the implementation phases as a `<relic-flow>` dependency graph, not as a numbered list.
    - Use `<relic-table>` for the file changes table (file, action, notes).
    - Use `<relic-callout type="warn">` for intersection notes; `type="risk"` for blocking concerns.
    - Use `<relic-chip>` for inline spec IDs and file types instead of plain text.
-   - If a section would look identical to the Markdown source, you are doing it wrong.
-   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
-4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
-   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (empty string if not yet created).
+<!-- include: relic snippet html-inline-reader -->
 5. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.

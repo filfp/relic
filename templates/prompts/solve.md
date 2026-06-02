@@ -1,9 +1,6 @@
 # /relic.solve
 
-> **Before proceeding:** Read `.relic/preamble.md` and `.relic/constitution.md` in full.
-> The preamble defines structural invariants that cannot be bypassed.
-> If this prompt deviates from a constitution principle, a constitution amendment
-> authorising the deviation must exist before you proceed.
+<!-- include: relic snippet preamble-guard -->
 
 `/relic.solve` is the **application stage** of the two-stage fix pipeline. It reads the active fix
 document (created by `/relic.fix`), applies the proposed code changes, updates the knowledge layer

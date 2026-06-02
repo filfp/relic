@@ -1,5 +1,7 @@
 # /relic.constitution
 
+<!-- include: relic snippet preamble-guard -->
+
 Extract project-specific coding principles, tech standards, and architecture decisions
 into `.relic/constitution.md`. Run this **once** when adopting Relic — after `/relic.scan`
 if the codebase exists, or standalone for new projects.

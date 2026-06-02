@@ -1,7 +1,6 @@
 # /relic.specify
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+<!-- include: relic snippet preamble-guard -->
 
 ## Before you begin — Step 0: derive the spec title
 
@@ -23,7 +22,7 @@ You are helping create a new spec for this project.
 
 ## Before you begin — Step 2: load context
 
-1. Read `.relic/constitution.md` — understand the governing rules.
+<!-- include: relic snippet constitution-load -->
 2. Read the newly created `spec.md` from the path in the scaffold output.
 3. Discover relevant shared artifacts using the two-step cascade:
 
@@ -103,19 +102,12 @@ If `mode` is `"html"`:
 1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
 2. Read `<spec-id>.html` in the spec directory (path is in the `relic scaffold` output from Step 1).
 3. Update it with **synthesised** content reflecting the work done in this session.
-   **Anti-transcription rules (mandatory):**
-   - Do NOT copy Markdown text verbatim into the HTML.
+<!-- include: relic snippet html-anti-transcription-common -->
    - Replace bullet lists of steps with a `<relic-flow>` diagram.
    - Replace prose describing tabular data with a `<relic-table>`.
    - Replace "3 of 5 tasks complete" with `<relic-progress>`.
    - Use `<relic-chip>` for inline metadata instead of parenthetical text.
-   - If a section would look identical to the Markdown source, you are doing it wrong — find a visual form.
-   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
-4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
-   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (use empty string if the file does not exist yet).
-   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (use empty string if the file does not exist yet).
-   These source blocks power the nav link reader — clicking a header nav link renders the file inline from these blocks.
+<!-- include: relic snippet html-inline-reader -->
 5. Write the updated `<spec-id>.html` back.
 
 If `mode` is `"md"`, skip this step entirely.
