@@ -1,26 +1,23 @@
 # /relic.solve
 
-<!-- include: relic snippet preamble-guard -->
-
 `/relic.solve` is the **application stage** of the two-stage fix pipeline. It reads the active fix
 document (created by `/relic.fix`), applies the proposed code changes, updates the knowledge layer
 if needed, and closes the fix. Run `/relic.fix <issue>` first if no fix is active.
 
 ---
 
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
+<!-- include: relic snippet preamble-guard -->
+
 ## Step 1 — Read session state
 
-```bash
-relic context
-```
+<!-- include: relic snippet context-mode-check -->
 
-Read the `current_fix` and `mode` fields.
+Also read the `current_fix` field from the same `relic context` output:
 
-- **`current_fix` is null** → Stop. Report: *"No active fix. Run `/relic.fix <issue>` first to
-  diagnose the issue and create a fix document."*
-- **`current_fix` is set** → Continue.
-
-Note `mode` — it determines whether the fix document is `.html` or `.md`, and how to close it.
+- **`current_fix` is null** → Stop. Report: _"No active fix. Run `/relic.fix <issue>` first to diagnose the issue and create a fix document."_
+- **`current_fix` is set** → Continue. The fix document is at `.relic/fixes/<current_fix>.html` (mode `html`) or `.md` (mode `md`).
 
 ---
 
@@ -30,6 +27,7 @@ Note `mode` — it determines whether the fix document is `.html` or `.md`, and 
 **If `mode = "md"`:** Read `.relic/fixes/<current_fix>.md` in full.
 
 Note:
+
 - **Owning spec** — which spec governs this fix
 - **Classification** (under Root Cause) — `code-bug | misspecification | misunderstanding | wrong-spec`
 - **Code changes** (under Proposed Changes) — the code changes to apply
@@ -39,14 +37,7 @@ Note:
 
 ## Step 3 — Load spec context
 
-```bash
-relic context --spec <owning-spec>
-```
-
-Read the following files in full:
-- `specs/<owning-spec>/spec.md`
-- `specs/<owning-spec>/plan.md`
-- All artifacts in `owns` and `reads` from `artifacts.json`
+<!-- include: relic snippet load-spec-context -->
 
 ---
 
@@ -63,10 +54,12 @@ the fix document's **Proposed changes** section before proceeding.
 ## Step 5 — Update the knowledge layer (if required)
 
 **If classification is `misspecification`, `misunderstanding`, or `wrong-spec`:**
+
 - Amend `specs/<owning-spec>/spec.md` to reflect the corrected understanding.
 - If the architecture was also affected, update `specs/<owning-spec>/plan.md`.
 
 **If contract impact is not "None":**
+
 - Update each affected shared artifact file in `shared/`.
 - For each updated artifact, scan all `specs/*/artifacts.json` for `reads` entries that reference
   it. In each affected spec's `spec.md`, append to Open Questions:
@@ -81,6 +74,7 @@ Only write a changelog entry if the fix **amended a spec, contract, domain, or r
 cross-artifact mutation occurred). Do not write one when the fix touched only source code.
 
 If a cross-artifact mutation occurred, run:
+
 ```bash
 relic write --changelog --payload '{"name":"<owning-spec> / <fix-id>: <what was changed>","slash_command":"/relic.solve","description":"<brief description of what was fixed and what artifact was amended>"}'
 ```
@@ -93,16 +87,19 @@ Do not open or edit `changelog.md` directly.
 ## Step 7 — Close the fix
 
 **If `mode = "html"`:**
+
 - Update `.relic/fixes/<current_fix>.html`: replace `<relic-status value="pending">` with
   `<relic-status value="done">solved</relic-status>`, mark proposed changes as applied, add a
   "Resolved" section with a brief note on what was changed.
 - Do **not** modify or create `<current_fix>.md` — it does not exist in html mode.
 
 **If `mode = "md"`:**
+
 - Set `Status: solved` in `.relic/fixes/<current_fix>.md` (change the `**Status:** pending` line).
 - Do not create or modify any `.html` file.
 
 Then clear the active fix:
+
 ```bash
 relic use --clear-fix
 ```
@@ -112,6 +109,7 @@ relic use --clear-fix
 ## Step 8 — Report to the user
 
 Output:
+
 1. **Files changed** — list of code files modified
 2. **Knowledge layer updates** — spec/plan/shared artifact changes made (or "none")
 3. **Changelog entry** — the entry written to `changelog.md` (or "none — no cross-artifact mutation")

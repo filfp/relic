@@ -1,69 +1,36 @@
 # /relic.clarify
 
+Use `/relic.clarify` to update an existing spec with new information, decisions, or constraints. This is for when you have already created a spec and need to amend it based on new insights, open question resolutions, or changes in direction.
+
+---
+
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
 <!-- include: relic snippet preamble-guard -->
-
-## Before you begin — run these first
-
-```bash
-# 1. Resolve paths and check what exists
-relic context --spec <your-spec-id>
-
-# 2. Validate shared brain integrity
-relic validate
-```
-
-Do not proceed if `relic validate` reports `"valid": false`.
-
-You are appending details, changing contracts, or adding behaviors to an existing spec.
 
 ## Before you begin
 
-<!-- include: relic snippet constitution-load -->
-2. Read `specs/{{SPEC_ID}}/spec.md` fully.
-3. Read `specs/{{SPEC_ID}}/artifacts.json`.
-4. Load all referenced shared artifacts.
+<!-- include: relic snippet validation -->
+
+You are appending details, changing contracts, or adding behaviors to an existing spec.
+
+<!-- include: relic snippet load-spec-context -->
 
 ## Intersection check (mandatory)
 
-Before making any changes, check all other specs' `artifacts.json` files:
-- Does the change you're about to make affect an artifact owned by another spec?
-- Does it add files to `touches_files` that another spec already owns?
-
-If yes, flag the intersection explicitly and do not proceed until resolved.
+<!-- include: relic snippet intersection-check -->
 
 ## Your task
 
 Apply the user's clarification to `spec.md`:
+
 - Update requirements, user stories, scope, or decisions as needed.
 - If a shared artifact changes, update it.
 - Update `artifacts.json` if ownership or file touches change.
 
 ## HTML Step (conditional)
 
-Run:
-```bash
-relic context
-```
-
-If `mode` is `"html"`:
-
-1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
-2. Read `<spec-id>.html` in the spec directory.
-3. Update it with **synthesised** content reflecting the clarifications applied in this session.
-   **Anti-transcription rules (mandatory):**
-   - Do NOT copy Markdown text verbatim into the HTML.
-   - Represent requirement changes as a `<relic-table>` diff (old vs new), not as prose.
-   - Use `<relic-callout type="info">` for resolved open questions; `type="warn"` for new constraints.
-   - Use `<relic-chip>` for inline metadata instead of parenthetical text.
-   - If a section would look identical to the Markdown source, you are doing it wrong.
-   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
-4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
-   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (empty string if not yet created).
-   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (empty string if not yet created).
-5. Write the updated `<spec-id>.html` back.
-
-If `mode` is `"md"`, skip this step entirely.
+<!-- include: relic snippet html-mode -->
 
 ## After changes — changelog (cross-artifact mutations only)
 
@@ -72,6 +39,7 @@ clarify session. Do not write one for: spec.md edits, open question resolution, 
 creation, or artifacts.json updates.
 
 If a cross-artifact mutation occurred, run:
+
 ```bash
 relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic.clarify","description":"<why it changed>"}'
 ```

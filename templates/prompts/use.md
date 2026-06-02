@@ -1,15 +1,18 @@
 # /relic.use
 
-<!-- include: relic snippet preamble-guard -->
-
 Switch the active spec or fix for this session. Works from any AI session — including remote
 sessions (Claude.ai, Copilot Chat) where the user has no terminal access.
 
 ---
 
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
+<!-- include: relic snippet preamble-guard -->
+
 ## Step 1 — Detect the argument type
 
 The user will say something like:
+
 - `"switch to spec 002-payments"` — spec ID (`NNN-slug` format)
 - `"use spec 001-auth"`
 - `"activate fix 2026-04-13-null-session-read"` — fix ID (`YYYY-MM-DD-*` format)
@@ -37,10 +40,11 @@ relic use --fix <fix-id>
 This validates `.relic/fixes/<fix-id>.md` exists and writes the fix ID to `session.json`.
 
 After activation, report:
+
 - **Active fix:** `<fix-id>`
 - **Owning spec:** read from the fix document (`**Owning spec:**` field)
 - **Status:** read from the fix document (`**Status:**` field)
-- **Next step:** *"Run `/relic.solve` to apply the proposed changes."*
+- **Next step:** _"Run `/relic.solve` to apply the proposed changes."_
 
 ---
 
@@ -52,7 +56,7 @@ Run:
 relic use --clear-fix
 ```
 
-Report: *"Active fix cleared."*
+Report: _"Active fix cleared."_
 
 ---
 
@@ -68,6 +72,7 @@ This updates `session.json` so all subsequent Relic commands resolve to the spec
 activated.
 
 After switching, report:
+
 - **Active spec:** the `spec_id` from the JSON output
 - **Title:** derived from the spec ID
 - **Files ready:** which of `spec.md`, `plan.md`, `tasks.md` exist (from `files_created` — empty means all existed)
