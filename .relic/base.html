@@ -592,19 +592,18 @@ LLM AUTHORING RULES
       else if (label) nodes.get(id).label = label;
     };
 
+    /* Anchored whole-line edge match: the arrow operator is only recognised
+       between two node terms, never inside []/{}/() label segments
+       (e.g. A[foo---bar] is a node, not an edge). */
+    const EDGE = /^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?\s*-{2,}>?\s*(?:\|([^|]*)\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?\s*$/;
     for (const line of lines.slice(1)) {
-      if (/-{2,}>?/.test(line)) {
-        const fromM = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
-        const toM   = line.match(/-{2,}>?\s*(?:\|[^|]*\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
-        if (fromM && toM) {
-          const [,fId,fBox,fDiam,fCirc] = fromM;
-          const [,tId,tBox,tDiam,tCirc] = toM;
-          parseNode(fId, fBox??fDiam??fCirc, fDiam?'diamond':fCirc?'circle':'box');
-          parseNode(tId, tBox??tDiam??tCirc, tDiam?'diamond':tCirc?'circle':'box');
-          const lblM = line.match(/\|([^|]*)\|/);
-          edges.push({ from:fId, to:tId, label:lblM?lblM[1]:'' });
-          continue;
-        }
+      const em = line.match(EDGE);
+      if (em) {
+        const [,fId,fBox,fDiam,fCirc,label,tId,tBox,tDiam,tCirc] = em;
+        parseNode(fId, fBox??fDiam??fCirc, fDiam?'diamond':fCirc?'circle':'box');
+        parseNode(tId, tBox??tDiam??tCirc, tDiam?'diamond':tCirc?'circle':'box');
+        edges.push({ from:fId, to:tId, label:label??'' });
+        continue;
       }
       const nm = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?$/);
       if (nm) parseNode(nm[1], nm[2]??nm[3]??nm[4], nm[3]?'diamond':nm[4]?'circle':'box');
