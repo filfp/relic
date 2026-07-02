@@ -63,18 +63,19 @@ Landed as the first commit of `roadmap/v1.0.0`:
 
 ---
 
-## Phase 2 — Finish the 4-vs-5 file invariant (small)
+## Phase 2 — Finish the 4-vs-5 file invariant ✅ (this branch)
 
-Main already landed the code half (fix `2026-06-02-validate-illegal-files-html-mode`):
-`relic validate` now permits `<spec-id>.html` in html mode. Remaining:
+Main landed the code half (fix `2026-06-02-validate-illegal-files-html-mode`): `relic
+validate` permits `<spec-id>.html` in html mode. This branch completed the text half:
 
-- `templates/preamble.md` still says "Exactly four files. No others." (lines ~20, 60, 66,
-  Prohibited Actions). Make it mode-conditional: 4 files always, plus `<spec-id>.html`
-  when `config.json` `mode = "html"`.
-- Update `.relic/preamble.md` (this repo's instance — refreshed automatically by
-  `relic upgrade --prompts`) and the `SpecFilesAllowlistRule.md` shared rule.
-- Optional polish: `relic validate` could *warn* when a spec HTML exists while mode is
-  `"md"`.
+- `templates/preamble.md` rewritten mode-conditionally: 4 files always, plus the
+  CLI-created `<spec-id>.html` when `config.json` `mode = "html"` (tree diagram,
+  What-Belongs-Where, The Test, and Prohibited Actions all updated).
+- `.relic/preamble.md` instance refreshed; `SpecFilesAllowlistRule.md` restated with the
+  html-mode exception (and its manifest tldr corrected — it referenced a `history.json`
+  that exists nowhere in the code).
+- Deferred to Phase 5 as polish: `relic validate` warning when a spec HTML exists while
+  mode is `"md"`.
 
 ---
 

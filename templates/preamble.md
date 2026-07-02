@@ -17,11 +17,12 @@ Relic separates shared knowledge from spec-local context.
     rules/                 ← cross-cutting business and system rules
     assumptions/           ← declared assumptions about the world
   specs/
-    <spec-id>/             ← spec-local context ONLY — four files, nothing else
+    <spec-id>/             ← spec-local context ONLY — the allowed files below, nothing else
       spec.md
       plan.md
       tasks.md
       artifacts.json       ← POINTER file — declares relationships, not content
+      <spec-id>.html       ← html mode ONLY — visual spec document (CLI-created)
   constitution.md          ← project governance (amendable)
   preamble.md              ← this document (not amendable)
   changelog.md
@@ -57,13 +58,16 @@ Declared assumptions about the environment, external systems, or user behaviour.
 Example: `shared/assumptions/third-party-auth.md`
 
 ### `specs/<spec-id>/`
-Exactly four files. No others.
+Exactly four files — five when the project runs in html mode. No others.
 - `spec.md` — feature intent, requirements, user stories
 - `plan.md` — implementation decisions
 - `tasks.md` — atomic task checklist
 - `artifacts.json` — ownership and dependency declarations (pointers, not containers)
+- `<spec-id>.html` — ONLY when `config.json` has `mode = "html"`: the visual spec
+  document. It is created by `relic scaffold` and its chrome is maintained by
+  `relic html-sync` — never create or delete it manually.
 
-**If you are about to create a fifth file inside a spec folder, stop.**
+**If you are about to create any other file inside a spec folder, stop.**
 Whatever you are creating belongs in `shared/` instead.
 
 ---
@@ -105,7 +109,8 @@ When you are about to create or place a file, ask:
 **If NO** → it is a source file. It goes in the project source tree.
             Declare it in `touches_files`.
 
-The only exception: `spec.md`, `plan.md`, `tasks.md`, `artifacts.json` go in the spec folder.
+The only exception: `spec.md`, `plan.md`, `tasks.md`, `artifacts.json` — and, in html
+mode, the CLI-created `<spec-id>.html` — go in the spec folder.
 
 ---
 
@@ -113,7 +118,8 @@ The only exception: `spec.md`, `plan.md`, `tasks.md`, `artifacts.json` go in the
 
 - Creating a contract, domain, rule, or assumption file inside a spec folder
 - Listing a `specs/` path in `owns` or `reads` in any `artifacts.json`
-- Creating any file inside `specs/<spec-id>/` other than the four listed above
+- Creating any file inside `specs/<spec-id>/` other than the allowed set above
+  (`<spec-id>.html` is allowed only in html mode, and only the CLI creates it)
 - Modifying a shared artifact whose path is not listed in your spec's `owns` array
 - Claiming ownership of an artifact already listed in another spec's `owns` array
 

@@ -570,3 +570,7 @@ FR-8 revised: embed-engine-templates.ts now walks templates/skills/ recursively,
 ## [2026-07-02T03:45:47.955Z] manual (1.0.0 roadmap phase 1) — 008-html-spec-mode: base.html chrome overhaul + relic html-sync
 
 Fixed custom-element parse-timing bug that broke pages containing <relic-flow> (components now defer rendering to DOMContentLoaded); added </script escaping convention for embedded reader sources; components are now theme-aware via tone CSS vars; reader gained task-list checkboxes and a separate panel (no innerHTML restore); generated HTML is now split into machine-managed chrome and sentinel-marked content regions, re-based by the new relic html-sync command (also run by scaffold/mode/upgrade), which additionally embeds spec/plan/tasks markdown into the reader source blocks deterministically. HtmlComponentContract and ScaffoldResultContract amended accordingly.
+
+## [2026-07-02T12:41:58.503Z] manual (1.0.0 roadmap phase 2) — 008-html-spec-mode: preamble and SpecFilesAllowlistRule made mode-conditional
+
+templates/preamble.md no longer states an unconditional four-file rule: spec folders allow the four base files plus CLI-created <spec-id>.html when mode is html. SpecFilesAllowlistRule.md restated accordingly (also removed a stale history.json mention from its manifest tldr). Completes the documentation half of the html-mode allowlist; the validate.ts code half landed with fix 2026-06-02-validate-illegal-files-html-mode.
