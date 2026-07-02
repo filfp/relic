@@ -4,6 +4,12 @@ Bootstrap the Relic knowledge layer from an existing codebase. Run this **once**
 adopting Relic on a project that already has code. It generates the shared artifact layer
 (`.relic/shared/`) so every subsequent spec starts with a populated brain.
 
+---
+
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
+<!-- include: relic snippet preamble-guard -->
+
 > This is an expensive operation — it reads many files. That cost is paid once. After this,
 > each spec runs faster because the domains, contracts, and rules are already defined.
 
@@ -64,15 +70,19 @@ Use this format:
 **Confidence:** high | medium | low
 
 ## Description
+
 What this bounded context is responsible for.
 
 ## Key Entities
+
 - Entity: description
 
 ## Relationships
+
 How this domain relates to others.
 
 ## Owned by
+
 (unowned — assign when a spec takes responsibility)
 ```
 
@@ -94,15 +104,19 @@ For each API surface, event schema, or shared data interface, write:
 **Confidence:** high | medium | low
 
 ## Description
+
 What this contract defines.
 
 ## Shape
+
 Key fields, endpoints, or event structure (no need to be exhaustive — capture the intent).
 
 ## Consumers
+
 Which parts of the codebase depend on this contract.
 
 ## Owned by
+
 (unowned — assign when a spec takes responsibility)
 ```
 
@@ -125,15 +139,19 @@ rate limits, etc.), write:
 **Confidence:** high | medium | low
 
 ## Description
+
 The rule in plain language.
 
 ## Enforcement
+
 Where this rule is enforced in the codebase.
 
 ## Exceptions
+
 Any known exceptions or edge cases.
 
 ## Owned by
+
 (unowned — assign when a spec takes responsibility)
 ```
 
@@ -156,15 +174,19 @@ choices, data volume assumptions, external API contracts), write:
 **Confidence:** high | medium | low
 
 ## Description
+
 What we are assuming to be true.
 
 ## Risk if wrong
+
 What breaks if this assumption changes.
 
 ## Staleness signal
+
 How you would know this assumption is no longer valid.
 
 ## Owned by
+
 (unowned — assign when a spec takes responsibility)
 ```
 
@@ -191,6 +213,7 @@ relic write --knowledge-assumptions --payload '{"name":"<ArtifactName>","file":"
 Do not open or edit any `manifest.toon` file directly.
 
 Each payload must have:
+
 - `name` — matches the `# Heading` in the artifact file
 - `file` — filename only (e.g. `UserAuth.md`)
 - `tags` — 4–8 lowercase keywords
@@ -220,6 +243,7 @@ Run `relic validate` after this step — it will warn if any `.md` files are unr
 ## After scan completes
 
 Tell the user:
+
 - How many artifacts were generated (domains / contracts / rules / assumptions)
 - Which ones have low confidence and need human review
 

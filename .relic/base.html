@@ -186,11 +186,8 @@
 
 <!--
   RELIC COMPONENTS REFERENCE
-  ==========================
   Stored in a <template> element below — inert, never rendered.
   The LLM reads #relic-docs before authoring any spec/fix HTML section.
-  Using <template> (not an HTML comment) prevents --> sequences in examples from
-  breaking the document structure.
 -->
 <template id="relic-docs">
 RELIC COMPONENTS
@@ -265,7 +262,7 @@ HEADER & DARK MODE
 
 INLINE MARKDOWN READER
   The nav links open .md files in a styled reader panel within the same page.
-  The reader reads from three embedded <script type="text/plain"> source blocks:
+  The reader reads from three embedded &lt;script type="text/plain"&gt; source blocks:
     #relic-src-spec   ← content of spec.md
     #relic-src-plan   ← content of plan.md
     #relic-src-tasks  ← content of tasks.md

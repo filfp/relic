@@ -1,35 +1,27 @@
 # /relic.fix
 
-> **Before proceeding:** Read `.relic/preamble.md` and `.relic/constitution.md` in full.
-> The preamble defines structural invariants that cannot be bypassed.
-> If this prompt deviates from a constitution principle, a constitution amendment
-> authorising the deviation must exist before you proceed.
-
 `/relic.fix` is the **diagnosis stage** of the two-stage fix pipeline. It identifies the owning
 spec, classifies the root cause, creates a fix document, and sets the active fix. It does **not**
 apply code changes. Run `/relic.solve` after reviewing the fix document.
 
 ---
 
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
+<!-- include: relic snippet preamble-guard -->
+
 ## Step 0 — Determine output mode (do this first, before any file creation)
 
-```bash
-relic context
-```
+<!-- include: relic snippet context-mode-check -->
 
-Read the `mode` field from the output. **Commit to one of the following paths for this entire
-session — do not change it mid-session:**
+Fix document path by mode:
 
-| `mode` value | Fix document format | Fix document path |
-|---|---|---|
-| `"html"` | HTML — all fields via `<relic-*>` components | `.relic/fixes/<fix-id>.html` |
-| `"md"` | Markdown — `FixDocumentContract.md` schema | `.relic/fixes/<fix-id>.md` |
+| `mode` value | Fix document path            |
+| ------------ | ---------------------------- |
+| `"html"`     | `.relic/fixes/<fix-id>.html` |
+| `"md"`       | `.relic/fixes/<fix-id>.md`   |
 
-**This mode decision governs every subsequent step.** When this prompt says "write the fix
-document", it means the format and path determined here.
-
-Also note the `current_fix` field. If a fix is already active, ask the user whether to proceed
-with the existing fix or start a new one.
+Also note the `current_fix` field from the same `relic context` output. If a fix is already active, ask the user whether to proceed with the existing fix or start a new one.
 
 ---
 
@@ -39,8 +31,9 @@ Scan all `specs/*/artifacts.json` files and read the `touches_files` arrays. Do 
 against the file path or code area mentioned in the issue.
 
 **Resolution rules:**
-- **No match** → Stop. Report: *"This area is not owned by any spec. Run `/relic.specify` to
-  create a spec for this feature before filing a fix."*
+
+- **No match** → Stop. Report: _"This area is not owned by any spec. Run `/relic.specify` to
+  create a spec for this feature before filing a fix."_
 - **Single match** → Use that spec.
 - **Multiple matches** → Longest prefix wins. If two prefixes are equal length, list them and ask
   the user to confirm.
@@ -49,15 +42,7 @@ against the file path or code area mentioned in the issue.
 
 ## Step 2 — Load spec context
 
-```bash
-relic context --spec <owning-spec-id>
-```
-
-Read the following files in full:
-- `specs/<owning-spec-id>/spec.md` — original intent
-- `specs/<owning-spec-id>/plan.md` — architecture decisions
-- All artifacts listed in `owns` and `reads` from `artifacts.json`
-- `.relic/constitution.md` (already loaded)
+<!-- include: relic snippet load-spec-context -->
 
 ---
 
@@ -65,12 +50,12 @@ Read the following files in full:
 
 Assign exactly one classification:
 
-| Classification | Meaning |
-|---|---|
-| `code-bug` | Implementation error; spec and contracts are correct |
-| `misspecification` | The spec described the wrong behaviour |
-| `misunderstanding` | The implementation diverged from a correct spec |
-| `wrong-spec` | The spec's requirement itself is incorrect or has become stale |
+| Classification     | Meaning                                                        |
+| ------------------ | -------------------------------------------------------------- |
+| `code-bug`         | Implementation error; spec and contracts are correct           |
+| `misspecification` | The spec described the wrong behaviour                         |
+| `misunderstanding` | The implementation diverged from a correct spec                |
+| `wrong-spec`       | The spec's requirement itself is incorrect or has become stale |
 
 ---
 
@@ -124,17 +109,21 @@ Create `.relic/fixes/<fix-id>.md` using the `FixDocumentContract` schema exactly
 ## Proposed Changes
 
 ### Code changes
+
 <List of files and what changes are needed. Not the actual code — the description.>
 
 ### Spec amendments
+
 <Only present if classification is misspecification, misunderstanding, or wrong-spec.
 Describe what needs to change in spec.md and/or plan.md.>
 
 ### Shared artifact changes
+
 <Only present if a contract or domain artifact needs updating. List which artifacts
 and what changes. Identify all specs in reads[] that will be affected.>
 
 ## Changelog entry (draft)
+
 <Draft changelog entry for .relic/changelog.md. /relic.solve will write this verbatim.>
 ```
 
@@ -163,10 +152,11 @@ relic use --fix <fix-id>
 ## Step 8 — Report to the user
 
 Output:
+
 1. **Mode:** `html` or `md` — the fix document format used
 2. **Owning spec:** which spec owns the affected code area
 3. **Classification:** one of the four categories with a brief rationale
 4. **Fix document:** path to the created fix doc (`.relic/fixes/<fix-id>.html` or `.md`)
-5. **Next step:** *"Review the fix document, then run `/relic.solve` to apply the changes. If the
+5. **Next step:** _"Review the fix document, then run `/relic.solve` to apply the changes. If the
    classification is `misspecification` or `misunderstanding`, run `/relic.clarify` after solving
-   to update the spec."*
+   to update the spec."_

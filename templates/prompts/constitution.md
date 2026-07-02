@@ -4,10 +4,14 @@ Extract project-specific coding principles, tech standards, and architecture dec
 into `.relic/constitution.md`. Run this **once** when adopting Relic — after `/relic.scan`
 if the codebase exists, or standalone for new projects.
 
+---
+
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
+<!-- include: relic snippet preamble-guard -->
+
 > The constitution is the HOW of your project. `/relic.scan` captures the WHAT (domains,
 > contracts, rules). Together they give the AI complete context before every interaction.
-
----
 
 ## Step 0 — Detect mode
 
@@ -38,6 +42,7 @@ These files contain **explicit** decisions with high confidence.
 ### Step 2 — Sample test files (5–10 files)
 
 Read a cross-section of test files from the codebase. Look for:
+
 - Testing approach: TDD? write-tests-after? mostly E2E?
 - Mocking strategy: heavy mocks? integration-first? no mocks?
 - What constitutes a "unit" in this codebase?
@@ -47,6 +52,7 @@ Read a cross-section of test files from the codebase. Look for:
 
 From the manifest's `key_files`, read `entry_point`, `routes`, `services`, `middleware` files.
 Look for:
+
 - Layering: is there a service layer? repository pattern? controller-service-repository?
 - Error handling: how are errors propagated?
 - Naming conventions: camelCase? snake_case? PascalCase for what?
@@ -55,6 +61,7 @@ Look for:
 ### Step 4 — Read documentation
 
 Read if they exist:
+
 - `README.md` — often captures high-level decisions and required setup
 - `CONTRIBUTING.md` — explicit workflow rules (treat as high confidence)
 - Any `docs/adr/` or `docs/decisions/` folder — Architecture Decision Records
@@ -64,11 +71,13 @@ Read if they exist:
 From what you read, identify **3 to 7** project-specific principles.
 
 A good principle is:
+
 - **Verifiable** — an AI can tell if code violates it
 - **Specific** — "use TypeScript strict mode" not "write good code"
 - **Non-trivial** — not already covered by preamble.md's operational rules
 
 Mark each principle with its evidence:
+
 - `(explicit)` — found in documentation or config
 - `(inferred)` — deduced from code patterns
 - `(assumed)` — no clear evidence; needs confirmation
@@ -81,6 +90,7 @@ Format each principle as:
 
 ```markdown
 ### I. Principle Name
+
 [One sentence: the rule]
 [One sentence: why it matters or what it prevents]
 Source: tsconfig.json strict: true, enforced by eslint no-explicit-any (explicit)
@@ -91,11 +101,12 @@ Set `**Ratified**: [today's date]`.
 ### Step 7 — Report to user
 
 Show:
+
 - Each principle with its source and confidence
 - Areas where evidence was weak or contradictory
 - Anything that needs human decision (competing patterns, unclear conventions)
 
-End with: *"Are these principles correct? Anything to add, remove, or correct before we start using this as a hard constraint?"*
+End with: _"Are these principles correct? Anything to add, remove, or correct before we start using this as a hard constraint?"_
 
 ---
 
@@ -128,6 +139,7 @@ not yet decided. Set today's date as the ratification date.
 ## After constitution is written
 
 Tell the user:
+
 - How many principles were extracted (or defined)
 - Which ones are `(inferred)` and need confirmation
 - Recommended next step:

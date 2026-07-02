@@ -1,21 +1,17 @@
 # /relic.analyse
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+Use `/relic.analyse` to perform a non-destructive consistency check on your spec. This is a manual process to identify gaps, misalignments, and areas for improvement in your spec and its artifacts.
+
+---
+
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
+
+<!-- include: relic snippet preamble-guard -->
+<!-- include: relic snippet read-only-guard -->
 
 ## Before you begin — run these first
 
-```bash
-# 1. Resolve paths and check what exists
-relic context --spec <your-spec-id>
-
-# 2. Run the automated integrity check (this IS the analyse starting point)
-relic validate
-```
-
-Report the `relic validate` output as your first finding, then continue with the manual checks below.
-
-You are performing a non-destructive consistency check. You must NOT modify any files.
+<!-- include: relic snippet validation -->
 
 ## What to check
 
@@ -28,6 +24,7 @@ You are performing a non-destructive consistency check. You must NOT modify any 
 ## Output format
 
 Report findings as:
+
 - ✅ [check]: [result]
 - ⚠️ [check]: [issue found]
 - ❌ [check]: [blocking issue found]

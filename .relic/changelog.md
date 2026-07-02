@@ -523,3 +523,47 @@ FR-21 corrected: component docs now stored in <template id=relic-docs> (not HTML
 ## [2026-05-20T16:51:41.442Z] /relic.solve — 008-html-spec-mode / 2026-05-20-nav-links-inline-markdown-reader: add inline markdown reader to base.html
 
 Fixed: FR-24 nav links used plain <a href> pointing to .md files — browsers displayed raw markdown text. Classification: misspecification (spec silent on rendering experience). Added: self-contained inline markdown reader in base.html — intercepts nav link clicks, reads from embedded <script type=text/plain> source blocks (primary) or fetch() fallback, renders parsed HTML in a panel with sticky header preserved, back button restores spec view. Updated: all 5 spec workflow prompt templates (specify, clarify, plan, tasks, implement) to populate the three relic-src-* source blocks during every HTML step. Artifacts amended: HtmlComponentContract.md (008 owns — no cross-spec impact).
+
+## [2026-05-20T22:53:00.748Z] /relic.clarify — 009-external-spec-integration: ExternalConfigContract shape overhaul
+
+config.external changed from { specsDir } to a flat per-type path map ({ fr, nfr, br, adr, us, epic }); external_reads entries changed from specsDir-relative paths to <type>/<filename> strings; relic validate external errors promoted from warnings to hard errors; relic external list command added; relic external create output gains committed/commit_sha fields; relic external init no longer writes to config.external
+
+## [2026-05-25T18:49:50.009Z] /relic.clarify — 010-prompt-snippet-injection: SnippetIncludeContract snippet registry corrected
+
+search-cascade.md removed from snippet registry (reclassified as skill search-context.md — contains decision logic, must be invokable outside relic commands); constitution-load.md added as new snippet. Registry now reflects the final 5-snippet set.
+
+## [2026-05-25T19:18:53.652Z] /relic.clarify — 010-prompt-snippet-injection: SnippetIncludeContract directive syntax changed to relic snippets namespace
+
+Directive syntax changed from <!-- include: snippets/xxx.md --> to <!-- include: relic snippets <name> --> — opaque named registry reference that does not expose the storage path. Resolution rules and CLI inspection section (relic snippet <name> command) added.
+
+## [2026-05-25T19:18:57.765Z] /relic.clarify — 010-prompt-snippet-injection: SkillExtractionContract updated for init+add-engine and engines package routing
+
+Build-time behaviour updated: skills written by both relic init AND relic add-engine (not add-engine only). Write logic routes through packages/engines/src/engines/claude/index.ts for future extensibility. Engine coverage table clarified with extension point notes for Copilot/Codex.
+
+## [2026-05-25T19:50:08.680Z] /relic.clarify — 010-prompt-snippet-injection: SnippetIncludeContract — runtime resolution, composition, dual directive syntax
+
+Architecture changed from build-time substitution to LLM-runtime invocation. Directives travel verbatim in baked templates; LLM resolves them by calling relic snippet <name>. Added <!-- use: relic.<skill> --> directive for skill invocation. Added snippet composition rules (nested includes, no variable substitution). Snippet registry updated to show preamble consolidation as plan-phase audit. Error behaviour updated for runtime context.
+
+## [2026-05-25T19:50:12.637Z] /relic.clarify — 010-prompt-snippet-injection: SkillExtractionContract — <!-- use: --> directive replaces prose skill references
+
+How command templates reference skills changed: prose instructions (Run /relic.search-context) replaced by <!-- use: relic.search-context --> HTML comment directive. Machine-readable, Markdown-invisible, recognised by LLM as skill invocation instruction.
+
+## [2026-06-02T16:01:39.135Z] /relic.clarify — 010 → 011: SkillExtractionContract.md ownership transferred
+
+Spec 010 split into two: 010 retains snippet injection (Track 1) only; skills (Track 2) extracted to new spec 011-skill-extraction. SkillExtractionContract.md ownership transferred from 010 to 011. SnippetIncludeContract.md remains owned by 010.
+
+## [2026-06-02T21:38:35.709Z] /relic.clarify — 011-skill-extraction: Proactive skill delivery mechanism changed — preamble instead of CLAUDE.md
+
+Removed FR-14/FR-15 (writing to .claude/CLAUDE.md). Relic must be self-contained and not touch user-owned files outside .relic/ and .claude/commands/. Proactive skill trigger conditions now live in templates/preamble.md (Proactive Skills section), which is loaded by every command prompt via preamble-guard. SkillExtractionContract.md updated to reflect this.
+
+## [2026-06-02T21:45:42.258Z] /relic.clarify — 011-skill-extraction: File ownership boundary clarified — relic-managed vs user-maintained files
+
+FR-14 revised to state the precise constraint: relic may write to files it owns in AI engine directories (.claude/commands/, .claude/settings.json, etc.) but must not write to user-maintained files in those same directories (.claude/CLAUDE.md, .claude/agents.md). The boundary is ownership, not directory. SkillExtractionContract.md updated with the ownership boundary rule.
+
+## [2026-06-02T21:57:51.736Z] /relic.clarify — 011-skill-extraction: Skills migrated from .claude/commands/ flat files to .claude/skills/<name>/SKILL.md directories
+
+Claude Code .claude/skills/ is the current best practice for skill delivery. Skills are directories (not flat files), supporting bundled supporting files. Proactive auto-invocation uses the description frontmatter field natively — no preamble Proactive Skills section required. SkillExtractionContract.md updated with skill directory structure, frontmatter spec, and file ownership boundary.
+
+## [2026-06-02T22:30:05.564Z] /relic.clarify — 011-skill-extraction: Multi-file skill directories — recursive build, any file type; command search migration confirmed in scope
+
+FR-8 revised: embed-engine-templates.ts now walks templates/skills/ recursively, storing every file (any extension) in SKILLS export. Write logic replicates the full directory tree. Enables bundling of shell scripts, Python, JS/TS helpers alongside SKILL.md. FR-16 scope confirmed: search-knowledge snippet migration applies within existing .claude/commands/ files; full command-to-skill migration is a separate future spec. SkillExtractionContract.md updated.

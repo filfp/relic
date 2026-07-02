@@ -1,51 +1,33 @@
 # /relic.plan
 
-> **Before proceeding:** Read `.relic/preamble.md`. It defines where artifacts belong.
-> Violating those rules cannot be undone by a changelog entry.
+Use `/relic.plan` to create an implementation plan for your spec. This is a manual process to design the architecture, break down the work into phases, and identify all file and artifact changes needed to implement the spec.
 
-## Before you begin — run these first
+---
 
-```bash
-# 1. Ensure spec folder and files exist (creates missing files from templates)
-relic scaffold --spec <your-spec-id>
+> **Include directives:** when you see `<!-- include: relic snippet <name> -->`, run `relic snippet <name>` and inline the output in place. Snippets may nest — repeat until none remain, then act on the fully expanded prompt.
 
-# 2. Validate shared brain integrity — no conflicts before planning
-relic validate
-```
+<!-- include: relic snippet preamble-guard -->
 
-Do not proceed if `relic validate` reports `"valid": false`. Resolve conflicts first.
+## Before you begin
+
+<!-- include: relic snippet validation -->
 
 You are creating an implementation plan for this spec.
 
-## Before writing the plan
+<!-- include: relic snippet load-spec-context -->
 
-1. Read `.relic/constitution.md`.
-2. Read `specs/{{SPEC_ID}}/spec.md` fully.
-3. Discover relevant shared artifacts using the two-step cascade:
+Then discover relevant shared artifacts:
 
-   **Step A — targeted search (preferred):**
-   Extract up to 10 keywords from the spec (feature domain, entities, verbs, technical concepts). Run:
-   ```bash
-   relic search <keyword1> <keyword2> ...
-   ```
-   Load full files for high-score results. If the returned candidates are sufficient context for planning, stop here.
+<!-- include: relic snippet search-knowledge -->
 
-   **Step B — full brain scan (fallback, only if Step A is insufficient):**
-   ```bash
-   relic search --deep
-   ```
-   Read only `tldr` fields from results. Select and fully read only the artifacts with clear relevance to this plan.
+Then run the intersection check before writing anything:
 
-4. Load ALL other specs' `artifacts.json` files from `specs/*/artifacts.json`.
-5. Run an intersection check:
-   - Which shared artifacts does this plan need to create or modify?
-   - Which files does this plan touch (`touches_files`)?
-   - Compare against all other specs' `owns` and `touches_files`.
-6. **Report any conflicts BEFORE writing the plan.** Conflicts must be resolved first.
+<!-- include: relic snippet intersection-check -->
 
 ## Writing the plan
 
 Fill in `specs/{{SPEC_ID}}/plan.md`:
+
 - **Architecture Overview** — high-level approach.
 - **Implementation Phases** — concrete ordered steps.
 - **File Changes table** — every file to be created or modified.
@@ -59,6 +41,7 @@ spec. Do not write one when the plan is first created, when only spec.md or plan
 when only new artifacts are being defined.
 
 If a cross-artifact mutation occurred, run:
+
 ```bash
 relic write --changelog --payload '{"name":"<spec-id>: Plan updated — <what changed>","slash_command":"/relic.plan","description":"<what changed and why>"}'
 ```
@@ -67,31 +50,7 @@ Do not open or edit `changelog.md` directly.
 
 ## HTML Step (conditional)
 
-Run:
-```bash
-relic context
-```
-
-If `mode` is `"html"`:
-
-1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
-2. Read `<spec-id>.html` in the spec directory.
-3. Update the Plan section with **synthesised** content from this planning session.
-   **Anti-transcription rules (mandatory):**
-   - Do NOT copy Markdown text verbatim into the HTML.
-   - Render the implementation phases as a `<relic-flow>` dependency graph, not as a numbered list.
-   - Use `<relic-table>` for the file changes table (file, action, notes).
-   - Use `<relic-callout type="warn">` for intersection notes; `type="risk"` for blocking concerns.
-   - Use `<relic-chip>` for inline spec IDs and file types instead of plain text.
-   - If a section would look identical to the Markdown source, you are doing it wrong.
-   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
-4. Populate the inline reader source blocks with the **current** content of the three Markdown files:
-   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (empty string if not yet created).
-5. Write the updated `<spec-id>.html` back.
-
-If `mode` is `"md"`, skip this step entirely.
+<!-- include: relic snippet html-mode -->
 
 ## What NOT to do
 
