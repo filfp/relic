@@ -38,15 +38,29 @@ A proactive skill file MUST contain:
 - A **Confirmation gate** section — the user must say yes before any workflow fires
 - An explicit **Do NOT** list: do not run workflows, write files, or execute commands without confirmation
 
-Proactive skill trigger conditions are also written to the engine's ambient instruction file (`.claude/CLAUDE.md` for Claude), bounded by `<!-- relic: proactive-skills -->` markers, by both `relic init` and `relic add-engine`. This block is idempotent — regenerated, not appended, if the marker exists.
+Proactive skill trigger conditions are documented in `templates/preamble.md`'s **Proactive Skills** section. Because `preamble-guard` is included in every command template, the LLM always has these conditions in context on every prompt load.
 
-## Skill File Structure
+**File ownership boundary:** Relic distinguishes between relic-managed files and user-maintained files within AI engine directories. Relic MAY write to files it creates and owns (`.claude/commands/relic.*.md`, `.claude/settings.json`, `.github/copilot-instructions.md`, `.codex/instructions.md`, `.codex/config.toml`). Relic MUST NOT write to files the user maintains in those same directories (`.claude/CLAUDE.md`, `.claude/agents.md`, or any file relic did not create). The boundary is ownership, not directory.
 
-Skills live in `templates/skills/<skill-name>.md`. Each file:
-- Is a complete, standalone Markdown document (can be read and followed without any parent command context)
+## Skill Directory Structure
+
+Skills live in `templates/skills/<skill-name>/SKILL.md` — each skill is a **directory**, mirroring the `.claude/skills/<name>/SKILL.md` structure that Claude Code recognises natively.
+
+Each `SKILL.md`:
+- Has YAML frontmatter. Proactive skills MUST include a `description` field — this is the native Claude Code auto-invocation trigger. Procedural skills MAY omit it (user-invoked only).
 - Has a clear title (`# /relic.<skill-name>`)
+- Is a complete, standalone procedure (can be followed without parent command context)
 - Describes exactly what to do, with explicit completion criteria
-- May use `<!-- include: relic snippets <name> -->` directives for shared static blocks
+- May use `<!-- include: relic snippet <name> -->` directives for shared static blocks
+
+**Supporting files:** A skill directory may contain any number of additional files in any format — shell scripts (`.sh`), Python (`.py`), JavaScript/TypeScript (`.js`, `.ts`), Bun scripts, data files, reference Markdown docs, or anything else. All files are stored in the `SKILLS` build export and replicated verbatim into `.claude/skills/relic.<name>/` at write time. The skill directory is the bundleable unit — future skill iterations add helpers without changing the build or write logic.
+
+Example frontmatter for a proactive skill:
+```yaml
+---
+description: When the user asks about a domain, concept, rule, or system behaviour that relic tracks — surface relevant artifacts and ask if they want to read more.
+---
+```
 
 ## Naming Convention
 
@@ -74,17 +88,23 @@ This is a machine-readable HTML comment — invisible in rendered Markdown, reco
 
 ## Build-Time Behaviour
 
-- Skills in `templates/skills/` are processed by `scripts/embed-engine-templates.ts` alongside `templates/prompts/` templates.
-- Skills ARE added to `ENGINE_TEMPLATES` as standalone entries (unlike snippets which are inlined).
-- Both `relic init` and `relic add-engine` write skill files to `.claude/commands/` as first-class slash commands.
-- The write logic lives in `packages/engines/src/engines/claude/index.ts` — routed through the engines package so future engines can add skill support without modifying `init.ts` or `add-engine` logic.
-- Skill files appear in the same directory as relic command files — they are sibling commands, not children.
+- `scripts/embed-engine-templates.ts` walks `templates/skills/` **recursively**. Every file found inside any skill subdirectory (any extension, any depth) is stored in the `SKILLS` export keyed by its relative path from `templates/skills/` (e.g. `search-context/SKILL.md`, `search-context/helper.sh`, `suggest-workflow/check.py`).
+- The `SKILLS` export is `Record<string, string>` — key is relative path, value is file content.
+- Both `relic init` and `relic add-engine` iterate all SKILLS entries, group by first path segment (skill name), create `.claude/skills/relic.<name>/` directories, and write each file at its relative subpath — replicating the full source tree.
+- The write logic lives in `packages/engines/src/engines/claude/index.ts`.
+- Existing `.claude/commands/relic.*.md` workflow command files are unchanged — skill directories are a separate, additive output. The search snippet migration within those command files (`<!-- include: relic snippet search-knowledge -->` → `<!-- use: relic.search-context -->`) is handled by FR-16.
+
+## File Ownership Boundary
+
+Relic MAY write to files and directories it creates: `.claude/skills/relic.*/`, `.claude/commands/relic.*.md`, `.claude/settings.json`, `.github/copilot-instructions.md`, `.codex/`.
+
+Relic MUST NOT write to user-maintained files in those same directories: `.claude/CLAUDE.md`, `.claude/agents.md`, or any file relic did not create. The boundary is ownership, not directory.
 
 ## Engine Coverage (v1)
 
 | Engine | Skill output | Mechanism |
 |---|---|---|
-| Claude | `.claude/commands/relic.<skill-name>.md` | Slash command, written by both `relic init` and `relic add-engine` via `engines/claude` |
+| Claude | `.claude/skills/relic.<skill-name>/SKILL.md` | Skill directory written by both `relic init` and `relic add-engine` via `engines/claude`. Proactive skills auto-invoke via `description` frontmatter — no user-maintained file required. |
 | Copilot | Not in v1 | Requires different invocation model — engines package extension point reserved |
 | Codex | Not in v1 | Requires different invocation model — engines package extension point reserved |
 
@@ -92,17 +112,17 @@ This is a machine-readable HTML comment — invisible in rendered Markdown, reco
 
 ### Procedural Skills
 
-| Skill file | Slash command | Procedure | Was embedded in |
+| Skill directory | Slash command | Procedure | Was embedded in |
 |---|---|---|---|
-| `search-context.md` | `/relic.search-context` | Two-step artifact discovery (targeted → full scan fallback) | specify, plan |
-| `check-intersections.md` | `/relic.check-intersections` | Load all `artifacts.json`, compare `owns` + `touches_files` | specify, clarify, plan, tasks |
+| `search-context/SKILL.md` | `/relic.search-context` | Two-step artifact discovery (targeted → full scan fallback) | specify, plan |
+| `check-intersections/SKILL.md` | `/relic.check-intersections` | Load all `artifacts.json`, compare `owns` + `touches_files` | specify, clarify, plan, tasks |
 
 ### Proactive Skills
 
-| Skill file | Slash command | Trigger condition | Fires when |
-|---|---|---|---|
-| `smart-search.md` | `/relic.smart-search` | User asks about a domain, concept, rule, or system behaviour relic tracks | LLM detects question about a topic in the relic knowledge base |
-| `suggest-workflow.md` | `/relic.suggest-workflow` | Conversation reveals a bug in spec-owned code or a new feature discussion | LLM detects fix or specify opportunity |
+| Skill directory | Slash command | `description` frontmatter (auto-invoke condition) |
+|---|---|---|
+| `smart-search/SKILL.md` | `/relic.smart-search` | User asks about a domain, concept, rule, or system behaviour relic tracks |
+| `suggest-workflow/SKILL.md` | `/relic.suggest-workflow` | Conversation reveals a bug in spec-owned code or a new feature discussion |
 
 ## Snippet vs Skill — The Loading Distinction
 

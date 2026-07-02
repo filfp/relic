@@ -20,6 +20,6 @@
     "templates/prompts/ask.md",
     "packages/engines/src/engines/claude/index.ts",
     "packages/engines/src/generated/engine-templates.ts",
-    ".claude/CLAUDE.md"
+    ".claude/skills/"
   ]
 }

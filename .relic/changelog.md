@@ -551,3 +551,19 @@ How command templates reference skills changed: prose instructions (Run /relic.s
 ## [2026-06-02T16:01:39.135Z] /relic.clarify — 010 → 011: SkillExtractionContract.md ownership transferred
 
 Spec 010 split into two: 010 retains snippet injection (Track 1) only; skills (Track 2) extracted to new spec 011-skill-extraction. SkillExtractionContract.md ownership transferred from 010 to 011. SnippetIncludeContract.md remains owned by 010.
+
+## [2026-06-02T21:38:35.709Z] /relic.clarify — 011-skill-extraction: Proactive skill delivery mechanism changed — preamble instead of CLAUDE.md
+
+Removed FR-14/FR-15 (writing to .claude/CLAUDE.md). Relic must be self-contained and not touch user-owned files outside .relic/ and .claude/commands/. Proactive skill trigger conditions now live in templates/preamble.md (Proactive Skills section), which is loaded by every command prompt via preamble-guard. SkillExtractionContract.md updated to reflect this.
+
+## [2026-06-02T21:45:42.258Z] /relic.clarify — 011-skill-extraction: File ownership boundary clarified — relic-managed vs user-maintained files
+
+FR-14 revised to state the precise constraint: relic may write to files it owns in AI engine directories (.claude/commands/, .claude/settings.json, etc.) but must not write to user-maintained files in those same directories (.claude/CLAUDE.md, .claude/agents.md). The boundary is ownership, not directory. SkillExtractionContract.md updated with the ownership boundary rule.
+
+## [2026-06-02T21:57:51.736Z] /relic.clarify — 011-skill-extraction: Skills migrated from .claude/commands/ flat files to .claude/skills/<name>/SKILL.md directories
+
+Claude Code .claude/skills/ is the current best practice for skill delivery. Skills are directories (not flat files), supporting bundled supporting files. Proactive auto-invocation uses the description frontmatter field natively — no preamble Proactive Skills section required. SkillExtractionContract.md updated with skill directory structure, frontmatter spec, and file ownership boundary.
+
+## [2026-06-02T22:30:05.564Z] /relic.clarify — 011-skill-extraction: Multi-file skill directories — recursive build, any file type; command search migration confirmed in scope
+
+FR-8 revised: embed-engine-templates.ts now walks templates/skills/ recursively, storing every file (any extension) in SKILLS export. Write logic replicates the full directory tree. Enables bundling of shell scripts, Python, JS/TS helpers alongside SKILL.md. FR-16 scope confirmed: search-knowledge snippet migration applies within existing .claude/commands/ files; full command-to-skill migration is a separate future spec. SkillExtractionContract.md updated.

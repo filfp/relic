@@ -45,17 +45,17 @@ The `search-knowledge` snippet (spec 010) inlines the search procedure text **ea
 
 ### Procedural Skills (extracted from command templates)
 
-| Skill file | Procedure | Currently embedded in | After extraction |
+| Skill directory | Procedure | Currently embedded in | After extraction |
 |---|---|---|---|
-| `search-context.md` | Two-step artifact discovery (Step A targeted search → Step B full brain scan fallback) | specify, plan (verbatim) | Standalone skill; specify and plan replace embedded procedure with `<!-- use: relic.search-context -->` |
-| `check-intersections.md` | Load all `specs/*/artifacts.json`, compare `owns` and `touches_files` for conflicts | specify, clarify, plan, tasks (paraphrased) | Standalone skill; command templates use `<!-- use: relic.check-intersections -->` |
+| `search-context/SKILL.md` | Two-step artifact discovery (Step A targeted search → Step B full brain scan fallback) | specify, plan (verbatim) | Standalone skill; specify and plan replace embedded procedure with `<!-- use: relic.search-context -->` |
+| `check-intersections/SKILL.md` | Load all `specs/*/artifacts.json`, compare `owns` and `touches_files` for conflicts | specify, clarify, plan, tasks (paraphrased) | Standalone skill; command templates use `<!-- use: relic.check-intersections -->` |
 
 ### Proactive Skills (ambient monitors)
 
-| Skill file | Trigger condition | Action | Output |
+| Skill directory | `description` frontmatter (auto-invoke trigger) | Action | Output |
 |---|---|---|---|
-| `smart-search.md` | User asks a question about a domain, concept, system behaviour, or rule that relic tracks (e.g. "how does auth work?", "what's the session contract?") | Run `relic search <keywords>` → surface relevant artifact names, tldr, and path | Ask user if they want to read the full artifact(s) — do NOT run the full workflow |
-| `suggest-workflow.md` | Conversation context reveals: (a) a bug/error in code owned by a spec, or (b) a feature/capability discussion that would warrant a new spec | Identify which workflow fits (`/relic.fix` or `/relic.specify`), explain why, give a one-line summary of what relic knows about the area | Ask user to confirm before proceeding — never activate without confirmation |
+| `smart-search/SKILL.md` | User asks about a domain, concept, system behaviour, or rule that relic tracks (e.g. "how does auth work?", "what's the session contract?") | Run `relic search <keywords>` → surface relevant artifact names, tldr, and path | Ask user if they want to read the full artifact(s) — do NOT run the full workflow |
+| `suggest-workflow/SKILL.md` | Conversation reveals: (a) a bug/error in code owned by a spec, or (b) a feature/capability discussion warranting a new spec | Identify which workflow fits (`/relic.fix` or `/relic.specify`), explain why, give a one-line summary of what relic knows about the area | Ask user to confirm before proceeding — never activate without confirmation |
 
 ---
 
@@ -63,27 +63,27 @@ The `search-knowledge` snippet (spec 010) inlines the search procedure text **ea
 
 ### Functional
 
-- **FR-1:** A `templates/skills/` directory holds skill definition files. Each skill is a standalone procedure the LLM can invoke as a slash command, independent of any relic workflow command.
-- **FR-2:** Skills are written to `.claude/commands/` by both `relic init` and `relic add-engine`, alongside the existing command files. They are first-class slash commands. The write logic routes through `packages/engines/src/engines/claude/index.ts` — the engines package layer — ensuring that extending to additional engines in future versions requires no changes to `init.ts` or `add-engine` logic directly.
+- **FR-1:** A `templates/skills/` directory holds skill source directories. Each skill is a **directory** containing `SKILL.md` as its entrypoint plus any number of supporting files in any format — Markdown, shell scripts (`.sh`), Python (`.py`), JavaScript (`.js`), TypeScript (`.ts`), Bun scripts, or any other text-based format. This mirrors the `.claude/skills/<name>/` folder structure that Claude Code recognises natively and enables bundling of runnable helpers alongside the skill definition.
+- **FR-2:** Skills are written to `.claude/skills/relic.<name>/SKILL.md` (one directory per skill) by both `relic init` and `relic add-engine`. This is the current best-practice location for Claude Code skills. Existing relic workflow commands remain in `.claude/commands/` — migration of commands to skills is out of scope for this spec. The write logic routes through `packages/engines/src/engines/claude/index.ts`.
 - **FR-3:** Skills must be named to reflect their standalone utility (e.g., `relic.search-context`, `relic.check-intersections`) — not tied to a specific parent command.
 - **FR-4:** Command templates that previously embedded a procedure inline must instead reference the skill by name using a `<!-- use: relic.<skill-name> -->` directive. This directive replaces both embedded procedure blocks and prose references ("Run `/relic.search-context` before proceeding."). The skill file is the single source of truth for that procedure.
-- **FR-5:** Because skills appear in `.claude/commands/`, the LLM can invoke them at any time — when a user is debugging, reviewing, implementing, or doing anything where artifact knowledge is relevant — not only when they explicitly use a relic command.
+- **FR-5:** Because skills appear in `.claude/skills/`, the LLM can invoke them at any time — when a user is debugging, reviewing, implementing, or doing anything where artifact knowledge is relevant — not only when they explicitly use a relic command.
 - **FR-6:** Skills may use `<!-- include: relic snippet <name> -->` directives (to load shared static context blocks defined by spec 010) and `<!-- use: relic.<skill-name> -->` directives (to invoke other skills). Both are resolved by the LLM at runtime.
-- **FR-7:** `templates/preamble.md` is updated to: (a) mandate `/relic.search-context` invocation via a `<!-- use: relic.search-context -->` directive, replacing the embedded search cascade; (b) document the directive system for the LLM — explaining that `<!-- include: relic snippet <name> -->` means "call `relic snippet <name>` and apply the result" and `<!-- use: relic.<skill-name> -->` means "invoke `/relic.<skill-name>` now."
-- **FR-8:** `scripts/embed-engine-templates.ts` is extended to walk `templates/skills/*.md` and add those files to `ENGINE_TEMPLATES` with keys `skills/<name>.md`. `writeClaude()` detects skill keys by prefix and writes them to `.claude/commands/relic.<name>.md`. This is an additive change on top of spec 010's SNIPPETS registry bake.
+- **FR-7:** `templates/preamble.md` is updated to: (a) mandate `/relic.search-context` invocation via a `<!-- use: relic.search-context -->` directive, replacing the embedded search cascade; (b) document the complete directive system for the LLM — explaining that `<!-- include: relic snippet <name> -->` means "call `relic snippet <name>` and apply the result" and `<!-- use: relic.<skill-name> -->` means "invoke `/relic.<skill-name>` now."
+- **FR-8:** `scripts/embed-engine-templates.ts` is extended to walk `templates/skills/` recursively. For each file found anywhere inside a skill directory (not just `SKILL.md` — any file, any extension), it stores the file content in the `SKILLS` export keyed by its relative path from `templates/skills/` (e.g. `search-context/SKILL.md`, `search-context/helper.sh`, `suggest-workflow/check.py`). `writeClaude()` iterates all SKILLS entries, derives the skill name from the first path segment, creates the `.claude/skills/relic.<name>/` directory, and writes each file at its relative path inside that directory — replicating the full source tree. This is an additive change on top of spec 010's SNIPPETS registry bake.
 - **FR-9:** The `<!-- use: relic.<skill-name> -->` directive applied in command templates is the canonical replacement for all prose instructions like "Run `/relic.search-context` before proceeding." All such prose references in command templates must be replaced with this directive form. The directive is an HTML comment — invisible in rendered Markdown, recognised by the LLM as a workflow instruction.
 
-- **FR-10:** A **proactive skill** fires without explicit user invocation. The LLM invokes it autonomously when it detects a trigger condition in the conversation. The trigger conditions are described in each proactive skill file's **When to invoke** section and mirrored in a relic-generated engine instruction file.
+- **FR-10:** A **proactive skill** fires without explicit user invocation. Claude Code reads the `description` frontmatter field of each `SKILL.md` and uses it to decide when to auto-invoke the skill. Proactive relic skills include a `description` field in their YAML frontmatter that describes the trigger condition. This is the native Claude Code auto-invocation mechanism — no external configuration file is required.
 - **FR-11:** Proactive skills MUST NOT execute any relic workflow, run any CLI command, or write any file without explicit user confirmation in the current turn. The confirmation gate is mandatory: surface the opportunity, name the workflow, ask. The user's "yes" or equivalent triggers the workflow.
-- **FR-12:** `templates/skills/smart-search.md` — proactive skill that fires when the user's question touches a domain, contract, rule, or concept relic tracks. Runs `relic search <keywords>`, surfaces matching artifact names and tldr lines, asks the user if they want to read the full artifact(s). Does not invoke `/relic.specify`, `/relic.plan`, or any other workflow command.
-- **FR-13:** `templates/skills/suggest-workflow.md` — proactive skill that fires when conversation context suggests a relic workflow would help: (a) bug/error in code area owned by a spec → offer `/relic.fix`; (b) feature/capability being discussed that has no spec → offer `/relic.specify`. The skill identifies the relevant workflow and the owning/candidate spec, explains why relic is relevant, and asks the user to confirm before proceeding.
-- **FR-14:** For proactive skills to fire automatically, relic writes a trigger-condition block to the engine's ambient instruction file. For Claude: this is appended to `.claude/CLAUDE.md` (creating it if absent) by both `relic init` and `relic add-engine`. The block describes the trigger conditions for each proactive skill in natural language, and instructs Claude to invoke the skill silently when a condition is met.
-- **FR-15:** The trigger-condition block written to `.claude/CLAUDE.md` is managed by relic — identified by an `<!-- relic: proactive-skills -->` marker. `relic add-engine` regenerates this block if the marker is found, rather than appending a duplicate.
-- **FR-16:** All prompt templates in `templates/prompts/` that currently contain `<!-- include: relic snippet search-knowledge -->` must be updated to `<!-- use: relic.search-context -->`. The skill is the canonical search mechanism for Claude. No prompt template should inline the search procedure text via snippet after this spec is implemented.
+- **FR-12:** `templates/skills/smart-search/SKILL.md` — proactive skill. Frontmatter `description`: fires when the user's question touches a domain, concept, rule, or system behaviour that relic tracks. Runs `relic search <keywords>`, surfaces matching artifact names and tldr lines, asks the user if they want to read the full artifact(s). Does not invoke `/relic.specify`, `/relic.plan`, or any other workflow command.
+- **FR-13:** `templates/skills/suggest-workflow/SKILL.md` — proactive skill. Frontmatter `description`: fires when conversation context reveals a bug in spec-owned code or a new feature being discussed. Offers `/relic.fix` or `/relic.specify` accordingly. Explains why relic is relevant and asks the user to confirm before proceeding.
+- **FR-14:** Relic distinguishes between **relic-managed files** and **user-maintained files** within AI engine directories. Relic MAY write to directories and files it creates and owns: `.claude/skills/relic.*/`, `.claude/commands/relic.*.md`, `.claude/settings.json`, `.github/copilot-instructions.md`, `.codex/`. Relic MUST NOT write to files the user maintains: `.claude/CLAUDE.md`, `.claude/agents.md`, or any file in an AI engine directory that relic did not create. The boundary is ownership, not directory.
+- **FR-15 (removed):** No longer applicable. Auto-invocation is handled natively by the `description` frontmatter in `SKILL.md`.
+- **FR-16:** All files in `templates/prompts/` that currently contain `<!-- include: relic snippet search-knowledge -->` must be updated to `<!-- use: relic.search-context -->`. This applies to both the prompt templates (`specify.md`, `plan.md`, `ask.md`) and any other template file that references the snippet. The skill is the canonical search mechanism for Claude. No template file should inline the search procedure via snippet after this spec is implemented. Note: this migration applies within the existing `.claude/commands/` command files — full migration of workflow commands to `.claude/skills/` format is a separate future spec.
 
 ### Non-Functional
 
-- **NFR-1:** After extraction, the total number of standalone `.claude/commands/` entries increases by exactly 4 (2 procedural + 2 proactive skills). No existing command file is removed.
+- **NFR-1:** After extraction, 4 new skill directories are created in `.claude/skills/` (2 procedural + 2 proactive). Existing `.claude/commands/relic.*.md` files are unchanged.
 - **NFR-2:** Skill files are plain Markdown, editable without any tooling knowledge beyond a text editor.
 - **NFR-3:** Both `relic init` and `relic add-engine` write skill files. No `relic add-skills` command — only first-party skills exist.
 - **NFR-4:** Proactive skills never block the user's primary intent. If the LLM chooses not to fire a proactive skill (ambiguous context, user clearly not asking about relic), it should proceed silently. Proactive skills are advisory, not mandatory.
@@ -105,14 +105,14 @@ The `search-knowledge` snippet (spec 010) inlines the search procedure text **ea
 
 ### In Scope
 
-- `templates/skills/` directory and the 4 skill files from the audit (2 procedural + 2 proactive).
-- Both `relic init` and `relic add-engine` write skills to `.claude/commands/` via `packages/engines/src/engines/claude/index.ts`.
-- `scripts/embed-engine-templates.ts` — additive extension to walk `templates/skills/` and add skill entries to `ENGINE_TEMPLATES` (on top of spec 010's SNIPPETS bake).
+- `templates/skills/<name>/SKILL.md` — one directory per skill (4 total: 2 procedural + 2 proactive). Each `SKILL.md` has YAML frontmatter; proactive skills include a `description` field for Claude Code auto-invocation.
+- Both `relic init` and `relic add-engine` write skills to `.claude/skills/relic.<name>/SKILL.md` via `packages/engines/src/engines/claude/index.ts`. Existing `.claude/commands/` entries are not modified.
+- `scripts/embed-engine-templates.ts` — additive extension to walk `templates/skills/<name>/SKILL.md` and add skill entries to `ENGINE_TEMPLATES` (on top of spec 010's SNIPPETS bake).
 - Command templates updated to replace prose skill references and embedded procedures with `<!-- use: relic.<skill-name> -->` directives.
-- `templates/preamble.md` — replace embedded search cascade with `<!-- use: relic.search-context -->` and document both directive types for the LLM.
+- `templates/preamble.md` — replace embedded search cascade with `<!-- use: relic.search-context -->` and document the directive system (`<!-- include: -->` and `<!-- use: -->`).
 - Skills may use both `<!-- include: relic snippet <name> -->` and `<!-- use: relic.<skill-name> -->` directives.
-- `.claude/CLAUDE.md` — relic writes (or appends) a proactive-skills trigger block with natural-language conditions for each proactive skill, bounded by `<!-- relic: proactive-skills -->` markers.
 - **Snippet-to-skill migration:** all `<!-- include: relic snippet search-knowledge -->` directives in `templates/prompts/` replaced with `<!-- use: relic.search-context -->`. The `search-knowledge` snippet becomes a non-Claude fallback only.
+- Relic writes only to files it created and owns — never to user-maintained files (`.claude/CLAUDE.md`, `.claude/agents.md`, etc.).
 
 ### Out of Scope
 
@@ -121,6 +121,7 @@ The `search-knowledge` snippet (spec 010) inlines the search procedure text **ea
 - Build-time directive resolution — directives remain LLM-runtime instructions.
 - Third-party skill extension — only first-party skills exist in `templates/skills/`.
 - Fully automated workflow execution — proactive skills always ask first.
+- Full migration of existing `.claude/commands/relic.*.md` workflow commands to `.claude/skills/` format — workflow commands stay as commands; this spec adds new skill directories only. The search snippet replacement within those command files (FR-16) is in scope.
 
 ---
 
@@ -141,11 +142,12 @@ The `search-knowledge` snippet (spec 010) inlines the search procedure text **ea
 |---|---|---|
 | `scripts/embed-engine-templates.ts` | Modify — add skill entries baking loop | Spec 010 also touches this (SNIPPETS bake). **Coordinated** — additive loop after existing SNIPPETS loop; applied after 010 is implemented. |
 | `templates/prompts/*.md` | Modify — replace procedures with `<!-- use: -->` directives | Spec 010 also modifies these (snippet directives). **Coordinated** — additive, sequential; applied after 010's snippet replacements. |
-| `templates/skills/` | Create — new directory | Entirely new path. No conflict. |
-| `packages/engines/src/engines/claude/index.ts` | Add skill write loop (prefix detection) | Not listed in any other spec. No conflict. |
+| `templates/skills/<name>/SKILL.md` | Create — new directory structure (4 skill directories) | Entirely new path. No conflict. |
+| `.claude/skills/` | Create — relic-managed skill directories written at init/add-engine time | Entirely new path. Not listed in any other spec. No conflict. |
+| `packages/engines/src/engines/claude/index.ts` | Add skill write loop (creates directories, writes SKILL.md) | Not listed in any other spec. No conflict. |
 | `templates/preamble.md` | Replace search cascade with `<!-- use: relic.search-context -->` + directive docs | Not listed in any other spec's `touches_files`. No conflict. |
 | `packages/engines/src/generated/engine-templates.ts` | Auto-generated — gains skill entries | Spec 010 also touches this. **Coordinated** — skill entries are an additive section alongside SNIPPETS export. |
-| `.claude/CLAUDE.md` | Write proactive-skills trigger block (create if absent, replace if marker exists) | Not listed in any other spec's `touches_files`. No conflict. This is in the user's project, not the relic repo — convention, not a compile-time artifact. |
+| `templates/preamble.md` | Add **Directive System** section and **Proactive Skills** section | Not listed in any other spec's `touches_files`. No conflict. Relic-owned file. |
 | `shared/contracts/SkillExtractionContract.md` | Owns — ownership transferred from spec 010 | No conflict. |
 | `shared/contracts/SnippetIncludeContract.md` | Read only | Owned by spec 010. No ownership claim. |
 | `shared/domains/TemplateDomain.md` | Read only | Owned by spec 004. No ownership claim. |
@@ -154,17 +156,20 @@ The `search-knowledge` snippet (spec 010) inlines the search procedure text **ea
 
 ## Decisions
 
-- **Skill write via engines package:** `packages/engines/src/engines/claude/index.ts` owns the write logic, using prefix detection on ENGINE_TEMPLATES keys (`skills/<name>.md`). Future engines add a handler here; `init.ts` and `add-engine` remain unchanged.
-- **Both `relic init` and `relic add-engine` write skills:** Both entry points must produce a complete, usable skill set. No `relic add-skills` command.
-- **Preamble mandate:** `templates/preamble.md` removes the embedded search cascade and replaces it with an authoritative mandate to invoke `/relic.search-context`. The skill is the single source of truth for the cascade procedure.
+- **Skills live in `.claude/skills/`, commands stay in `.claude/commands/`:** `.claude/skills/<name>/SKILL.md` is the current Claude Code best practice for reusable, bundleable procedures. Existing relic workflow commands remain as `.claude/commands/relic.*.md` — migration is out of scope. New skills are written only to `.claude/skills/`.
+- **Skill directory = bundleable unit of any file type:** A skill folder can contain `SKILL.md` plus any supporting files in any format — shell scripts, Python, JavaScript, Bun scripts, data files, reference docs. The build system stores every file verbatim. The write system replicates the full directory tree into `.claude/skills/relic.<name>/`. Future skill iterations add helpers without touching the build or write logic.
+- **Proactive invocation via `description` frontmatter:** Claude Code natively auto-invokes skills when the conversation matches the `description` field. No external configuration file or CLAUDE.md write required. This is the correct mechanism for `smart-search` and `suggest-workflow`.
+- **Skill write via engines package:** `packages/engines/src/engines/claude/index.ts` owns the write logic. It iterates all SKILLS entries, groups by first path segment (the skill name), creates `.claude/skills/relic.<name>/` directories, and writes each file at its relative path — replicating the full source tree regardless of file type or depth. Future engines add a handler here; no changes to `init.ts` or `add-engine`.
+- **Both `relic init` and `relic add-engine` write skills:** Both entry points produce a complete, usable skill set. No `relic add-skills` command.
+- **Preamble mandate:** `templates/preamble.md` removes the embedded search cascade and replaces it with an authoritative mandate to invoke `/relic.search-context`. Documents both directive types for the LLM.
 - **`<!-- use: relic.<skill-name> -->` is the canonical form:** All prose references to skills are replaced with this directive in command templates. Machine-readable, invisible in rendered Markdown.
-- **Claude only in v1:** Skills are written to `.claude/commands/` only. Copilot and Codex engines return an empty skill set.
+- **Claude only in v1:** Skills are written to `.claude/skills/` only for Claude. Copilot and Codex engines return an empty skill set.
 - **Prerequisite on spec 010:** Skill files use `<!-- include: relic snippet preamble-guard -->` for their opening preamble. Spec 010 must be implemented first.
-- **Proactive skills require a CLAUDE.md trigger block:** Skill files alone don't make the LLM invoke them proactively — Claude needs to be told when to do so. Relic writes a bounded block to `.claude/CLAUDE.md` describing the trigger conditions for each proactive skill. This block is idempotent (marker-bounded) so repeated `add-engine` runs don't duplicate it.
-- **Confirmation gate is mandatory:** Proactive skills detect and surface — they do not act. The user must explicitly confirm before any relic workflow is activated. This is enforced in each proactive skill file's completion criteria.
-- **Skill set is extensible:** The two proactive skills delivered in this spec are the first — not the last. Future specs may add skills to `templates/skills/` following the same pattern. The build pipeline and write logic are designed for arbitrary skill addition.
-- **Skills are lazy, snippets are eager:** A snippet is inlined at load time — its text is always present in the prompt context. A skill is invoked on demand — its procedure runs only when the LLM decides a search (or check) is needed. This is why procedural snippets (especially those with CLI commands) should be promoted to skills: they make prompts lighter and allow richer, branching logic that would bloat a snippet.
-- **`search-context` skill is the canonical search mechanism for Claude:** Prompt templates reference the skill via `<!-- use: relic.search-context -->`. The `search-knowledge` snippet remains in `templates/snippets/` as a non-Claude fallback but is not referenced from any Claude prompt template after this spec.
+- **Relic-managed vs user-maintained files:** Relic may write to directories and files it creates: `.claude/skills/relic.*/`, `.claude/commands/relic.*.md`, `.claude/settings.json`. It must never write to user-maintained files (`.claude/CLAUDE.md`, `.claude/agents.md`).
+- **Confirmation gate is mandatory:** Proactive skills detect and surface — they do not act. The user must explicitly confirm before any relic workflow is activated.
+- **Skill set is extensible:** Future specs may add skills by adding directories to `templates/skills/`. The build pipeline and write logic support arbitrary additions.
+- **Skills are lazy, snippets are eager:** A snippet is inlined at load time — always in context. A skill is invoked on demand — its procedure runs only when needed. Procedural snippets with CLI commands should be promoted to skills for lighter prompts and richer logic.
+- **`search-context` skill is the canonical search mechanism for Claude:** Prompt templates reference it via `<!-- use: relic.search-context -->`. The `search-knowledge` snippet remains as a non-Claude fallback only.
 
 ---
 
