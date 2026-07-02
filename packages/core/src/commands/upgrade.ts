@@ -28,6 +28,9 @@ export interface UpgradeOptions {
   relicDir?: string;
   /** Override the resolved channel. Used in tests only. */
   _channel?: string;
+  /** Override the engine-hook writer. Used in tests only (avoids bun's
+   *  process-global mock.module, which leaks into other test files). */
+  _runAddEngine?: typeof runAddEngine;
 }
 
 export interface UpgradeCheckResult {
@@ -192,7 +195,8 @@ function cleanSupersededClaudeCommands(projectDir: string, result: UpgradeResult
 async function refreshHooks(
   relicDir: string,
   projectDir: string,
-  result: UpgradeResult
+  result: UpgradeResult,
+  addEngine: typeof runAddEngine = runAddEngine
 ): Promise<void> {
   const engines = readEngines(relicDir);
 
@@ -213,7 +217,7 @@ async function refreshHooks(
       continue;
     }
     try {
-      await runAddEngine({
+      await addEngine({
         engine: engine as Parameters<typeof runAddEngine>[0]["engine"],
         projectDir,
       });
@@ -262,7 +266,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       toon_warnings: [],
       warnings: [],
     };
-    await refreshHooks(relicDir, projectDir, result);
+    await refreshHooks(relicDir, projectDir, result, options._runAddEngine);
     if (options.clean) cleanSupersededClaudeCommands(projectDir, result);
     if (options.text) {
       if (result.warnings.length > 0) result.warnings.forEach((w) => console.log(w));
@@ -376,7 +380,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       }
     } else {
       // Spawn failed — fall back to in-process refresh.
-      await refreshHooks(relicDir, projectDir, result);
+      await refreshHooks(relicDir, projectDir, result, options._runAddEngine);
       if (options.clean) cleanSupersededClaudeCommands(projectDir, result);
       result.warnings.push(
         "Hooks refreshed in-process (templates may be from the previous version). " +

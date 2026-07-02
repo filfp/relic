@@ -123,20 +123,30 @@ Reframed with the owner (plugin delivery + ambient SDD, D-1..D-9), then implemen
 - Cross-spec amendments with provenance: `ContextResultContract` (003) and
   `ProjectConfigDomain` (008) gained the `sdd` field.
 
-## Phase 5 — Hardening, docs, release hygiene
+## Phase 5 — Hardening, docs, release hygiene ✅ (this branch)
 
-- **Test pollution:** root `bun test` fails engine tests that pass in isolation
-  (shared tmp/cwd leakage). Make both `bun test` and `bun run test` green.
-- **Typecheck:** fix the 16 pre-existing errors (search/toon-migrate/toon test files +
-  `toon-migrate.ts`); add `tsc --noEmit` to CI.
-- **Docs refresh:** rewrite `CLAUDE.md` to match reality (session.json, 12 prompts,
-  snippet/skill architecture, `write`/`mode`/`upgrade`/`html-sync`/`snippet`/`external`
-  commands, toon manifests, fix/solve pipeline); refresh `README.md` and `docs/*`.
-- **Open questions:** resolve or explicitly defer the CLAUDE.md "Open Questions" list.
-- **Upgrade path:** confirm `relic upgrade` on an old project refreshes preamble,
-  base.html, spec HTML chrome, prompts, snippets, and (post-011) skills.
-
----
+- **Test pollution fixed at the root:** `upgrade.test.ts` used
+  `mock.module("@relic/engines")` — bun module mocks are process-global and leaked a
+  no-op `runAddEngine` into the engines package's own tests whenever suites shared a
+  process. Replaced with an injection seam (`_runAddEngine`, matching `_channel`).
+  Plain `bun test` at the root is green for the first time (245/245), alongside
+  `bun run test`. Convention recorded in CLAUDE.md: never `mock.module` a workspace
+  package.
+- **Typecheck clean:** all 16 pre-existing errors fixed (guarded regex captures in
+  `toon-migrate.ts`, non-null assertions after length checks in test files, and
+  `toon.test.ts` ported from a stray vitest import to `bun:test`). `tsc --noEmit`
+  added to CI next to the plugin freshness check.
+- **CLAUDE.md rewritten for the current reality** (489 stale lines → current):
+  session.json (not current-spec), the full command surface (write/snippet/mode/
+  html-sync/external/upgrade --clean), snippet + plugin architecture, ambient SDD +
+  sdd knob, html mode with the machine-managed-chrome model, external spec
+  integration, testing conventions, 7-site version bump. The stale "Open Questions"
+  list is gone — answers live in the knowledge layer, and CLAUDE.md now points there
+  ("Where Decisions Live").
+- **Upgrade path verified end-to-end** on a three-engine html-mode project: one
+  `upgrade --prompts --clean` refreshes copilot/codex prompt files, claude settings
+  (plugin era), preamble, base.html, spec HTML chrome, and removes pre-plugin command
+  copies.
 
 ## Phase 6 — Ship 1.0.0
 

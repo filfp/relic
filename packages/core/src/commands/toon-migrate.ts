@@ -83,7 +83,7 @@ export function buildSpecIndex(relicDir: string): ManifestEntry[] {
     if (fileExists(specMdPath)) {
       const content = readText(specMdPath);
       const match = content.match(/^# Spec:\s*(.+)/m);
-      if (match) name = match[1].trim();
+      if (match?.[1]) name = match[1].trim();
     }
     entries.push({ name, file: folderName + "/", tags: [], tldr: "" });
   }
@@ -112,7 +112,7 @@ export function buildFixIndex(relicDir: string): ManifestEntry[] {
     if (fileExists(filePath)) {
       const content = readText(filePath);
       const match = content.match(/^# Fix:\s*(.+)/m);
-      if (match) name = match[1].trim();
+      if (match?.[1]) name = match[1].trim();
     }
     entries.push({ name, file: filename, tags: [], tldr: "" });
   }

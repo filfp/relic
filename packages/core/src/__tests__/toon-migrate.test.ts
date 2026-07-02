@@ -45,8 +45,8 @@ describe("readManifestToon", () => {
     ]);
     const entries = readManifestToon(subdirPath, "domains manifest");
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe("UserAuth");
-    expect(entries[0].tags).toEqual(["auth", "session"]);
+    expect(entries[0]!.name).toBe("UserAuth");
+    expect(entries[0]!.tags).toEqual(["auth", "session"]);
   });
 
   test("falls back to .json when .toon absent; writes .toon; emits warn", () => {
@@ -63,7 +63,7 @@ describe("readManifestToon", () => {
     console.warn = origWarn;
 
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe("UserAuth");
+    expect(entries[0]!.name).toBe("UserAuth");
     expect(existsSync(join(subdirPath, "manifest.toon"))).toBe(true);
     expect(warnMessages.some((m) => m.includes("Auto-migrating"))).toBe(true);
   });
@@ -97,8 +97,8 @@ describe("buildSpecIndex", () => {
 
     const entries = buildSpecIndex(relicDir);
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe("001-auth");
-    expect(entries[0].file).toBe("001-auth/");
+    expect(entries[0]!.name).toBe("001-auth");
+    expect(entries[0]!.file).toBe("001-auth/");
   });
 });
 
@@ -122,7 +122,7 @@ describe("buildFixIndex", () => {
 
     const entries = buildFixIndex(relicDir);
     expect(entries.length).toBe(1);
-    expect(entries[0].file).toBe("2026-01-01-real.md");
+    expect(entries[0]!.file).toBe("2026-01-01-real.md");
   });
 });
 
