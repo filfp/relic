@@ -22,6 +22,7 @@ export type { UpgradeOptions, UpgradeCheckResult, UpgradeResult } from "./comman
 export { runWrite } from "./commands/write.ts";
 export type { WriteOptions, WriteResult, WriteTarget } from "./commands/write.ts";
 export { runAsk } from "./commands/ask.ts";
+export { runSnippet } from "./commands/snippet.ts";
 export type { AskOptions } from "./commands/ask.ts";
 export { runMode } from "./commands/mode.ts";
 export type { ModeOptions } from "./commands/mode.ts";

@@ -1,0 +1,29 @@
+{
+  "owns": [
+    "shared/contracts/SnippetIncludeContract.md"
+  ],
+  "reads": [
+    "shared/domains/TemplateDomain.md"
+  ],
+  "touches_files": [
+    "scripts/embed-engine-templates.ts",
+    "templates/snippets/",
+    "templates/prompts/specify.md",
+    "templates/prompts/clarify.md",
+    "templates/prompts/plan.md",
+    "templates/prompts/analyse.md",
+    "templates/prompts/tasks.md",
+    "templates/prompts/implement.md",
+    "templates/prompts/fix.md",
+    "templates/prompts/scan.md",
+    "templates/prompts/use.md",
+    "templates/prompts/constitution.md",
+    "templates/prompts/solve.md",
+    "templates/prompts/ask.md",
+    "packages/core/src/commands/snippet.ts",
+    "packages/core/src/index.ts",
+    "packages/cli-node/src/bin.ts",
+    "packages/engines/src/index.ts",
+    "packages/engines/src/generated/engine-templates.ts"
+  ]
+}

@@ -1,212 +1,144 @@
 # Relic 1.0.0 Roadmap
 
 > Written 2026-07-02 from a full audit of the codebase at v0.8.19.
-> Goal: close all open work, fix the HTML-mode defects, modernise the AI-engine
-> integrations, and ship a stable, documented 1.0.0.
+> **Revised 2026-07-02** after reconciling with main (`78a160a`), which landed work from a
+> second machine: spec 010 (prompt snippet injection, fully implemented), spec 011
+> (skill extraction, scaffolded), a spec 009 overhaul, and the html-mode validate fix.
+> Goal: close all open work, modernise the AI-engine integrations, and ship a stable,
+> documented 1.0.0.
 
 ---
 
-## Where the project stands (audit summary)
+## Where the project stands (post-reconciliation)
 
 - **Version:** 0.8.19, published on npm and PyPI. CI publishes on `v*` tags; a test
   workflow runs `bun run test` on PRs.
-- **Specs:** 8 of 9 specs are fully implemented (001–008). **009-external-spec-integration
-  is the only open feature** — spec.md and plan.md are complete, but `tasks.md` is a
-  placeholder ("Task 1 / Task 2") and nothing is implemented.
-- **Tests:** 197 tests, all green when run per-package. Running plain `bun test` at the
-  repo root produces 8 engine-test failures from cross-test pollution (they pass in
-  isolation) — a hygiene issue, not a product bug.
-- **Docs:** `CLAUDE.md` and parts of `docs/` are significantly stale (they describe
-  `.relic/current-spec` — the code uses `session.json`; they list 10 prompts — there are
-  12; `relic deep-search` no longer exists as its own command; `mode.ts`, `write.ts`,
-  `upgrade.ts`, `ask.ts` are missing from the described layout).
-- **HTML mode:** functional but carries the defects detailed in Phase 1 below.
+- **Specs 001–008:** fully implemented.
+- **Spec 010 (prompt snippet injection): DONE** (27/27). Prompts now carry
+  `<!-- include: relic snippet <name> -->` directives resolved at LLM runtime via
+  `relic snippet <name>`; shared prompt fragments live once in `templates/snippets/`.
+- **Spec 009 (external spec integration): OPEN** — spec/plan overhauled on main
+  (per-type path map `{ fr, nfr, br, adr, us, epic }`, git-submodule integration model,
+  `ExternalConfigContract` + `ExternalSpecDomain` written, hard validate errors,
+  `relic external list`), but `tasks.md` is still a placeholder and nothing is implemented.
+- **Spec 011 (skill extraction): OPEN** — spec/plan written, tasks not generated.
+  Supersedes the old "modernise Claude engine" phase of this roadmap.
+- **Phase 1 (this branch):** base.html chrome fixes + `relic html-sync` — done,
+  reconciled onto new main (spec HTMLs for 009/010/011 re-based, escaping fix from the
+  instance-level hotfix folded into the template, prompt-level HTML rules moved into
+  `templates/snippets/html-mode.md`).
+- **Tests:** all green per-package (138 core / 67 utility / 11 engines). Plain root
+  `bun test` still shows engine-test pollution; 16 pre-existing typecheck errors in
+  toon/search test files.
+- **Docs:** `CLAUDE.md` and `docs/*` significantly stale (session.json vs current-spec,
+  12 prompts vs 10, no mention of snippets/skills/mode/write/upgrade/html-sync).
 
 ---
 
-## Phase 1 — HTML mode bug fixes (P0, ship as 0.9.x)
+## Phase 1 — HTML mode bug fixes + `relic html-sync` ✅ (this branch)
 
-These are the user-visible breakages. All fixes land in `templates/base.html` plus a
-small amount of CLI code; every fix must also reach *already generated* HTML files
-(see 1.4).
+Landed as the first commit of `roadmap/v1.0.0`:
 
-### 1.1 `<relic-flow>` breaks the whole page — custom-element parse timing
-
-**Root cause:** all components that read their own content (`relic-flow`,
-`relic-callout`, `relic-chip`, `relic-status`) do so in `connectedCallback`. When the
-browser's streaming parser creates the element, `connectedCallback` fires **before the
-element's children are parsed**, so `this.textContent` is empty. For `relic-flow` this
-means `renderFlow('')` produces an SVG with `viewBox="0 0 0 0"` at `width:100%`
-(degenerate layout), and the raw mermaid text is then appended by the parser *after*
-the empty SVG — raw `graph TD A[Start] --> B...` text spills into the page and the
-layout collapses. Attribute-driven components (`relic-chart`, `relic-table`) are
-unaffected, which is why only flows appear to break.
-
-**Fix:** in every content-reading component, defer rendering when the document is still
-parsing:
-
-```js
-connectedCallback() {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => this.render(), { once: true });
-  } else {
-    this.render();
-  }
-}
-```
-
-Additionally: `renderFlow` must guard empty/unparseable input (render nothing rather
-than a 0×0 SVG), and the flow SVG should get a minimum sensible viewBox.
-
-### 1.2 Embedded markdown can terminate the page (`</script>` hazard)
-
-The inline-reader source blocks are `<script type="text/plain">`. If `spec.md` /
-`plan.md` / `tasks.md` contain a literal `</script>` (very likely in specs that discuss
-HTML — including Relic's own spec 008), the block terminates early and the rest of the
-markdown is parsed as live HTML — a second "breaks all HTML" vector.
-
-**Fix:** define an escaping convention: the writer (LLM prompt instruction + docs in
-`#relic-docs`) must write `<\/script` inside the blocks, and the reader JS unescapes it
-before parsing. Update all 6 prompt HTML steps to state this rule.
-
-### 1.3 Nav links open raw markdown instead of the styled reader
-
-The current `templates/base.html` already contains the inline markdown reader
-(header nav → styled reader panel → back button). The problem is **distribution**:
-every generated `<spec-id>.html` / fix HTML is a frozen full copy of whatever
-`base.html` existed at scaffold time. Files generated before the reader existed
-(e.g. `008-html-spec-mode.html`, `009-…html`, the two `.relic/fixes/*.html`) never
-receive it, so their nav links still navigate to the raw `.md` file.
-
-**Fix (structural, not prompt-based):** add a deterministic re-base step to the CLI —
-`relic html-sync` (or fold it into `relic scaffold` + `relic upgrade`):
-
-- Replace everything that is "chrome" (the `<head>`, both `<script>` blocks, the
-  `<template id="relic-docs">`, the header) with the current `base.html` version.
-- Preserve the authored parts: `#relic-body` sections and the three `relic-src-*`
-  source blocks.
-- Requires marking chrome vs. content regions in `base.html` with stable comment
-  sentinels (e.g. `<!-- relic:chrome:start -->` … `<!-- relic:chrome:end -->`) so the
-  swap is a deterministic string operation, not an LLM task.
-- `relic scaffold` in html mode runs the sync automatically when the spec HTML already
-  exists; the prompts' HTML step then only edits content sections.
-
-This is the single most important structural fix: 800 lines of infrastructure JS must
-never be LLM-maintained per file.
-
-### 1.4 Smaller base.html defects (fix in the same pass)
-
-- `.reader-msg` fallback panel is styled under `#relic-reader .reader-msg` but rendered
-  *outside* `#relic-reader` → unstyled fallback. Fix the selector or the markup.
-- Dark-mode gaps: components inject hardcoded light-theme hex values (chart axis text
-  `#64748b`, callout body colour `#1e293b`, progress track `#e2e8f0`, flow node fills).
-  Move to `var(--*)` custom properties so dark mode is consistent.
-- Reader parser gaps: task-list items (`- [x]` / `- [ ]`) render as literal text —
-  `tasks.md` is entirely checkboxes, so render them as disabled checkboxes; no nested
-  list support; headings inside blockquotes.
-- `edgeRe` in `renderFlow` is computed but only used as a gate — simplify while there.
-
-### 1.5 Verification
-
-Add a lightweight rendered-DOM test (happy-dom or a headless Chrome smoke test) that
-loads a generated spec HTML containing a `<relic-flow>`, asserts the SVG has nodes and
-no raw mermaid text leaks, and asserts the reader opens from an embedded source block.
+- **Custom-element parse-timing fix** — `connectedCallback` fires mid-parse before
+  children exist; content-reading components (`relic-flow`, `relic-callout`,
+  `relic-chip`, `relic-status`) rendered from empty sources, so flows produced a 0×0
+  SVG and dumped raw mermaid text into the page. All components now defer rendering to
+  `DOMContentLoaded` via `defineRelic`, with a `data-relic-rendered` guard.
+- **`</script` escaping convention** for the embedded reader source blocks (a literal
+  occurrence truncated the block and parsed the rest of the file as live HTML).
+- **Theme-aware components** via `--tone-*` CSS variables (light + dark values).
+- **Reader hardening** — separate panel instead of `innerHTML` save/restore, GFM task
+  checkboxes, styled fallback message.
+- **`relic html-sync`** — generated HTML split into machine-managed chrome and
+  sentinel-marked content regions; the sync re-bases existing files onto the current
+  template (legacy files handled heuristically) and deterministically embeds
+  spec/plan/tasks markdown into the reader source blocks. Runs automatically in
+  `relic scaffold`, `relic mode html`, and `relic upgrade`.
+- **Docs-template escape fix** folded in from main's instance-level hotfix: raw
+  `<script …>` text inside `<template id="relic-docs">` swallowed everything up to the
+  next real `</script>` (blank page); now written as `&lt;script …&gt;` in the template
+  itself so newly scaffolded files are correct.
+- Contracts amended (`HtmlComponentContract`, `ScaffoldResultContract`); changelog
+  entry written via `relic write`; all four existing spec HTMLs re-based.
 
 ---
 
-## Phase 2 — The 4-files-per-spec invariant is now conditional (P0)
+## Phase 2 — Finish the 4-vs-5 file invariant (small)
 
-HTML mode legitimately adds a 5th file (`<spec-id>.html`) to the spec folder, but the
-invariant is hardcoded in several places:
+Main already landed the code half (fix `2026-06-02-validate-illegal-files-html-mode`):
+`relic validate` now permits `<spec-id>.html` in html mode. Remaining:
 
-| Location | Problem |
-|---|---|
-| `templates/preamble.md` (lines ~20, 60, 66, Prohibited Actions) | "Exactly four files. No others." / "If you are about to create a fifth file… stop." |
-| `packages/core/src/commands/validate.ts:12` | `ALLOWED_SPEC_FILES` = the 4 md/json files → **`relic validate` flags the spec's own HTML file as a violation in html mode** |
-| `.relic/preamble.md` (this repo's own copy) | same stale text |
-| `.relic/shared/rules/SpecFilesAllowlistRule.md` | must be re-stated as mode-conditional |
-
-**Fix:** state the allowlist as mode-conditional: 4 files always; plus `<spec-id>.html`
-when `config.json` `mode` is `"html"`. Update `validate.ts` to read the mode and extend
-the set accordingly (and to *warn* if a spec HTML exists while mode is `"md"`).
-`relic upgrade` must refresh `preamble.md` in user projects. Add a validate test for
-both modes.
+- `templates/preamble.md` still says "Exactly four files. No others." (lines ~20, 60, 66,
+  Prohibited Actions). Make it mode-conditional: 4 files always, plus `<spec-id>.html`
+  when `config.json` `mode = "html"`.
+- Update `.relic/preamble.md` (this repo's instance — refreshed automatically by
+  `relic upgrade --prompts`) and the `SpecFilesAllowlistRule.md` shared rule.
+- Optional polish: `relic validate` could *warn* when a spec HTML exists while mode is
+  `"md"`.
 
 ---
 
-## Phase 3 — Finish spec 009: External Spec Integration (P1)
+## Phase 3 — Implement spec 009: External Spec Integration
 
-The only open feature. spec.md (FR-1…FR-10, NFR-1…6, decisions D-1…D-3) and plan.md
-exist; tasks were never generated.
+Spec and plan are current on main (post-overhaul); tasks were never generated.
 
-1. Regenerate `tasks.md` from the existing plan (`/relic.tasks`).
-2. Implement: `config.json` `external.specsDir` block; `relic init --external-specs`;
-   `relic external` (report / `set` / `link`); `external` field in `relic context`;
-   `external_reads` in `artifacts.json` with per-entry existence in
-   `relic context --spec`; `relic validate` warnings for missing external files;
-   path-traversal rejection (NFR-4); prompt updates for the 6 workflow commands (FR-8).
-3. Write the two owned shared artifacts (`ExternalSpecDomain.md`,
-   `ExternalConfigContract.md`) and the changelog entry for the cross-spec
-   `ContextResultContract.md` mutation (OQ-1).
-4. Resolve OQ-2…OQ-5 (recommendations: validate at link time; commit `specsDir`;
-   `external set` warns on breaking `external_reads`; `external list` all-specs view
-   can wait for post-1.0).
-
-Also: check off the stale T-10 in `001-workflow-test-suite/tasks.md`
-(`validate.test.ts` exists — the box was never ticked).
+1. `/relic.tasks` against the updated plan.
+2. Implement per the revised contract: `config.external` as a flat per-type path map
+   (`{ fr, nfr, br, adr, us, epic }`), `external_reads` as `<type>/<filename>` entries,
+   `relic external` (report / set / link / list / create with `committed`/`commit_sha`),
+   `external` field in `relic context`, hard validate errors for missing external files,
+   path-traversal rejection, git-submodule awareness per `ExternalSpecDomain`.
+3. Prompt updates via the snippet system (a new snippet, not per-prompt edits).
+4. Resolve the remaining open questions in the spec at plan time.
 
 ---
 
-## Phase 4 — Modernise the AI-engine integrations (P1)
+## Phase 4 — Implement spec 011: Skill Extraction
 
-The reason the project "isn't bleeding edge anymore": Claude Code has moved from bare
-`.claude/commands/*.md` slash commands to **skills** and **plugins**.
+Replaces the old "modernise AI-engine integrations" phase — main scoped this properly
+as a spec. Key decisions already recorded there:
 
-- **Claude engine:** emit skills — `.claude/skills/relic-<cmd>/SKILL.md` with YAML
-  frontmatter (`name`, `description` written so Claude can auto-invoke the right
-  workflow, `allowed-tools` limited to `Bash(relic *)` + file tools). Keep writing
-  `.claude/commands/` for one release for backward compatibility, then deprecate.
-  Verify against current Claude Code docs at implementation time.
-- **Plugin packaging (stretch):** a Relic plugin (commands + skills + hooks in one
-  installable unit) would replace per-project file copying entirely. Evaluate; don't
-  block 1.0 on it.
-- **Codex engine:** verify `.codex/commands/` + `config.toml` `prefix_rules` still match
-  current Codex CLI conventions; add `AGENTS.md` emission if that is now the canonical
-  hook.
-- **Copilot engine:** `.github/prompts/*.prompt.md` is current — verify frontmatter
-  schema, no structural change expected.
-- Prompts are the sole source of truth (`templates/prompts/`) — the engine layer only
-  changes packaging, not content. Update `add-engine` tests accordingly.
+- Skills live in `.claude/skills/<name>/SKILL.md` directories (current Claude Code best
+  practice), supporting multi-file bundles (scripts/helpers alongside SKILL.md).
+- `embed-engine-templates.ts` walks `templates/skills/` recursively into a `SKILLS`
+  export; written by both `relic init` and `relic add-engine`, routed through the
+  claude engine writer.
+- Proactive auto-invocation via the `description` frontmatter field.
+- `<!-- use: relic.<skill> -->` directive replaces prose skill references in prompts.
+- Ownership boundary: relic writes only relic-owned files in `.claude/` — never
+  user-maintained files (`CLAUDE.md`, `agents.md`).
+
+Steps: `/relic.tasks` → implement → verify skills load in Claude Code. Fold in the old
+phase-4 secondary items: verify Codex (`.codex/commands/` + `config.toml`) and Copilot
+(`.github/prompts/*.prompt.md`) layouts against current docs.
 
 ---
 
-## Phase 5 — Hardening, docs, release hygiene (P2)
+## Phase 5 — Hardening, docs, release hygiene
 
-- **Test pollution:** root `bun test` fails 8 engine tests that pass in isolation
-  (shared tmp-dir/cwd leakage between suites). Isolate fixtures so both `bun test` and
-  `bun run test` are green.
+- **Test pollution:** root `bun test` fails engine tests that pass in isolation
+  (shared tmp/cwd leakage). Make both `bun test` and `bun run test` green.
+- **Typecheck:** fix the 16 pre-existing errors (search/toon-migrate/toon test files +
+  `toon-migrate.ts`); add `tsc --noEmit` to CI.
 - **Docs refresh:** rewrite `CLAUDE.md` to match reality (session.json, 12 prompts,
-  current command list incl. `write`, `mode`, `upgrade`, `ask`, `solve`, search flags,
-  toon manifests, fix pipeline); refresh `README.md` and `docs/*` for html mode and the
-  fix/solve pipeline.
-- **Open questions:** the CLAUDE.md "Open Questions" list is mostly answered by specs
-  003–008 — resolve each in writing or explicitly defer to post-1.0.
-- **Preamble/upgrade path:** confirm `relic upgrade` refreshes `preamble.md`,
-  `base.html`, and engine files in user projects, and that old projects survive the
-  4→5 file rule change.
+  snippet/skill architecture, `write`/`mode`/`upgrade`/`html-sync`/`snippet`/`external`
+  commands, toon manifests, fix/solve pipeline); refresh `README.md` and `docs/*`.
+- **Open questions:** resolve or explicitly defer the CLAUDE.md "Open Questions" list.
+- **Upgrade path:** confirm `relic upgrade` on an old project refreshes preamble,
+  base.html, spec HTML chrome, prompts, snippets, and (post-011) skills.
 
 ---
 
 ## Phase 6 — Ship 1.0.0
 
-1. All phases above merged; `bun test`, `bun run test`, `tsc --noEmit` green.
-2. Manual smoke: `relic init` (md + html modes) in a throwaway project; run the full
-   forward lifecycle and one fix/solve cycle in Claude Code; open the generated HTML in
-   a browser (light + dark, file:// and HTTP) with at least one flow diagram.
-3. `bun run publish` → v1.0.0 tag → npm + PyPI. Announce breaking-change notes:
-   none expected for md-mode users; html-mode users get auto re-based HTML.
-4. Post-1.0 backlog: Homebrew tap, Claude plugin packaging, multiple external repos,
-   `relic external list` across specs, flow-renderer layout improvements.
+1. All phases merged; `bun test`, `bun run test`, `tsc --noEmit` green.
+2. Manual smoke: `relic init` (md + html modes) in a throwaway project; full forward
+   lifecycle + one fix/solve cycle in Claude Code; open generated HTML in a browser
+   (light + dark, file:// and HTTP) with at least one flow diagram.
+3. `bun run publish` → v1.0.0 tag → npm + PyPI.
+4. Post-1.0 backlog: Homebrew tap, plugin packaging, full command-to-skill migration
+   (flagged out of scope by 011), multiple external repos, flow-renderer layout
+   improvements.
 
 ---
 
@@ -214,8 +146,8 @@ The reason the project "isn't bleeding edge anymore": Claude Code has moved from
 
 | # | Work | Size | Ships as |
 |---|---|---|---|
-| 1 | Phase 1 (base.html fixes + html-sync) + Phase 2 (allowlist) | M | 0.9.0 |
+| 1 | Phase 1 (base.html + html-sync) ✅ + Phase 2 (preamble allowlist) | S remaining | 0.9.0 |
 | 2 | Phase 3 (spec 009) | M | 0.9.x |
-| 3 | Phase 4 (engines/skills) | M | 0.10.0 |
+| 3 | Phase 4 (spec 011 skills) | M | 0.10.0 |
 | 4 | Phase 5 (hardening + docs) | S | 0.10.x |
 | 5 | Phase 6 (release) | S | **1.0.0** |

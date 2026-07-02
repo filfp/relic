@@ -1,3 +1,5 @@
+export { SNIPPETS } from "./generated/engine-templates.ts";
+
 import { writeClaude } from "./engines/claude/index.ts";
 import { writeCopilot } from "./engines/copilot/index.ts";
 import { writeCodex } from "./engines/codex/index.ts";

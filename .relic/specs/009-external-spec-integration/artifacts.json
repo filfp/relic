@@ -25,6 +25,13 @@
     "templates/prompts/plan.md",
     "templates/prompts/tasks.md",
     "templates/prompts/implement.md",
-    "templates/prompts/fix.md"
+    "templates/prompts/fix.md",
+    "templates/external/fr.md",
+    "templates/external/nfr.md",
+    "templates/external/br.md",
+    "templates/external/adr.md",
+    "templates/external/us.md",
+    "templates/external/epic.md",
+    "scripts/embed-templates.ts"
   ]
 }
