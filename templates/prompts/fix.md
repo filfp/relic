@@ -44,6 +44,8 @@ against the file path or code area mentioned in the issue.
 
 <!-- include: relic snippet load-spec-context -->
 
+<!-- include: relic snippet external-reads -->
+
 ---
 
 ## Step 3 — Classify the root cause

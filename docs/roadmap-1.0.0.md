@@ -79,18 +79,22 @@ validate` permits `<spec-id>.html` in html mode. This branch completed the text 
 
 ---
 
-## Phase 3 — Implement spec 009: External Spec Integration
+## Phase 3 — Implement spec 009: External Spec Integration ✅ (this branch)
 
-Spec and plan are current on main (post-overhaul); tasks were never generated.
+Planned, task-generated, and implemented 2026-07-02 via the relic workflow itself:
 
-1. `/relic.tasks` against the updated plan.
-2. Implement per the revised contract: `config.external` as a flat per-type path map
-   (`{ fr, nfr, br, adr, us, epic }`), `external_reads` as `<type>/<filename>` entries,
-   `relic external` (report / set / link / list / create with `committed`/`commit_sha`),
-   `external` field in `relic context`, hard validate errors for missing external files,
-   path-traversal rejection, git-submodule awareness per `ExternalSpecDomain`.
-3. Prompt updates via the snippet system (a new snippet, not per-prompt edits).
-4. Resolve the remaining open questions in the spec at plan time.
+- `config.external` per-type map with runtime resolution and traversal guard
+  (`@relic/utility`); `relic external` command (report, `init` submodule, `set`, `link`,
+  `create` with sequential IDs + auto git commit + auto-link, `list` across specs);
+  `relic context` gains `external`/`external_reads`; `relic validate` gains hard
+  `external_errors`; `relic init` gains `--external-<type>` flags; six document
+  templates in `templates/external/` (embedded automatically — no build-script change).
+- FR-8 implemented as one `external-reads` snippet included by the six workflow prompts
+  (validate-then-read, hard stop on broken entries per OQ-4).
+- `ContextResultContract.md` (003-owned) amended additively per OQ-1 with changelog
+  entries at plan and implementation time. Spec status → implemented; 24/24 tasks done.
+- Verified: 25 new tests + an end-to-end temp-project smoke (init → set → create with
+  git commit → link → list → context → validate pass → hard failure after file removal).
 
 ---
 

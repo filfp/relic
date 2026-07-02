@@ -574,3 +574,11 @@ Fixed custom-element parse-timing bug that broke pages containing <relic-flow> (
 ## [2026-07-02T12:41:58.503Z] manual (1.0.0 roadmap phase 2) — 008-html-spec-mode: preamble and SpecFilesAllowlistRule made mode-conditional
 
 templates/preamble.md no longer states an unconditional four-file rule: spec folders allow the four base files plus CLI-created <spec-id>.html when mode is html. SpecFilesAllowlistRule.md restated accordingly (also removed a stale history.json mention from its manifest tldr). Completes the documentation half of the html-mode allowlist; the validate.ts code half landed with fix 2026-06-02-validate-illegal-files-html-mode.
+
+## [2026-07-02T12:59:01.064Z] /relic.plan — 009-external-spec-integration: plan written against post-overhaul contract
+
+Implementation plan for the per-type external spec integration (config.external map, relic external init/set/link/create/list, context/validate/init extensions, external-reads workflow snippet). Cross-spec notice per OQ-1: ContextResultContract.md (owned by 003) will gain additive external and external_reads fields at implementation time; no existing field changes shape.
+
+## [2026-07-02T14:44:51.447Z] /relic.implement — 009-external-spec-integration: implemented — external spec integration shipped
+
+config.external per-type map (fr/nfr/br/adr/us/epic) with runtime resolution and traversal guard in @relic/utility; relic external command (report, init submodule, set, link, create with sequential IDs + git commit, list across specs); relic context gains external + external_reads fields; relic validate gains external_errors (hard); relic init gains --external-<type> flags; 6 document templates in templates/external/; external-reads snippet included by the 6 workflow prompts. Cross-artifact mutation: ContextResultContract.md (owned by 003) amended with the additive external/external_reads fields per OQ-1.

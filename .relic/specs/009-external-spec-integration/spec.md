@@ -2,7 +2,7 @@
 
 **Spec ID:** 009-external-spec-integration
 **Created:** 2026-05-20
-**Status:** draft
+**Status:** implemented
 
 ---
 
@@ -116,7 +116,7 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 
 ## Open Questions
 
-- [ ] **OQ-1:** `ContextResultContract.md` is owned by spec 003 — adding the `external` field is a cross-spec mutation. A changelog entry is required at plan time.
+- [x] **OQ-1:** `ContextResultContract.md` is owned by spec 003 — adding the `external` field is a cross-spec mutation. **Resolved →** changelog entries written at plan time and at implementation time (2026-07-02); the contract was amended additively with a provenance note.
 - [x] **OQ-2:** Should `relic external link` validate path existence at link time or defer to `relic validate`? **Resolved → both.** Validate immediately at `relic external link` (hard error if missing). Also validate at `relic validate` (hard error, not warning).
 - [x] **OQ-3:** Should `external.specsDir` be per-project-member (gitignored) or team-shared (committed)? **Resolved → committed** (D-2). Per-type paths in `config.external` are team-wide conventions.
 - [x] **OQ-4:** What happens when type paths change and `external_reads` entries break? **Resolved → hard stop.** Any command that uses `external_reads` validates all paths before doing any work. A broken path stops the command immediately with a clear error listing which entries are missing. Broken paths do not produce degraded or partial output — they must be fixed first.

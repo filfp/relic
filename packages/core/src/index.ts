@@ -27,6 +27,8 @@ export type { AskOptions } from "./commands/ask.ts";
 export { runMode } from "./commands/mode.ts";
 export type { ModeOptions } from "./commands/mode.ts";
 export { runHtmlSync, syncAllSpecHtml, syncSpecHtml, refreshBaseHtml } from "./commands/html-sync.ts";
+export { runExternal } from "./commands/external.ts";
+export type { ExternalOptions } from "./commands/external.ts";
 export type { HtmlSyncOptions, HtmlSyncResult, SpecSyncStatus } from "./commands/html-sync.ts";
 export { rebaseSpecHtml, extractSpecHtmlParts, embedMarkdownSources, escapeMdForScriptBlock } from "./core/html-rebase.ts";
 export type { SpecHtmlParts } from "./core/html-rebase.ts";

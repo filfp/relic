@@ -691,7 +691,7 @@ LLM AUTHORING RULES
 
 **Spec ID:** 009-external-spec-integration
 **Created:** 2026-05-20
-**Status:** draft
+**Status:** implemented
 
 ---
 
@@ -805,7 +805,7 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 
 ## Open Questions
 
-- [ ] **OQ-1:** `ContextResultContract.md` is owned by spec 003 — adding the `external` field is a cross-spec mutation. A changelog entry is required at plan time.
+- [x] **OQ-1:** `ContextResultContract.md` is owned by spec 003 — adding the `external` field is a cross-spec mutation. **Resolved →** changelog entries written at plan time and at implementation time (2026-07-02); the contract was amended additively with a provenance note.
 - [x] **OQ-2:** Should `relic external link` validate path existence at link time or defer to `relic validate`? **Resolved → both.** Validate immediately at `relic external link` (hard error if missing). Also validate at `relic validate` (hard error, not warning).
 - [x] **OQ-3:** Should `external.specsDir` be per-project-member (gitignored) or team-shared (committed)? **Resolved → committed** (D-2). Per-type paths in `config.external` are team-wide conventions.
 - [x] **OQ-4:** What happens when type paths change and `external_reads` entries break? **Resolved → hard stop.** Any command that uses `external_reads` validates all paths before doing any work. A broken path stops the command immediately with a clear error listing which entries are missing. Broken paths do not produce degraded or partial output — they must be fixed first.
@@ -827,27 +827,107 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 <script type="text/plain" id="relic-src-plan"># Plan: External Spec Integration
 
 **Spec ID:** 009-external-spec-integration
-**Status:** draft
+**Status:** ready
+**Planned:** 2026-07-02 (against the post-overhaul spec: per-type path map, submodule model)
 
 ---
 
 ## Architecture Overview
 
-*High-level description of the implementation approach.*
+The feature is layered bottom-up, mirroring the existing package boundaries:
+
+1. **Utility layer (`@relic/utility`, `project-config.ts`)** — `ProjectConfig` gains an
+   optional `external` map (`fr | nfr | br | adr | us | epic` → path). All path logic
+   lives here: config accessors, runtime resolution (absolute or relative to the
+   `.relic/` parent — never normalised on write, per NFR-1), `"<type>/<filename>"`
+   entry parsing, and the path-traversal guard (D-3: resolved path must stay inside
+   the type's configured directory).
+
+2. **Command layer (`@relic/core`)** — one new command module `external.ts`
+   implementing the `relic external` sub-commands (report, `init`, `set`, `link`,
+   `create`, `list`) exactly per `ExternalConfigContract.md` §4. Three existing
+   commands are extended: `context.ts` (§3 shapes: `external` map + resolved
+   `external_reads`), `validate.ts` (§5: `external_errors`, hard errors), and
+   `init.ts` (`--external-<type>` flags).
+
+3. **Templates** — six document templates in `templates/external/` with
+   `{{ID}}/{{TITLE}}/{{DATE}}` placeholders. `scripts/embed-templates.ts` already
+   walks `templates/` recursively (only `prompts/` is excluded), so the new files are
+   embedded with keys `external/<type>.md` — **no build-script change needed**
+   (removes `scripts/embed-templates.ts` from the original touches_files estimate).
+
+4. **Prompt layer** — per the 010 snippet architecture, FR-8 is implemented as ONE new
+   snippet `templates/snippets/external-reads.md` included by the six workflow prompts
+   (`specify`, `clarify`, `plan`, `tasks`, `implement`, `fix`), not per-prompt prose.
+   The snippet instructs: read `external_reads` from `relic context --spec` output;
+   if any entry has `exists: false`, STOP and report (OQ-4 hard-stop); otherwise read
+   every file before the main work; documents may be edited (never deleted) when
+   contracts change, with a commit expected in the spec repo (NFR-2).
+
+Git operations (`external init` submodule add, `external create` commit) use
+`spawnSync` against the system git. `create` commits only the created file
+(`git add <file> && git commit`) inside the type directory's repo; when the directory
+is not in a git repo, `committed: false` + warning (NFR-7).
+
+## Sequential ID assignment (`external create`)
+
+`nextExternalId(dir, TYPE)`: scan the configured directory for files matching
+`^<TYPE>-(\d+)-`, take max+1 (not count — robust against gaps), zero-pad to 3.
+Collision guard (NFR-8): while `<TYPE>-<NNN>-<slug>.md` exists, increment NNN.
+Slug: lowercase, non-alphanumeric → hyphens, collapse repeats, trim, max 60 chars
+(reuses `slugify` from `@relic/utility`, extended with a length cap parameter if needed).
 
 ---
 
 ## Implementation Steps
 
-### Phase 1 —
+### Phase 1 — Utility layer (config + resolution)
 
-1.
-2.
+1. `project-config.ts`: add `ExternalConfig` type, `EXTERNAL_TYPES` const, `external`
+   field on `ProjectConfig` (preserved through read/write round-trips).
+2. Helpers: `readExternalTypes`, `writeExternalType`, `resolveExternalDir`,
+   `parseExternalEntry`, `resolveExternalRead` (returns entry/type/filename/
+   resolved_path/exists; throws typed errors for unconfigured type and traversal).
+3. Re-export from `packages/utility/src/index.ts`; unit tests in
+   `__tests__/project-config.test.ts` (round-trip, relative/absolute resolution,
+   traversal rejection, unconfigured type, Windows separator normalisation).
 
-### Phase 2 —
+### Phase 2 — `relic external` command
 
-1.
-2.
+1. `templates/external/{fr,nfr,br,adr,us,epic}.md` document templates.
+2. `packages/core/src/commands/external.ts`: report / `set` / `link` / `create` /
+   `list` / `init` per contract §4 (JSON default, `--text` per NFR-6).
+3. Register in `bin.ts` and `bin.debug.ts`; export from core `index.ts`.
+4. Tests `__tests__/external.test.ts`: set/link/create/list against a temp project;
+   create inside a temp git repo asserts `committed: true` + valid `commit_sha`;
+   create outside git asserts `committed: false` + warning; collision increments NNN;
+   traversal and unconfigured-type hard errors.
+
+### Phase 3 — Extend context / validate / init
+
+1. `context.ts`: `external` field (§3) always present (`{configured:false}` when
+   empty); `external_reads` resolved entries when the spec's `artifacts.json` has
+   them; `--text` output extended.
+2. `validate.ts`: `external_errors` (§5) — missing files, unconfigured types, and
+   traversal entries all fail validation (`valid: false`).
+3. `init.ts` + bin flag plumbing: `--external-fr <path>` … `--external-epic <path>`.
+4. Tests for all three extensions.
+
+### Phase 4 — Prompt snippet
+
+1. `templates/snippets/external-reads.md` (validate-then-read, hard stop, edit-not-
+   delete rules).
+2. Add `<!-- include: relic snippet external-reads -->` to the six workflow prompts
+   right after spec context loading.
+3. Rebuild embeds; verify `relic snippet external-reads` resolves.
+
+### Phase 5 — Knowledge layer + docs
+
+1. Amend `ContextResultContract.md` (owned by 003 — cross-spec mutation, see
+   Intersection Notes) with the `external` / `external_reads` fields.
+2. Changelog entries via `relic write --changelog` (plan creation per OQ-1; the
+   contract amendment at implementation time).
+3. Update 009 HTML (content regions) per the html-mode step.
 
 ---
 
@@ -855,8 +935,21 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 
 | File | Action | Notes |
 |------|--------|-------|
-| | create | |
-| | modify | |
+| `packages/utility/src/project-config.ts` | modify | `external` map, accessors, resolution, traversal guard |
+| `packages/utility/src/index.ts` | modify | re-exports |
+| `packages/utility/src/__tests__/project-config.test.ts` | modify | external config/resolution tests |
+| `packages/core/src/commands/external.ts` | create | report/init/set/link/create/list |
+| `packages/core/src/commands/context.ts` | modify | `external` + `external_reads` fields |
+| `packages/core/src/commands/validate.ts` | modify | `external_errors` hard errors |
+| `packages/core/src/commands/init.ts` | modify | accept external type map |
+| `packages/core/src/index.ts` | modify | export `runExternal` |
+| `packages/core/src/__tests__/external.test.ts` | create | full sub-command coverage |
+| `packages/cli-node/src/bin.ts` | modify | `external` command + init flags |
+| `packages/cli-node/src/bin.debug.ts` | modify | same |
+| `templates/external/fr.md` … `epic.md` | create | 6 document templates |
+| `templates/snippets/external-reads.md` | create | FR-8 workflow step (single source) |
+| `templates/prompts/{specify,clarify,plan,tasks,implement,fix}.md` | modify | one include line each |
+| `scripts/embed-templates.ts` | none | already recursive — no change required |
 
 ---
 
@@ -864,40 +957,88 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 
 | Artifact | Action | Approved by |
 |----------|--------|-------------|
-| | create | |
-| | update | |
+| `shared/contracts/ExternalConfigContract.md` | none (already authored) | 009 owns |
+| `shared/domains/ExternalSpecDomain.md` | none (already authored) | 009 owns |
+| `shared/contracts/ContextResultContract.md` | update — add `external` + `external_reads` fields | cross-spec (003 owns) — changelog required, see OQ-1 |
 
 ---
 
 ## Intersection Notes
 
-*Any intersections with other specs detected at plan time.*
-
-(none)
+- **`ContextResultContract.md` (owned by 003-fix-solve-workflow):** this plan adds the
+  `external` and `external_reads` fields to `relic context` output. Additive only —
+  no existing field changes shape, so 003's fix/solve flows are unaffected. Recorded
+  in the changelog at plan time (OQ-1) and amended in the contract at implementation
+  time with a provenance note.
+- **`validate.ts`:** touched by 001 (tests), 005 (toon), and the 008 html allowlist
+  fix. The change here is additive (a new `external_errors` array and its effect on
+  `valid`) and does not alter existing checks.
+- **`bin.ts` / prompts:** shared surface with 010 (snippet include lines). Additive
+  include lines only; no existing directive is moved or removed.
 
 ---
 
 ## Changelog Reference
 
-*Links or refs to changelog entries written during this plan session.*
+- Plan-time entry: "009: plan written — external integration per-type contract"
+  (includes the OQ-1 cross-spec notice for ContextResultContract).
+- Implementation-time entry expected for the ContextResultContract amendment.
 </script>
 <script type="text/plain" id="relic-src-tasks"># Tasks: External Spec Integration
 
 **Spec ID:** 009-external-spec-integration
-**Generated from plan:** 2026-05-20
+**Generated from plan:** 2026-07-02
 
 ---
 
 ## Tasks
 
-- [ ] Task 1
-- [ ] Task 2
+### Phase 1 — Utility layer (config + resolution)
+
+- [x] **T-1** `project-config.ts`: `ExternalConfig` type, `EXTERNAL_TYPES`, optional `external` field on `ProjectConfig`, preserved through read/write round-trips
+- [x] **T-2** `project-config.ts`: `readExternalTypes` / `writeExternalType` / `resolveExternalDir` helpers (relative paths resolve against the `.relic/` parent at runtime; stored as given)
+- [x] **T-3** `project-config.ts`: `parseExternalEntry` + `resolveExternalRead` — `"<type>/<filename>"` parsing, existence check, unconfigured-type and path-traversal hard errors (D-3), separator normalisation (NFR-5)
+- [x] **T-4** Re-export the external helpers from `packages/utility/src/index.ts`
+- [x] **T-5** Unit tests: round-trip, relative/absolute resolution, traversal rejection, unconfigured type, backslash normalisation
+
+### Phase 2 — `relic external` command
+
+- [x] **T-6** Create `templates/external/` document templates: `fr.md`, `nfr.md`, `br.md`, `adr.md`, `us.md`, `epic.md` (with `{{ID}}`, `{{TITLE}}`, `{{DATE}}` placeholders)
+- [x] **T-7** `external.ts`: report sub-command (no args) — per-type path, exists, one-level listing; `{"configured": false}` when empty (FR-3)
+- [x] **T-8** `external.ts`: `set <type> <path>` — validate type key, write `config.external.<type>`, report previous/new/exists (FR-9)
+- [x] **T-9** `external.ts`: `link <type>/<filename>` — validate configured + exists + no traversal, append to active spec's `external_reads` (dedup), report (FR-10)
+- [x] **T-10** `external.ts`: `create <type> <title>` — next sequential ID by max+1 with collision guard (FR-14/NFR-8), write from template, git commit when in a repo else `committed:false` + warning (NFR-7), auto-link to active spec (FR-12)
+- [x] **T-11** `external.ts`: `list [--spec <id>]` — aggregate `external_reads` across all specs, no session required (FR-15)
+- [x] **T-12** `external.ts`: `init <remote-url> [--path]` — `git submodule add`; fails clearly outside a git repo; never writes `config.external` (FR-11)
+- [x] **T-13** Register `external` in `bin.ts` + `bin.debug.ts`; export `runExternal` from core `index.ts`
+- [x] **T-14** Tests `external.test.ts`: set/link/list happy paths + hard errors; create inside temp git repo (`committed:true`, sha) and outside (`committed:false` + warning); collision increments NNN
+
+### Phase 3 — context / validate / init extensions
+
+- [x] **T-15** `context.ts`: `external` field per contract §3 (`{configured:false}` when absent) + `--text` rendering
+- [x] **T-16** `context.ts`: resolved `external_reads` entries with `exists`/`resolved_path` when present in the spec's `artifacts.json`
+- [x] **T-17** `validate.ts`: `external_errors` — missing file, unconfigured type, traversal → `valid:false` (FR-7)
+- [x] **T-18** `init.ts` + bin flags: `--external-fr` … `--external-epic` write `config.external` at init (FR-2)
+- [x] **T-19** Tests for context/validate/init extensions
+
+### Phase 4 — Prompt snippet
+
+- [x] **T-20** `templates/snippets/external-reads.md`: validate-then-read step (hard stop on `exists:false` per OQ-4; read every linked doc before main work; edit-never-delete + commit expectation per NFR-2/D-1)
+- [x] **T-21** Add `<!-- include: relic snippet external-reads -->` to `specify`, `clarify`, `plan`, `tasks`, `implement`, `fix` prompts; rebuild embeds; verify `relic snippet external-reads` resolves
+
+### Phase 5 — Knowledge layer + docs
+
+- [x] **T-22** Amend `ContextResultContract.md` (003-owned, cross-spec per OQ-1) with the additive `external` / `external_reads` fields + provenance note
+- [x] **T-23** Changelog entry for the contract amendment via `relic write --changelog`
+- [x] **T-24** Full test suite + typecheck green; `relic validate` clean; update 009 HTML content regions
 
 ---
 
 ## Notes
 
-*Task-level caveats, dependencies, or ordering constraints.*
+- `scripts/embed-templates.ts` requires **no change** — it already embeds `templates/external/*.md` (recursive walk).
+- Ordering: Phase 1 blocks everything; Phases 2 and 3 are independent of each other; Phase 4 depends on Phase 3 (`relic context` must expose `external_reads` before the snippet can instruct reading it).
+- Overlap: `bin.ts` and the six prompts are shared surface with spec 010 (snippet includes) — additive lines only.
 </script>
 <!-- relic:sources:end -->
 
@@ -908,38 +1049,65 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 <section>
   <h2>Overview</h2>
   <div class="flex gap-2 items-center mb-2">
-    <relic-status value="draft">draft</relic-status>
+    <relic-status value="done">implemented</relic-status>
     <relic-chip color="blue">spec-009</relic-chip>
     <relic-chip>2026-05-20</relic-chip>
+    <relic-chip color="amber">clarified 2026-05-20</relic-chip>
+    <relic-chip color="green">implemented 2026-07-02</relic-chip>
   </div>
 
-  <p>Enterprise teams keep a canonical spec repository (FRs, NFRs, ADRs) <em>outside</em> the
-  implementation repo. Today Relic workflows run blind — plans written without the FR that
-  constrains them, specs scoped without the ADR that governs the architecture.</p>
+  <p>Enterprise teams maintain FRs, NFRs, BRs, ADRs, User Stories, and Epics in a separate spec
+  repository — owned by PMs, designers, and platform teams. This spec treats that repo as a
+  <strong>first-class git submodule</strong> of the project monorepo and makes Relic a
+  <strong>contributor to it</strong>, not just a reader.</p>
 
-  <p>This spec adds a first-class <strong>read-only integration path</strong>: point Relic at the
-  external folder via <code>config.json</code>, surface it in every <code>relic context</code>
-  response, and let each spec declare the exact external documents it depends on via
-  <code>external_reads</code> in <code>artifacts.json</code>. Every workflow command then loads
-  those documents automatically before doing any work.</p>
+  <div class="grid-2" style="gap:.75rem;margin:.75rem 0">
+    <relic-callout type="info">
+      <strong>Write model (clarified):</strong> Relic can <em>create and edit</em> documents in the
+      external spec repo. Git branch+PR is the safety guarantee — Relic commits, the document owner
+      reviews before merge.
+    </relic-callout>
+    <relic-callout type="warn">
+      <strong>One hard boundary:</strong> Relic must never <em>delete</em> files in the external spec
+      repo. No other write restriction applies.
+    </relic-callout>
+  </div>
 
-  <relic-callout type="info">
-    <strong>Core constraint:</strong> Relic never writes to the external repo. One external repo
-    per project. Local filesystem only — no remote auth, no network access.
-  </relic-callout>
+  <p>The external spec repo is the <strong>team-wide human-readable layer</strong> — PMs and designers
+  read it directly, without access to the code repo. The monorepo pins a specific commit of the spec
+  repo (git submodule); <code>git submodule update --remote</code> distributes the latest to the whole team.</p>
 
-  <h3>Integration data flow</h3>
+  <p><code>config.external</code> is a <strong>flat per-type path map</strong> — each document type
+  points to its own directory. No Relic-imposed conventions; existing repo layouts are fully supported.</p>
+
+  <h3>Architecture: per-type paths + submodule</h3>
   <relic-flow>
   graph LR
-  ExternalRepo[External Repo]
-  Config[config.json]
-  Context[relic context]
-  ArtifactsJSON[artifacts.json]
-  Prompts[AI Prompts]
-  ExternalRepo -->|path stored in| Config
-  Config -->|read by| Context
-  ArtifactsJSON -->|external_reads| Context
-  Context -->|external_reads resolved| Prompts
+  Monorepo[Project Monorepo]
+  SpecRepo[External Spec Repo]
+  Config[config.external]
+  ArtJSON[external_reads]
+  Prompts[AI Workflow]
+  PM[PM / Designer]
+  Monorepo -->|submodule| SpecRepo
+  Config -->|fr adr us paths| SpecRepo
+  ArtJSON -->|type slash file| Prompts
+  Prompts -->|reads + edits| SpecRepo
+  PM -->|reads directly| SpecRepo
+  </relic-flow>
+
+  <h3>Create + commit path</h3>
+  <relic-flow>
+  graph LR
+  Dev[Developer]
+  Create[relic external create]
+  File[FR-003-slug.md]
+  Commit[git commit]
+  ArtJSON[external_reads]
+  Dev -->|fr session-expiry| Create
+  Create -->|writes from template| File
+  Create -->|commits to spec repo| Commit
+  Create -->|appends fr slash filename| ArtJSON
   </relic-flow>
 </section>
 
@@ -947,38 +1115,55 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
 <section>
   <h2>Requirements</h2>
 
-  <h3>New CLI commands</h3>
+  <h3>Key deltas from this clarification</h3>
   <relic-table
-    headers='["Command","What it does"]'
+    headers='["Area","Before","After"]'
     rows='[
-      ["<code>relic init --external-specs &lt;path&gt;</code>","Writes <code>external.specsDir</code> into <code>config.json</code> at init time"],
-      ["<code>relic external</code>","Shows configured path, exists check, top-level listing of the external repo"],
-      ["<code>relic external set &lt;path&gt;</code>","Updates <code>specsDir</code> without requiring reinit"],
-      ["<code>relic external link &lt;rel-path&gt;</code>","Appends an entry to the active spec&apos;s <code>external_reads</code> array"]
+      ["NFR-2 — write model","Create-only. Never modify existing files.","<strong>Create + edit.</strong> No deletion. Git branch+PR is the safety guarantee."],
+      ["FR-7 — validation severity","Warnings on missing <code>external_reads</code> paths.","<strong>Hard errors.</strong> Commands stop immediately on any broken path."],
+      ["FR-12 — create command","File creation only. No git step.","File creation <strong>+ git commit</strong> in spec repo. Relic owns the commit."],
+      ["config shape (FR-1)","<code>external: { specsDir }</code> — single root path.","<code>external: { fr, nfr, br, adr, us, epic }</code> — flat per-type map."],
+      ["external_reads format (FR-5)","Paths relative to <code>specsDir</code>.","<code>&lt;type&gt;/&lt;filename&gt;</code> — type key resolves to its configured directory."],
+      ["relic external list (FR-15)","Not existed.","Shows all specs&apos; <code>external_reads</code>. CLI-only, no LLM."]
     ]'>
   </relic-table>
 
-  <h3>Config &amp; context changes</h3>
+  <h3>CLI commands — full surface</h3>
   <relic-table
-    headers='["Location","Change","FR"]'
+    headers='["Command","What it does","FR"]'
     rows='[
-      ["<code>config.json</code>","New optional <code>external: { specsDir }</code> block","FR-1"],
-      ["<code>relic context</code> output","New <code>external</code> field: <code>{ configured, path, exists }</code>","FR-4"],
-      ["<code>artifacts.json</code>","New <code>external_reads</code> array (paths relative to specsDir)","FR-5"],
-      ["<code>relic context --spec</code>","Shows <code>external_reads</code> with per-entry <code>exists</code> checks","FR-6"],
-      ["<code>relic validate</code>","Warns (not errors) when external_reads files are missing","FR-7"]
+      ["<code>relic init --external-&lt;type&gt; &lt;path&gt;</code>","Per-type paths at init (e.g. <code>--external-fr ./docs/fr</code>)","FR-2"],
+      ["<code>relic external</code>","Per-type directory listing with exists checks","FR-3"],
+      ["<code>relic external set &lt;type&gt; &lt;path&gt;</code>","Set or update a single type path in <code>config.external</code>","FR-9"],
+      ["<code>relic external init &lt;remote-url&gt;</code>","<code>git submodule add</code>; does NOT write to <code>config.external</code>","FR-11"],
+      ["<code>relic external link &lt;type&gt;/&lt;filename&gt;</code>","Validate + append to <code>external_reads</code>. Hard error if file missing.","FR-10"],
+      ["<code>relic external create &lt;type&gt; &lt;title&gt;</code>","Create + commit + link to <code>external_reads</code>","FR-12"],
+      ["<code>relic external list [--spec &lt;id&gt;]</code>","All <code>external_reads</code> across all specs. CLI-only.","FR-15"]
     ]'>
   </relic-table>
 
-  <h3>Prompt template changes</h3>
-  <p>Six prompt templates gain a new <strong>external_reads load step</strong> that fires before
-  any other work: <code>specify</code>, <code>clarify</code>, <code>plan</code>,
-  <code>tasks</code>, <code>implement</code>, <code>fix</code>.</p>
+  <h3>Document types — naming in configured directory</h3>
+  <relic-table
+    headers='["Type key","Document type","Filename pattern","Example"]'
+    rows='[
+      ["<code>fr</code>","Functional Requirement","<code>FR-NNN-slug.md</code>","<code>FR-003-session-auth.md</code>"],
+      ["<code>nfr</code>","Non-Functional Requirement","<code>NFR-NNN-slug.md</code>","<code>NFR-001-latency.md</code>"],
+      ["<code>br</code>","Business Requirement","<code>BR-NNN-slug.md</code>","<code>BR-002-gdpr-consent.md</code>"],
+      ["<code>adr</code>","Architecture Decision Record","<code>ADR-NNN-slug.md</code>","<code>ADR-012-db-sharding.md</code>"],
+      ["<code>us</code>","User Story","<code>US-NNN-slug.md</code>","<code>US-007-checkout-flow.md</code>"],
+      ["<code>epic</code>","Epic","<code>Epic-NNN-slug.md</code>","<code>Epic-001-payments.md</code>"]
+    ]'>
+  </relic-table>
+  <p class="text-muted text-sm">Files go into the directory configured for that type. No forced subdirectory structure — the team's layout is respected.</p>
+
+  <h3>Prompt template changes (6 commands)</h3>
+  <p>Before any main work: validate all <code>external_reads</code> paths → <strong>hard stop</strong>
+  if any missing → load files. AI workflow commands (clarify, plan) may also edit external spec
+  documents when contracts change; those edits must be committed by the team.</p>
 
   <relic-callout type="warn">
-    Path traversal outside <code>external.specsDir</code> via <code>../</code> is rejected at
-    <code>relic external link</code> time — not deferred to validate. Cross-platform path
-    separator normalisation is required for Windows compatibility.
+    Path traversal (<code>../</code>) outside the configured type directory is rejected as a hard error
+    at <code>relic external link</code>, <code>relic external create</code>, and <code>relic validate</code>.
   </relic-callout>
 </section>
 
@@ -989,26 +1174,114 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
     <div>
       <h3 style="color:#16a34a">✓ In scope</h3>
       <ul>
-        <li><code>config.json</code> <code>external</code> block</li>
-        <li><code>relic external</code> command (get / set / link / list)</li>
-        <li><code>relic context</code> <code>external</code> field</li>
-        <li><code>artifacts.json</code> <code>external_reads</code> array</li>
-        <li><code>relic validate</code> warnings for missing external docs</li>
-        <li>6 prompt templates: external_reads load step</li>
-        <li><code>project-config.ts</code>: <code>readExternalSpecsDir</code> / <code>writeExternalSpecsDir</code></li>
+        <li><code>config.external</code> flat per-type path map</li>
+        <li><code>relic external init / set / link / create / list</code></li>
+        <li><code>relic context</code> <code>external</code> + <code>external_reads</code> fields</li>
+        <li><code>artifacts.json</code> <code>external_reads</code> (<code>&lt;type&gt;/&lt;filename&gt;</code>)</li>
+        <li><code>relic validate</code> <code>external_errors</code> (hard errors)</li>
+        <li>6 prompt templates: validate + read (hard stop on broken paths); may edit external docs</li>
+        <li><code>project-config.ts</code>: per-type read/write helpers</li>
+        <li>6 document type templates + <code>scripts/embed-templates.ts</code></li>
+        <li>Auto-incrementing sequential IDs; git commit on create</li>
       </ul>
     </div>
     <div>
       <h3 style="color:#dc2626">✕ Out of scope</h3>
       <ul>
-        <li>Writing to the external repo</li>
+        <li>Deleting files from external spec directories</li>
+        <li>Git push after commit (team's workflow)</li>
+        <li>Git branch creation (team's workflow)</li>
         <li>Multiple external repos per project</li>
         <li>Remote / authenticated repo access</li>
         <li>Indexing external docs via <code>relic search</code></li>
+        <li>Syncing <code>.relic/shared/</code> to external repo</li>
         <li>Nested Relic sessions inside the external repo</li>
       </ul>
     </div>
   </div>
+</section>
+
+<!-- ─────────────────────── DECISIONS ───────────────────────────── -->
+<section>
+  <h2>Decisions</h2>
+  <relic-table
+    headers='["ID","Decision","Rationale"]'
+    rows='[
+      ["D-1","Relic may <strong>create and edit</strong> files in external type directories. It must never <em>delete</em> files.","Contracts evolve during scope and planning. Git branch+PR provides safety — not enforcement by Relic."],
+      ["D-2","<code>config.external</code> is committed — not gitignored","Per-type paths are a team convention. All members share the same configuration."],
+      ["D-3","Path traversal (<code>../</code>) rejected as a hard error everywhere","Prevents specs from depending on files outside their configured type directory."],
+      ["D-4","The external spec repo layout is fully user-controlled. Relic imposes no directory conventions.","<code>config.external</code> maps each type to whatever directory the team already uses."],
+      ["D-5","<code>relic external create</code> commits to the spec repo. Push and monorepo submodule update are the team&apos;s workflow.","Relic owns the commit step; the team owns git remote operations."],
+      ["D-6","<code>config.external</code> is a flat per-type map (not a single <code>specsDir</code>)","Accommodates teams with existing spec repos at arbitrary layouts without migration."]
+    ]'>
+  </relic-table>
+</section>
+
+<!-- ─────────────────────── OPEN QUESTIONS ──────────────────────── -->
+<section>
+  <h2>Open Questions</h2>
+  <relic-table
+    headers='["ID","Resolution","Status"]'
+    rows='[
+      ["OQ-1","<code>ContextResultContract.md</code> (owned by spec 003) — cross-spec mutation. Changelog entries written at plan time and implementation time; contract amended additively with provenance note.","<relic-chip color=\"green\">resolved</relic-chip>"],
+      ["OQ-2","Validate at <code>relic external link</code> time AND at <code>relic validate</code>. Both are hard errors.","<relic-chip color=\"green\">resolved</relic-chip>"],
+      ["OQ-3","<code>config.external</code> is committed — team convention, not personal state.","<relic-chip color=\"green\">resolved (D-2)</relic-chip>"],
+      ["OQ-4","Broken paths = hard stop. Any command with broken <code>external_reads</code> must stop immediately and list missing entries.","<relic-chip color=\"green\">resolved</relic-chip>"],
+      ["OQ-5","<code>relic external list</code> shows all specs by default; <code>--spec &lt;id&gt;</code> filters. CLI-only — no LLM required.","<relic-chip color=\"green\">resolved (FR-15)</relic-chip>"],
+      ["OQ-6","No reminder needed. Relic commits the new file to the spec repo internally. Push is the team&apos;s workflow.","<relic-chip color=\"green\">resolved</relic-chip>"],
+      ["OQ-7","Not a command. Instead: <code>config.external</code> is a fine-grained per-type path map. Teams point each type to their existing directories.","<relic-chip color=\"green\">resolved (D-6)</relic-chip>"]
+    ]'>
+  </relic-table>
+</section>
+
+<!-- ─────────────────────── PLAN ────────────────────────────────── -->
+<section>
+  <h2>Plan <relic-status value="done">executed</relic-status></h2>
+  <p class="text-muted text-sm">Five bottom-up phases, planned and implemented 2026-07-02 against the post-overhaul contract.</p>
+  <relic-flow>
+  graph LR
+  U[utility layer] --> C[external command]
+  U --> X[context validate init]
+  X --> S[prompt snippet]
+  C --> K[knowledge layer]
+  S --> K
+  </relic-flow>
+  <relic-table
+    headers='["Phase","Delivers","Key files"]'
+    rows='[
+      ["1 — Utility","<code>config.external</code> map, runtime resolution, traversal guard","<code>project-config.ts</code>"],
+      ["2 — Command","<code>relic external</code> report/init/set/link/create/list + 6 doc templates","<code>external.ts</code>, <code>templates/external/</code>"],
+      ["3 — Extensions","<code>context</code> external fields, <code>validate</code> hard errors, <code>init</code> flags","<code>context.ts</code>, <code>validate.ts</code>, <code>init.ts</code>"],
+      ["4 — Prompts","validate-then-read step, hard stop on broken entries","<code>snippets/external-reads.md</code> + 6 includes"],
+      ["5 — Knowledge","<code>ContextResultContract</code> amendment + changelog","<code>shared/contracts/</code>"]
+    ]'>
+  </relic-table>
+  <relic-callout type="info">
+    <strong>Planning discovery:</strong> <code>scripts/embed-templates.ts</code> needed no change —
+    it already walks <code>templates/</code> recursively, so the six document templates embed automatically.
+  </relic-callout>
+</section>
+
+<!-- ─────────────────────── TASKS ───────────────────────────────── -->
+<section>
+  <h2>Tasks <relic-status value="done">24/24</relic-status></h2>
+  <relic-progress value="24" max="24" label="All phases complete"></relic-progress>
+  <div class="grid-2" style="gap:.75rem;margin-top:.75rem">
+    <div>
+      <relic-progress value="5" max="5" label="Phase 1 — Utility layer"></relic-progress>
+      <relic-progress value="9" max="9" label="Phase 2 — external command"></relic-progress>
+      <relic-progress value="5" max="5" label="Phase 3 — context/validate/init"></relic-progress>
+    </div>
+    <div>
+      <relic-progress value="2" max="2" label="Phase 4 — prompt snippet"></relic-progress>
+      <relic-progress value="3" max="3" label="Phase 5 — knowledge layer"></relic-progress>
+    </div>
+  </div>
+  <relic-callout type="success">
+    Verified end-to-end: <relic-chip color="green">25 new tests</relic-chip>
+    <relic-chip color="green">temp-project smoke</relic-chip> — init → set → create (git commit
+    + auto-link) → link → list → context → validate pass → hard failure after file removal.
+  </relic-callout>
 </section>
 
 <!-- ─────────────────────── ARTIFACTS ───────────────────────────── -->
@@ -1024,9 +1297,10 @@ The external spec repo serves as the team-wide readable knowledge layer: PMs, de
       ["<relic-chip>reads</relic-chip>","<code>shared/contracts/ScaffoldResultContract.md</code>","008 owns"]
     ]'>
   </relic-table>
-  <relic-callout type="warn">
-    Cross-spec mutation at plan time: adding <code>external</code> field to
-    <code>ContextResultContract.md</code> (owned by spec 003) — changelog entry required.
+  <relic-callout type="success">
+    Cross-spec mutation completed: <code>ContextResultContract.md</code> (owned by spec 003)
+    amended with the additive <code>external</code> / <code>external_reads</code> fields —
+    changelog entries written at plan time and implementation time (2026-07-02).
   </relic-callout>
 </section>
 

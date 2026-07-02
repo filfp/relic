@@ -1,6 +1,6 @@
 import { join } from "path";
 import { readdirSync, statSync } from "fs";
-import { findRelicDir, fileExists, dirExists, readJson, readText, decodeToon, readMode } from "@relic/utility";
+import { findRelicDir, fileExists, dirExists, readJson, readText, decodeToon, readMode, resolveExternalRead } from "@relic/utility";
 import { loadRegistry } from "../core/artifact-registry.ts";
 import { SHARED_SUBDIRS } from "../types.ts";
 
@@ -21,6 +21,7 @@ interface ValidateResult {
   missing_manifests: Array<{ subdir: string }>;
   invalid_manifests: Array<{ subdir: string }>;
   unregistered_files: Array<{ subdir: string; file: string }>;
+  external_errors: Array<{ spec: string; entry: string; resolved_path: string | null; reason: string }>;
   warnings: string[];
 }
 
@@ -42,6 +43,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
   const missingManifests: ValidateResult["missing_manifests"] = [];
   const invalidManifests: ValidateResult["invalid_manifests"] = [];
   const unregisteredFiles: ValidateResult["unregistered_files"] = [];
+  const externalErrors: ValidateResult["external_errors"] = [];
   const warnings: ValidateResult["warnings"] = [];
 
   // Build ownership map to detect conflicts
@@ -56,6 +58,39 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
 
   for (const [artifact, specs] of ownershipMap.entries()) {
     if (specs.length > 1) conflicts.push({ artifact, specs });
+  }
+
+  // external_reads — missing files, unconfigured types, and traversal are all
+  // hard errors (ExternalConfigContract §5, FR-7)
+  for (const spec of registry) {
+    const artifactsPath = join(spec.path, "artifacts.json");
+    if (!fileExists(artifactsPath)) continue;
+    let entries: string[] = [];
+    try {
+      entries = readJson<{ external_reads?: string[] }>(artifactsPath).external_reads ?? [];
+    } catch {
+      continue; // malformed artifacts.json is reported by other checks
+    }
+    for (const entry of entries) {
+      try {
+        const r = resolveExternalRead(relicDir, entry);
+        if (!r.exists) {
+          externalErrors.push({
+            spec: spec.id,
+            entry: r.entry,
+            resolved_path: r.resolved_path,
+            reason: "file not found — update external_reads or restore the file in the spec repo",
+          });
+        }
+      } catch (err) {
+        externalErrors.push({
+          spec: spec.id,
+          entry,
+          resolved_path: null,
+          reason: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
   }
 
   for (const spec of registry) {
@@ -139,7 +174,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
   }
 
   const result: ValidateResult = {
-    valid: conflicts.length === 0 && missingOwned.length === 0 && missingReads.length === 0 && illegalFiles.length === 0 && invalidPaths.length === 0 && missingManifests.length === 0 && invalidManifests.length === 0 && unregisteredFiles.length === 0,
+    valid: conflicts.length === 0 && missingOwned.length === 0 && missingReads.length === 0 && illegalFiles.length === 0 && invalidPaths.length === 0 && missingManifests.length === 0 && invalidManifests.length === 0 && unregisteredFiles.length === 0 && externalErrors.length === 0,
     conflicts,
     missing_owned: missingOwned,
     missing_reads: missingReads,
@@ -148,6 +183,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
     missing_manifests: missingManifests,
     invalid_manifests: invalidManifests,
     unregistered_files: unregisteredFiles,
+    external_errors: externalErrors,
     warnings,
   };
 
@@ -184,6 +220,10 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
     if (unregisteredFiles.length > 0) {
       console.log("\nUnregistered files (add to manifest.toon or manifest.json):");
       for (const u of unregisteredFiles) console.log(`  shared/${u.subdir}/${u.file}`);
+    }
+    if (externalErrors.length > 0) {
+      console.log("\nExternal read errors (hard errors — fix before any workflow command):");
+      for (const e of externalErrors) console.log(`  [${e.spec}] ${e.entry}: ${e.reason}`);
     }
     if (warnings.length > 0) {
       console.log("\nWarnings:");

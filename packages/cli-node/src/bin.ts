@@ -16,6 +16,7 @@ import {
   runMode,
   runSnippet,
   runHtmlSync,
+  runExternal,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -40,12 +41,23 @@ program
     `AI engines to configure, comma-separated (${SUPPORTED_ENGINES.join("|")})`,
     "claude"
   )
-  .action(async (opts: { dir: string; force: boolean; engine: string }) => {
+  .option("--external-fr <path>", "External Functional Requirements directory")
+  .option("--external-nfr <path>", "External Non-Functional Requirements directory")
+  .option("--external-br <path>", "External Business Requirements directory")
+  .option("--external-adr <path>", "External Architecture Decision Records directory")
+  .option("--external-us <path>", "External User Stories directory")
+  .option("--external-epic <path>", "External Epics directory")
+  .action(async (opts: { dir: string; force: boolean; engine: string; externalFr?: string; externalNfr?: string; externalBr?: string; externalAdr?: string; externalUs?: string; externalEpic?: string }) => {
     const engines = opts.engine
       .split(",")
       .map((e) => e.trim())
       .filter(Boolean) as Engine[];
-    await runInit({ dir: opts.dir, force: opts.force, engines });
+    const external = {
+      fr: opts.externalFr, nfr: opts.externalNfr, br: opts.externalBr,
+      adr: opts.externalAdr, us: opts.externalUs, epic: opts.externalEpic,
+    };
+    const hasExternal = Object.values(external).some(Boolean);
+    await runInit({ dir: opts.dir, force: opts.force, engines, ...(hasExternal ? { external } : {}) });
   });
 
 program
@@ -214,6 +226,16 @@ program
   .description("Output named snippet content from baked SNIPPETS registry")
   .action((name: string) => {
     runSnippet(name);
+  });
+
+program
+  .command("external [args...]")
+  .description("External spec repo integration: report, set <type> <path>, link <type>/<file>, create <type> <title>, list, init <remote-url>")
+  .option("--path <local-path>", "Submodule path for external init (default: specs/)")
+  .option("--spec <id>", "Spec ID override for link/create/list")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (args: string[], opts: { path?: string; spec?: string; text: boolean }) => {
+    await runExternal({ args: args ?? [], path: opts.path, spec: opts.spec, text: opts.text });
   });
 
 program
