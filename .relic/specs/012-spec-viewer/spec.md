@@ -71,9 +71,18 @@ follow-up).
 
 ### Functional — viewer (frontend)
 
-- **FR-5:** New package `packages/viewer/` (`@relic/viewer`): a **React** application
-  (TSX + real CSS files) built by Bun at build time; the bundle is embedded into the
-  CLI via the existing embed pipeline (no CDN, works offline, single binary preserved).
+- **FR-5:** New package `packages/viewer/` (`@relic/viewer`): a **full React**
+  application scaffolded with the Vite react template
+  (`bun create vite viewer --template react --no-interactive`), TSX + real CSS files.
+  **Vite is the dev/build toolchain only**: `vite dev` gives HMR during development
+  (proxying `/api` to a running `relic serve`); `vite build` produces the production
+  `dist/` that `scripts/embed-viewer.ts` bakes into the CLI. Users never run Vite —
+  the runtime is `relic serve` (Bun) with the embedded assets: no CDN, works offline,
+  single binary preserved.
+- **FR-5b:** Serving model: `relic serve` ships the built app at `/` (index + hashed
+  assets from the embedded map), `/api/*` for JSON, and an SPA fallback (unknown
+  non-API GET paths return the app shell) so client-routed deep links like
+  `/spec/<id>` work on direct load — and future pages are just new routes.
 - **FR-6:** Routes: `/` — project dashboard (spec list with status/progress, fixes
   list, quick health from `relic validate` data); `/spec/<id>` — the spec view
   (rendered fragment + derived components + tabs/nav for spec.md, plan.md, tasks.md
@@ -225,9 +234,16 @@ follow-up).
 - **D-2 (2026-07-02, owner):** Authored surface is **semantic tags + server-derived
   data components** — no LLM-facing templating syntax; Jinja-style templating stays an
   internal server concern at most.
-- **D-3 (2026-07-02, owner):** Frontend stack is **React** with real stylesheet files,
-  Bun-bundled and embedded (chosen over Preact for ecosystem headroom — the future
-  brain graph).
+- **D-3 (2026-07-02, owner):** Frontend stack is **full React** with real stylesheet
+  files (chosen over Preact for ecosystem headroom — the future brain graph — and to
+  avoid getting stuck on library compatibility).
+- **D-8 (2026-07-02, owner):** Toolchain is **Vite** (react template, scaffolded via
+  `bun create vite … --template react --no-interactive`) in its own
+  `packages/viewer/` folder. Vite serves development (HMR + `/api` proxy); production
+  is `vite build` → embed → `relic serve`. Vite never ships to users.
+- **D-9 (2026-07-02, owner):** Serving model: built app at `/`, `/api/*` JSON, SPA
+  fallback for client routes — additional pages and API calls are additive paths on
+  the same tiny server.
 - **D-4 (2026-07-02, owner):** MCP v1 is **tools-only, minimal** (`view_spec`,
   `view_fix`, `list_views`), shipped via the plugin's `.mcp.json`.
 - **D-5 (2026-07-02, owner):** Server lifecycle is **per-project and lazy** with the

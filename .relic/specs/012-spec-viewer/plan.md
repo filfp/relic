@@ -19,10 +19,14 @@ relic serve  (HTTP, localhost:<port>)         relic mcp  (stdio)
        /api/spec/<id> /api/fix/<id>                   running → return URL
 ```
 
-- **`packages/viewer/`** — React + TSX + CSS source. `bun build` produces one JS bundle
-  + one CSS file; a new embed step (`scripts/embed-viewer.ts`, mirroring the existing
-  embed scripts) bakes them into `packages/core/src/generated/viewer-assets.ts` so both
-  distribution channels (Node bundle, compiled binaries) carry them.
+- **`packages/viewer/`** — full React app scaffolded with the Vite react template
+  (`bun create vite viewer --template react --no-interactive`). Development:
+  `vite dev` with HMR, proxying `/api` to a running `relic serve` instance.
+  Production: `vite build` → `dist/` (index.html + hashed JS/CSS assets); a new embed
+  step (`scripts/embed-viewer.ts`, mirroring the existing embed scripts) bakes the
+  whole `dist/` tree into `packages/core/src/generated/viewer-assets.ts` so both
+  distribution channels (Node bundle, compiled binaries) carry it. Vite is a
+  devDependency of `packages/viewer` only — never part of the shipped CLI.
 - **Fragment pipeline** — one tolerant parser in `@relic/core`
   (`core/fragment.ts`): parses `<relic-body>` fragments into a typed node tree; feeds
   BOTH the JSON API (viewer renders the tree) and `relic validate` (lint). Malformed
@@ -56,9 +60,15 @@ relic serve  (HTTP, localhost:<port>)         relic mcp  (stdio)
    path.
 
 ### Phase 3 — Viewer package
-1. `packages/viewer/`: shell, router, theme; component per tag with error boundaries;
-   markdown renderer for spec/plan/tasks tabs; dashboard; `/docs` reference route.
-2. Build + embed: `scripts/embed-viewer.ts`, wired into `build:templates` chain and CI.
+1. Scaffold: `bun create vite viewer --template react --no-interactive` inside
+   `packages/`; align package.json name (`@relic/viewer`), add React Router, wire the
+   `/api` dev proxy in `vite.config`.
+2. App: shell, router (dashboard `/`, `/spec/:id`, `/fix/:id`, `/docs`), theme;
+   component per tag with error boundaries; markdown renderer for spec/plan/tasks tabs.
+3. Build + embed: `vite build` → `scripts/embed-viewer.ts` embeds `dist/` (all hashed
+   assets, correct content types); wired into the build chain
+   (`build:viewer` → embed) and CI freshness. `relic serve` static handler + SPA
+   fallback consume the embedded map.
 
 ### Phase 4 — Server + CLI
 1. `relic serve`: router, embedded assets, JSON API reading `.relic` live, health,

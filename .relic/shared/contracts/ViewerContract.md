@@ -65,6 +65,18 @@ labels data title>` · `<relic-table headers rows>` · `<relic-chip color?>` ·
 - JSON API: `/api/health` · `/api/project` · `/api/spec/<id>` · `/api/fix/<id>`
   (exact shapes recorded here during implementation).
 
+## Build & Toolchain (D-8/D-9)
+
+- `packages/viewer/` — Vite react template scaffold (full React, React Router, real
+  CSS). Vite = dev/build only: `vite dev` (HMR, `/api` proxied to `relic serve`);
+  `vite build` → `dist/` → `scripts/embed-viewer.ts` →
+  `packages/core/src/generated/viewer-assets.ts` (gitignored, rebuilt by the build
+  chain; CI-checked).
+- `relic serve` runtime serving: `/` = embedded built app (index + hashed assets),
+  `/api/*` = JSON, SPA fallback for unknown non-API GETs (client-routed deep links and
+  future pages are additive).
+- Vite never ships to users; the CLI stays a single self-contained artifact.
+
 ## MCP
 
 `relic mcp` (stdio), tools only: `view_spec(spec_id)` / `view_fix(fix_id)` /
