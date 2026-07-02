@@ -48,8 +48,8 @@ ask-first.
 - **FR-1:** The relic repository gains a `plugin/` directory containing a complete Claude
   Code plugin named `relic`: `.claude-plugin/plugin.json` (name, description, version,
   author), `commands/` (the 12 workflow commands), and `skills/` (the ambient skills).
-  Exact manifest schema is verified against current Claude Code plugin documentation at
-  implementation time.
+  Schemas verified against live docs 2026-07-02 and recorded in
+  `ClaudePluginContract.md` (OQ-1). `claude plugin validate ./plugin --strict` runs in CI.
 - **FR-2:** Plugin commands are **generated** from `templates/prompts/*.md` by a build
   script (`scripts/build-plugin.ts`) so prompts keep a single source of truth shared with
   the Copilot/Codex engines. The generator adds command frontmatter (description,
@@ -82,12 +82,13 @@ ask-first.
   autonomy ladder. Announced.
 - **FR-8: `relic-doc-keeper`** — after implementing or materially changing spec-owned
   code, Claude closes the loop without being asked: check off tasks, record plan/spec
-  drift, amend owned shared artifacts, write required changelog entries, refresh the spec
-  HTML (via `relic scaffold`/`html-sync`). This is part of finishing the work, not a
-  separate chore. Silent for pure upkeep; announced when an artifact's meaning changes.
+  drift, amend owned shared artifacts, write required changelog entries. **HTML files are
+  explicitly out of scope** — the HTML surface is frozen pending a separate reshape
+  (OQ-2 resolution); `relic scaffold`'s built-in sync remains the only HTML-touching
+  mechanism. Silent for pure upkeep; announced when an artifact's meaning changes.
 - **FR-9:** Every ambient skill degrades gracefully: no `.relic/` directory → the skill
-  stays inactive (no nagging to adopt Relic); `relic` CLI missing → mention the install
-  command once, never block non-relic work.
+  stays inactive (no nagging to adopt Relic); `relic` CLI missing → run the consent-gated
+  CLI bootstrap (FR-17), and never block non-relic work.
 
 ### Functional — autonomy ladder
 
@@ -95,7 +96,7 @@ ask-first.
   | Class | Examples | Policy |
   |---|---|---|
   | **Read** | `relic search`, loading artifacts/specs/fix docs | always automatic, silent |
-  | **Maintain** | task checkoffs, changelog entries, owned-artifact sync, HTML refresh | automatic as part of the work |
+  | **Maintain** | task checkoffs, changelog entries, owned-artifact sync | automatic as part of the work |
   | **Structural** | new spec, new shared artifact, ownership claims, contract changes affecting other specs' `reads` | automatic **with announcement** before proceeding |
 - **FR-11:** `config.json` gains an optional `"sdd"` field: `"auto"` (default — the ladder
   above) or `"suggest"` (structural actions ask a one-line confirmation first; read and
@@ -110,10 +111,11 @@ ask-first.
 
 - **FR-13:** `relic init --engine claude` and `relic add-engine claude` stop writing
   `.claude/commands/relic.*.md`. They now: (a) keep writing the `Bash(relic *)` permission
-  into `.claude/settings.json`; (b) write the plugin recommendation keys into
-  `.claude/settings.json` (marketplace + enabled-plugin entries — exact keys verified
-  against current docs at implementation time) so teammates opening the project are
-  prompted to install the plugin; (c) print the manual install instructions.
+  into `.claude/settings.json`; (b) write `extraKnownMarketplaces.relic` (github source
+  `filfp/relic`) and `enabledPlugins."relic@relic": true` into the same file — the
+  committed settings file **is** the per-project installation (verified against docs
+  2026-07-02); (c) print the manual install instructions
+  (`/plugin marketplace add filfp/relic` → `/plugin install relic@relic`).
 - **FR-14:** `relic upgrade` removes superseded relic-managed command copies
   (`.claude/commands/relic.*.md`) when refreshing a project whose engine list includes
   claude, reporting each removal. Only files matching the relic-managed pattern are
@@ -126,6 +128,19 @@ ask-first.
   practice and the autonomy ladder — the philosophy lives in the knowledge layer, not only
   in plugin skills.
 
+### Functional — CLI bootstrap
+
+- **FR-17:** The CLI is the backbone of every flow and its surface will keep growing —
+  the plugin owns CLI onboarding. Every plugin command and ambient skill begins with an
+  availability check (`relic --version`). When missing, ask the user **once per session**
+  for consent to install (npm or uv, whichever toolchain is present), run the install on
+  consent, then continue the original request. Declining is respected for the session.
+  Installation is never silent.
+- **FR-18:** `/relic:setup` — an authored onboarding command in the plugin: installs the
+  CLI if missing (FR-17 consent flow), runs `relic init` when the project has no
+  `.relic/`, and reports what was configured. One command from plugin-installed to
+  project-spec-aware.
+
 ### Non-Functional
 
 - **NFR-1:** The plugin is self-contained after install — no network access needed at
@@ -134,10 +149,11 @@ ask-first.
   directories (per spec 009 rules), and the project source tree the user asked to change.
 - **NFR-3:** Ambient skills must not fire in projects without `.relic/` (zero noise for
   non-relic users) and must never block or delay the user's primary request.
-- **NFR-4:** Command UX: plugin commands are invoked with the plugin namespace
-  (`/relic:specify` form). All user-facing references in prompts, README, and docs are
-  updated; the old `/relic.specify` spelling remains only in historical records
-  (changelog, old fix docs).
+- **NFR-4:** Command UX: `/relic:command` (plugin namespace form, verified) is the
+  **single** documented spelling. All references in templates, README, docs, and engine
+  instruction files are renamed in one pass — no dual-spelling compatibility period
+  (no non-Claude users exist yet; owner decision 2026-07-02). The old `/relic.command`
+  spelling remains only in historical records (changelog, old fix docs).
 - **NFR-5:** The plugin works offline against a local marketplace clone; teams may fork
   the repo and point the marketplace at their fork.
 - **NFR-6:** Everything remains functional without the plugin: the CLI and the
@@ -175,6 +191,8 @@ ask-first.
 - Four ambient skills: `relic-knowledge-first`, `relic-spec-detector`,
   `relic-fix-pipeline`, `relic-doc-keeper`
 - Autonomy ladder + `config.json` `"sdd"` knob + `relic context` `sdd` field
+- CLI bootstrap: consent-gated first-use install (FR-17) + `/relic:setup` onboarding
+  command (FR-18); per-project plugin enablement via committed `.claude/settings.json`
 - Claude engine rewrite (settings + plugin recommendation, no command copies) and
   `relic upgrade` cleanup of superseded copies
 - `templates/preamble.md` Ambient SDD section
@@ -188,8 +206,10 @@ ask-first.
 - MCP servers in the plugin
 - Migrating Copilot/Codex to any plugin-like mechanism
 - Marketplace distribution beyond the relic repo itself (no registry submission)
-- Auto-installing the relic CLI from the plugin
+- Silent (non-consented) CLI installation
 - Adoption nudges in projects without `.relic/`
+- Any creation, refresh, or edit of spec HTML files (surface frozen pending a separate
+  HTML reshape spec — owner decision 2026-07-02)
 
 ---
 
@@ -214,18 +234,21 @@ ask-first.
 
 ## Open Questions
 
-- [ ] **OQ-1:** Exact `plugin.json` / `marketplace.json` schemas and the settings keys for
-  team plugin recommendation must be verified against current Claude Code docs at
-  implementation time (first plan task).
-- [ ] **OQ-2:** Should `relic-doc-keeper` refresh the spec HTML on every maintenance pass
-  or only at natural milestones (task phase completed, session end)? Current lean:
-  milestones — `relic scaffold` already syncs chrome/sources on every workflow entry.
-- [ ] **OQ-3:** Does the `/relic:command` namespace collide with the historical
-  `/relic.command` spelling anywhere that matters (docs, engine instructions for
-  Copilot/Codex which keep the old spelling)? Audit at implementation.
-- [ ] **OQ-4:** Should `relic upgrade`'s removal of superseded command copies be gated
-  behind a `--clean` flag for the first release? Current lean: yes for one minor version,
-  then default.
+- [x] **OQ-1:** **Resolved 2026-07-02** — schemas verified against code.claude.com/docs
+  (plugins-reference, plugin-marketplaces) and recorded in `ClaudePluginContract.md`:
+  `plugin.json` (only `name` required; `version` pins updates), `marketplace.json`
+  (`plugins[].source: "./plugin"` relative form), per-project enablement via
+  `extraKnownMarketplaces` + `enabledPlugins` in project settings, `/relic:command`
+  namespacing, `claude plugin validate --strict` for CI.
+- [x] **OQ-2:** **Resolved → HTML untouched in this spec.** The owner is planning a
+  separate HTML reshape; ambient skills never create/refresh/edit spec HTML. Only
+  `relic scaffold`'s existing built-in sync touches HTML.
+- [x] **OQ-3:** **Resolved → single spelling.** `/relic.command` is renamed to
+  `/relic:command` everywhere in one pass (templates, docs, engine instructions) — no
+  compatibility period, since no users are on non-Claude engines yet.
+- [x] **OQ-4:** **Resolved → yes,** gated behind `relic upgrade --clean` for the first
+  release, becoming default afterwards; removal reports each file and only ever matches
+  the relic-managed pattern.
 
 ---
 
@@ -243,3 +266,12 @@ ask-first.
   build generates its commands from them. Skills are plugin-native (authored in
   `plugin/skills/`).
 - **D-6:** The relic repo is its own marketplace — no external registry dependency.
+- **D-7 (2026-07-02):** The plugin is installed **per project** — `add-engine claude`
+  writes the marketplace + enablement keys into the project's committed
+  `.claude/settings.json`; opening the project activates the plugin for every teammate.
+- **D-8 (2026-07-02):** The plugin owns CLI onboarding: consent-gated auto-install on
+  first use (FR-17) plus the `/relic:setup` onboarding command (FR-18). The CLI remains
+  the backbone; the plugin is the delivery vehicle, never the sole carrier of relic
+  functionality.
+- **D-9 (2026-07-02):** Spec HTML files are frozen for this spec — a dedicated HTML
+  reshape spec follows after this plan completes.

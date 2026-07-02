@@ -10,11 +10,11 @@
 
 Four layers, ordered so every later layer consumes a verified earlier one:
 
-1. **Facts first.** Claude Code plugin schemas move fast — the first phase pins the exact
-   `plugin.json` / `marketplace.json` shapes, command/skill frontmatter fields, the
-   namespace form of plugin commands, and the settings keys for team plugin
-   recommendation, against the live docs (OQ-1). Everything downstream depends on this;
-   the contract is written from these findings, not from memory.
+1. **Facts pinned (done at plan time).** The `plugin.json` / `marketplace.json` shapes,
+   `/relic:command` namespacing, and the per-project enablement keys
+   (`extraKnownMarketplaces` + `enabledPlugins`) were verified against
+   code.claude.com/docs on 2026-07-02 and recorded in `ClaudePluginContract.md` (OQ-1
+   resolved). Phase 1 shrinks to a re-check + the spelling-rename audit.
 
 2. **Plugin as build output + authored skills.** `plugin/commands/` is **generated** from
    `templates/prompts/*.md` by `scripts/build-plugin.ts` (adds frontmatter:
@@ -58,13 +58,13 @@ self-contained).
 
 ## Implementation Phases
 
-### Phase 1 — Verify platform facts (OQ-1, OQ-3)
+### Phase 1 — Re-check facts + spelling rename map
 
-1. Pull current Claude Code docs for: plugin manifest schema, marketplace schema, command
-   frontmatter, skill frontmatter + auto-invocation, command namespacing, settings keys
-   for recommending plugins to a team, local plugin testing flags.
-2. Record findings in `ClaudePluginContract.md` (created in this phase, owned by 011).
-3. Audit `/relic.command` spelling across templates/docs; decide the rename map (NFR-4).
+1. Re-check `ClaudePluginContract.md` schema notes against the docs at implementation
+   start (they were verified 2026-07-02 at plan time; a quick diff guards against drift).
+2. Build the `/relic.command` → `/relic:command` rename map across templates, README,
+   docs, and engine instruction files — single spelling, one pass, no compatibility
+   period (OQ-3 resolved).
 
 ### Phase 2 — Plugin scaffold + build
 
@@ -75,10 +75,17 @@ self-contained).
    freshness in CI.
 3. `scripts/publish.ts`: bump plugin.json version in lockstep.
 
-### Phase 3 — Ambient skills
+### Phase 3 — Ambient skills + CLI bootstrap
 
-1. Author the four `plugin/skills/<name>/SKILL.md` per the table above.
-2. Shared guard/ladder block consistency check in `build-plugin.ts`.
+1. Author the four `plugin/skills/<name>/SKILL.md` per the table above. Doc-keeper
+   explicitly never touches HTML files (OQ-2: HTML surface frozen pending the owner's
+   separate reshape spec).
+2. Author the CLI bootstrap block (FR-17): `relic --version` check → consent-gated
+   install (npm or uv, whichever toolchain exists) → continue the original request;
+   once per session; never silent. Shared verbatim by all commands and skills.
+3. Author `/relic:setup` (FR-18): the onboarding command — bootstrap the CLI, run
+   `relic init` when `.relic/` is absent, report the result.
+4. Shared guard/ladder/bootstrap block consistency check in `build-plugin.ts`.
 
 ### Phase 4 — CLI support
 
@@ -92,15 +99,17 @@ self-contained).
 ### Phase 5 — Practice + docs
 
 1. `templates/preamble.md` Ambient SDD section (FR-16).
-2. README + docs: install path (`/plugin marketplace add filfp/relic`), command namespace
-   rename pass, engine table update.
+2. README + docs: install path (`/plugin marketplace add filfp/relic` →
+   `/plugin install relic@relic`), the Phase-1 rename map applied
+   (`/relic.command` → `/relic:command` everywhere), engine table update.
 3. Changelog entries; 011 HTML deep pass; `relic validate` clean.
 
 ### Phase 6 — Verification
 
-1. Local plugin load in a sandbox project (plugin-dir/local marketplace flow from Phase 1
-   findings): commands appear, skills fire on matching situations, `sdd: suggest`
-   downgrades structural actions.
+1. Local plugin load in a sandbox project (local marketplace add → install): commands
+   appear as `/relic:*`, skills fire on matching situations, `sdd: suggest` downgrades
+   structural actions, `/relic:setup` bootstraps CLI + `relic init` on a bare project.
+   `claude plugin validate ./plugin --strict` green.
 2. Full suite + typecheck; e2e: `add-engine claude` on a fresh project writes settings
    only; `upgrade --clean` removes old copies.
 
@@ -113,7 +122,8 @@ self-contained).
 | `plugin/.claude-plugin/plugin.json` | create | manifest; version synced by publish |
 | `.claude-plugin/marketplace.json` | create | repo as its own marketplace |
 | `plugin/commands/*.md` | generate | from templates/prompts via build-plugin.ts (committed) |
-| `plugin/skills/{relic-knowledge-first,relic-spec-detector,relic-fix-pipeline,relic-doc-keeper}/SKILL.md` | create | authored ambient skills |
+| `plugin/skills/{relic-knowledge-first,relic-spec-detector,relic-fix-pipeline,relic-doc-keeper}/SKILL.md` | create | authored ambient skills (HTML files untouched) |
+| `plugin/commands/setup.md` | create | authored onboarding command (FR-18) — not generated from prompts |
 | `scripts/build-plugin.ts` | create | generation + consistency assertions |
 | `scripts/publish.ts` | modify | plugin version bump |
 | `packages/utility/src/project-config.ts` | modify | `sdd` knob + `readSdd` |
