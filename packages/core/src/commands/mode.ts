@@ -1,6 +1,5 @@
-import { join } from "path";
-import { findRelicDir, fileExists, writeText, readMode, writeMode } from "@relic/utility";
-import { TEMPLATES } from "../generated/templates.ts";
+import { findRelicDir, readMode, writeMode } from "@relic/utility";
+import { refreshBaseHtml } from "./html-sync.ts";
 
 export interface ModeOptions {
   value?: string;
@@ -37,30 +36,22 @@ export async function runMode(options: ModeOptions): Promise<void> {
   const mode = options.value as "md" | "html";
   writeMode(relicDir, mode);
 
-  // When switching to html, scaffold base.html if absent
+  // When switching to html, write base.html from the current template
+  // (creates it if absent, refreshes it if stale)
   if (mode === "html") {
-    const baseHtmlPath = join(relicDir, "base.html");
-    if (!fileExists(baseHtmlPath)) {
-      const template = (TEMPLATES["base.html"] ?? "")
-        .replace(/\{\{SPEC_ID\}\}/g, "base")
-        .replace(/\{\{TITLE\}\}/g, "Relic Component Library")
-        .replace(/\{\{DATE\}\}/g, new Date().toISOString().slice(0, 10));
-      writeText(baseHtmlPath, template);
-      if (options.text) {
-        console.log(`Mode set to html.`);
-        console.log(`Created .relic/base.html (component library).`);
-      } else {
-        console.log(
-          JSON.stringify({ mode, base_html_created: true }, null, 2)
-        );
-      }
-      return;
+    const updated = refreshBaseHtml(relicDir);
+    if (options.text) {
+      console.log(`Mode set to html.`);
+      if (updated) console.log(`Wrote .relic/base.html (component library).`);
+    } else {
+      console.log(JSON.stringify({ mode, base_html_updated: updated }, null, 2));
     }
+    return;
   }
 
   if (options.text) {
     console.log(`Mode set to ${mode}.`);
   } else {
-    console.log(JSON.stringify({ mode, base_html_created: false }, null, 2));
+    console.log(JSON.stringify({ mode, base_html_updated: false }, null, 2));
   }
 }

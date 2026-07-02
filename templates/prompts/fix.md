@@ -86,8 +86,13 @@ the issue description (e.g. `2026-04-13-null-session-read-on-missing-file`).
 **If `mode = "html"`** (determined in Step 0):
 
 1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
-2. Create `.relic/fixes/<fix-id>.html` with the following structure (all fields from
-   `FixDocumentContract` expressed via components). Do **not** create `<fix-id>.md`.
+2. Create `.relic/fixes/<fix-id>.html` by **copying `.relic/base.html` wholesale** and then editing
+   only the content region (between `<!-- relic:content:start -->` and `<!-- relic:content:end -->`):
+   - Replace the placeholder sections with the fix sections listed below (all fields from
+     `FixDocumentContract` expressed via components). Do **not** create `<fix-id>.md`.
+   - In the header, set the `h-id` span to the fix ID and the `h-title` span to a short issue title.
+   - Leave the three `relic-src-*` source blocks empty and everything else (styles, scripts,
+     header structure) untouched — that chrome is machine-managed.
 
    Required sections:
    - `<relic-status value="pending">pending</relic-status>` — fix status badge

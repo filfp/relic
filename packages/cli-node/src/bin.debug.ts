@@ -22,6 +22,7 @@ import {
   runWrite,
   runAsk,
   runMode,
+  runHtmlSync,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -313,10 +314,19 @@ program
 
 program
   .command("mode [value]")
-  .description("Get or set the project mode (md|html). When switching to html, scaffolds .relic/base.html if absent.")
+  .description("Get or set the project mode (md|html). When switching to html, writes .relic/base.html from the current template.")
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (value: string | undefined, opts: { text: boolean }) => {
     await runMode({ value, text: opts.text });
+  });
+
+program
+  .command("html-sync")
+  .description("Re-base generated spec HTML files onto the current base.html template (chrome only; authored content preserved)")
+  .option("--spec <id>", "Sync a single spec instead of all")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (opts: { spec?: string; text: boolean }) => {
+    await runHtmlSync({ spec: opts.spec, text: opts.text });
   });
 
 program.parse(process.argv);

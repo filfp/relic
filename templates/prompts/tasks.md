@@ -58,7 +58,14 @@ If `mode` is `"html"`:
    - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
    - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (empty string if not yet created).
    - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md`.
-5. Write the updated `<spec-id>.html` back.
+   **Escaping rule:** if any embedded markdown contains a closing script tag (the character
+   `<` immediately followed by `/script`), write it as `<\/script` inside the source block —
+   otherwise it terminates the block and breaks the whole page. The reader converts it back.
+5. Write the updated `<spec-id>.html` back. **Edit only the content regions** — the areas between
+   `<!-- relic:content:start -->` / `<!-- relic:content:end -->` and
+   `<!-- relic:sources:start -->` / `<!-- relic:sources:end -->`. Everything else (styles, component
+   script, header, reader script) is machine-managed chrome kept current by `relic scaffold` /
+   `relic html-sync` — never modify, reformat, or regenerate it.
 
 If `mode` is `"md"`, skip this step entirely.
 

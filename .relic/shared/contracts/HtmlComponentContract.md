@@ -16,6 +16,15 @@ The component API contract between `base.html` (provider) and the LLM writing sp
 - **No CDN at runtime**: all JS and CSS are embedded inline in `base.html`. Files work offline and in air-gapped environments.
 - **Synthesis, not transcription**: the LLM must never copy Markdown text verbatim into HTML. Each section must represent information in its most visual form — flow diagrams instead of bullet lists, tables instead of prose, progress bars instead of counts. The `<template id="relic-docs">` block includes explicit LLM authoring rules enforcing this.
 
+## Rendering Model
+
+Components read their own content (`textContent` / `innerHTML`) — but `connectedCallback`
+fires during the streaming parse, **before the element's children exist**. All components
+therefore defer rendering until `DOMContentLoaded` when the document is still loading, via
+the shared `defineRelic` helper. A `data-relic-rendered` guard prevents double-rendering if
+content is re-parsed. Consumers must never rely on the components' generated markup — only
+the source (authoring) form is contractual.
+
 ## Component Inventory
 
 The initial `templates/base.html` ships with the following components:
@@ -36,7 +45,13 @@ A compact inline tag rendered in monospace with a coloured background. Use for s
 
 ### Dark mode contract
 
-All component colours are hardcoded (they do not use CSS custom properties internally, to keep the component JS minimal). However, the CSS custom properties defined by `base.html` are available for any custom HTML the LLM writes:
+Component colours are theme-aware: badges, chips, callouts, and flow-diagram nodes use
+`rl-tone-*` CSS classes backed by `--tone-<name>-bg/-bd/-fg` custom properties (slate, blue,
+green, amber, red, purple) with light and dark values. SVG text/gridlines in charts and flows
+use the `rl-t-muted` / `rl-t-strong` / `rl-grid` / `rl-edge` classes (CSS `fill`/`stroke` on
+`var(--*)`). Fixed-colour marks (chart series, progress bar fills, pie labels) are inline and
+legible in both themes. The CSS custom properties defined by `base.html` are available for any
+custom HTML the LLM writes:
 
 | Property | Light value | Dark value |
 |---|---|---|
@@ -57,7 +72,7 @@ The LLM must use `var(--*)` for any custom CSS to ensure dark-mode compatibility
 
 The sticky header in `base.html` includes three navigation links: `spec.md`, `plan.md`, `tasks.md`. Clicking a link opens the file **inline within the same page** using the embedded markdown reader — the browser does not navigate away. A `← back` button appears in the header (replacing the nav links) while the reader is open; clicking it restores the original spec HTML view.
 
-Fix HTML files (`.relic/fixes/<fix-id>.html`) do not have corresponding Markdown files in the same directory; the LLM should remove or replace the nav links when writing a fix HTML document.
+Fix HTML files (`.relic/fixes/<fix-id>.html`) do not have corresponding Markdown files in the same directory. The chrome (including nav links) is kept intact — clicking a nav link in a fix document shows the reader's graceful "not embedded" message.
 
 The dark mode toggle persists the preference in `localStorage` under the key `relic-theme`.
 
@@ -78,11 +93,18 @@ The dark mode toggle persists the preference in `localStorage` under the key `re
 2. Fall back to `fetch(filename)` if the source block is empty (works on HTTP; blocked by CORS on `file://` in Chrome).
 3. If both fail, show a graceful error with an "Open in new tab" link.
 
-**LLM obligation:** After updating the HTML content sections, the LLM MUST replace the content of all three source blocks with the current text of the corresponding Markdown files. This is the primary delivery path for the reader — not fetch.
+**Population:** the CLI embeds the current markdown file contents into the source blocks on
+every `relic scaffold` and `relic html-sync` run (files are the source of truth — existing
+block content is replaced). The LLM's only obligation is mid-session freshness: if it edits
+spec.md/plan.md/tasks.md after the scaffold step, it re-embeds the updated content.
 
-**Parser capabilities:** headings (H1–H4), bold, italic, inline code, fenced code blocks, unordered lists, ordered lists, GFM pipe tables, blockquotes, horizontal rules, paragraphs, links.
+**Escaping rule:** a literal `</script` inside a source block would terminate the block and
+dump the remaining markdown into the page as live HTML. Writers (CLI and LLM) escape it as
+`<\/script`; the reader converts it back before parsing. Nothing else needs escaping.
 
-**Back navigation:** when the reader is open, `#relic-back` (`.h-back`) is shown and `.h-nav` is hidden. Clicking back restores `#relic-body.innerHTML` and reverts the header.
+**Parser capabilities:** headings (H1–H4), bold, italic, inline code, fenced code blocks, unordered lists, ordered lists, GFM task-list checkboxes (`- [ ]` / `- [x]`, rendered as disabled checkboxes), GFM pipe tables, blockquotes, horizontal rules, paragraphs, links.
+
+**Back navigation:** the reader renders into a separate `#relic-reader-wrap` panel and the spec body (`#relic-body`) is hidden — never serialised and restored via `innerHTML`, which would re-parse already-rendered components and corrupt them. When the reader is open, `#relic-back` (`.h-back`) is shown and `.h-nav` is hidden; clicking back hides the panel and unhides the body.
 
 ## File Naming Convention
 
@@ -99,7 +121,26 @@ Naming by ID prevents tab name collisions when multiple HTML files are open simu
 
 `<spec-id>.html` and `<fix-id>.html` are **self-contained documents**. When `relic scaffold` creates a spec HTML file, it copies the full `base.html` content (substituting `{{SPEC_ID}}` and `{{TITLE}}`). All CSS and JS are embedded inline — there is no separate load step and no reference to an external `base.html` file. This ensures files open correctly regardless of where they are accessed from.
 
-`base.html` is the source template for new files; customising it does not retroactively affect already-created spec or fix HTML files.
+### Chrome vs content — sentinel regions
+
+Every generated HTML file is divided into **machine-managed chrome** and **authored content**:
+
+| Region | Marked by | Owner |
+|---|---|---|
+| Embedded markdown sources | `relic:sources:start` … `relic:sources:end` comments | CLI (LLM refreshes mid-session) |
+| Body sections (`#relic-body`) | `relic:content:start` … `relic:content:end` comments | LLM |
+| Everything else (styles, component script, header, reader script) | no markers — all remaining | CLI |
+
+`relic html-sync` (also run automatically by `relic scaffold` and `relic upgrade`) re-bases
+existing files onto the current template: chrome is replaced wholesale, content and identity
+(spec ID, title) are preserved, and the source blocks are refreshed from the markdown files.
+Legacy files without sentinels are recognised heuristically (`#relic-body` boundaries);
+unrecognisable files are skipped, never overwritten. The marker comments must appear exactly
+once — the sync locates regions by first occurrence.
+
+Consequence: template fixes DO retroactively reach already-created files. Manual edits to
+chrome (including custom components added to a generated file) are overwritten on the next
+sync; team customisations belong in the upstream template.
 
 ## HTML File Conventions
 
@@ -133,9 +174,9 @@ When `mode = "md"`, `/relic.fix` creates `<fix-id>.md` per `FixDocumentContract.
 
 ## Lifecycle
 
-- `base.html` is written once by `relic mode html`; the user owns it after that. Teams may add custom components.
+- `base.html` is written by `relic mode html` and refreshed from the embedded template by `relic html-sync` / `relic upgrade` — it is a machine-managed reference copy, not user-owned.
 - `<spec-id>.html` is created once by `relic scaffold` in HTML mode; updated by every spec workflow command session (specify, clarify, plan, tasks, implement).
 - `<fix-id>.html` is created by `/relic.fix` when `mode = "html"` — it is the fix document, replacing `<fix-id>.md`. Updated by `/relic.solve`.
 - When `mode = "md"`, `/relic.fix` creates `<fix-id>.md` per `FixDocumentContract.md` — no HTML. The two modes are mutually exclusive.
-- Neither HTML file is overwritten by the CLI after initial creation — the LLM is the sole updater.
+- The CLI re-bases spec HTML chrome and refreshes embedded sources on every `relic scaffold` / `relic html-sync` / `relic upgrade`; the LLM is the sole updater of the content region.
 - All HTML artefact files are committed to version control as first-class documents.

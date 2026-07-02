@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{SPEC_ID}} — {{TITLE}}</title>
+  <meta name="relic-base-version" content="2">
+  <title>base — Relic Component Library</title>
   <style>
     /* ── CSS custom properties ────────────────────────────────────── */
     :root {
@@ -19,6 +20,13 @@
       --accent-bg: #eff6ff;
       --code-bg:   #f1f5f9;
       --hdr-h:     52px;
+      /* tone palette — shared by badges, chips, callouts, flow nodes */
+      --tone-slate-bg:#f1f5f9;  --tone-slate-bd:#cbd5e1;  --tone-slate-fg:#475569;
+      --tone-blue-bg:#dbeafe;   --tone-blue-bd:#93c5fd;   --tone-blue-fg:#1d4ed8;
+      --tone-green-bg:#dcfce7;  --tone-green-bd:#86efac;  --tone-green-fg:#15803d;
+      --tone-amber-bg:#fef3c7;  --tone-amber-bd:#fde68a;  --tone-amber-fg:#92400e;
+      --tone-red-bg:#fee2e2;    --tone-red-bd:#fca5a5;    --tone-red-fg:#b91c1c;
+      --tone-purple-bg:#f3e8ff; --tone-purple-bd:#d8b4fe; --tone-purple-fg:#7c3aed;
     }
     [data-theme="dark"] {
       --bg:        #0f172a;
@@ -32,6 +40,12 @@
       --accent:    #60a5fa;
       --accent-bg: #1e3a5f;
       --code-bg:   #263248;
+      --tone-slate-bg:#263248;  --tone-slate-bd:#475569;  --tone-slate-fg:#94a3b8;
+      --tone-blue-bg:#1e3a5f;   --tone-blue-bd:#2f5d9e;   --tone-blue-fg:#93c5fd;
+      --tone-green-bg:#14331f;  --tone-green-bd:#1f6f43;  --tone-green-fg:#86efac;
+      --tone-amber-bg:#362a10;  --tone-amber-bd:#8a6410;  --tone-amber-fg:#fcd34d;
+      --tone-red-bg:#3b1a1e;    --tone-red-bd:#8a2b33;    --tone-red-fg:#fca5a5;
+      --tone-purple-bg:#2b1d44; --tone-purple-bd:#6d3fb8; --tone-purple-fg:#d8b4fe;
     }
 
     /* ── Reset & base ─────────────────────────────────────────────── */
@@ -82,7 +96,7 @@
     #relic-header .h-toggle:hover { background: var(--surface-2); }
 
     /* ── Layout ───────────────────────────────────────────────────── */
-    #relic-body { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+    #relic-body, #relic-reader-wrap { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
 
     /* ── Typography ───────────────────────────────────────────────── */
     h1 { font-size: 1.55rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
@@ -130,6 +144,51 @@
     tr:nth-child(even) td { background: var(--surface-2); }
     tr:last-child td { border-bottom: none; }
 
+    /* ── Relic components (theme-aware via tone vars) ─────────────── */
+    .rl-tone-slate  { background: var(--tone-slate-bg);  border-color: var(--tone-slate-bd);  color: var(--tone-slate-fg); }
+    .rl-tone-blue   { background: var(--tone-blue-bg);   border-color: var(--tone-blue-bd);   color: var(--tone-blue-fg); }
+    .rl-tone-green  { background: var(--tone-green-bg);  border-color: var(--tone-green-bd);  color: var(--tone-green-fg); }
+    .rl-tone-amber  { background: var(--tone-amber-bg);  border-color: var(--tone-amber-bd);  color: var(--tone-amber-fg); }
+    .rl-tone-red    { background: var(--tone-red-bg);    border-color: var(--tone-red-bd);    color: var(--tone-red-fg); }
+    .rl-tone-purple { background: var(--tone-purple-bg); border-color: var(--tone-purple-bd); color: var(--tone-purple-fg); }
+    .rl-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 9999px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; border: 1px solid;
+    }
+    .rl-chip {
+      display: inline-block; padding: 1px 7px; border-radius: 4px;
+      font-size: 0.72rem; font-weight: 600; font-family: ui-monospace, monospace; border: 1px solid;
+    }
+    relic-callout { display: block; }
+    .rl-callout {
+      border: 1px solid; border-left: 4px solid; border-radius: 7px;
+      padding: 0.75rem 1rem; margin: 0.6rem 0; color: var(--text);
+    }
+    .rl-callout-info    { background: var(--tone-blue-bg);  border-color: var(--tone-blue-bd);  border-left-color: #3b82f6; }
+    .rl-callout-warn    { background: var(--tone-amber-bg); border-color: var(--tone-amber-bd); border-left-color: #f59e0b; }
+    .rl-callout-risk    { background: var(--tone-red-bg);   border-color: var(--tone-red-bd);   border-left-color: #f43f5e; }
+    .rl-callout-success { background: var(--tone-green-bg); border-color: var(--tone-green-bd); border-left-color: #22c55e; }
+    .rl-ico { font-weight: 700; margin-right: 0.5rem; font-size: 0.88em; }
+    .rl-callout-info    > .rl-ico { color: #3b82f6; }
+    .rl-callout-warn    > .rl-ico { color: #f59e0b; }
+    .rl-callout-risk    > .rl-ico { color: #f43f5e; }
+    .rl-callout-success > .rl-ico { color: #22c55e; }
+    relic-progress { display: block; margin: 0.5rem 0; }
+    .rl-track { background: var(--surface-2); border-radius: 9999px; height: 8px; overflow: hidden; }
+    .rl-track-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-2); margin-bottom: 5px; }
+    relic-table { display: block; overflow-x: auto; margin: 0.5rem 0; }
+    relic-chart, relic-flow { display: block; margin: 0.5rem 0; }
+    /* SVG theming — CSS wins over presentation attributes, so fixed-colour
+       text inside charts uses inline style="fill:..." instead of these classes */
+    .rl-t-muted  { fill: var(--text-2); }
+    .rl-t-strong { fill: var(--text); }
+    .rl-grid     { stroke: var(--border); }
+    .rl-edge     { stroke: var(--text-3); }
+    .rl-arrow    { fill: var(--text-3); }
+    .rl-node-box     { fill: var(--tone-blue-bg);  stroke: var(--tone-blue-bd); }
+    .rl-node-diamond { fill: var(--tone-amber-bg); stroke: var(--tone-amber-bd); }
+    .rl-node-circle  { fill: var(--tone-green-bg); stroke: var(--tone-green-bd); }
+
     /* ── Utility classes ──────────────────────────────────────────── */
     .flex        { display: flex; }
     .flex-wrap   { flex-wrap: wrap; }
@@ -169,6 +228,8 @@
     #relic-reader p  { margin-bottom: 0.75rem; }
     #relic-reader ul, #relic-reader ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
     #relic-reader li { margin-bottom: 0.25rem; }
+    #relic-reader li.rl-task { list-style: none; margin-left: -1.25rem; }
+    #relic-reader li.rl-task input { margin-right: 0.4rem; accent-color: var(--accent); vertical-align: -1px; }
     #relic-reader blockquote { border-left: 3px solid var(--accent); background: var(--accent-bg); color: var(--text-2); padding: 0.5rem 1rem; margin: 0.75rem 0; border-radius: 0 6px 6px 0; }
     #relic-reader blockquote p { margin-bottom: 0; }
     #relic-reader hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
@@ -196,6 +257,8 @@
 RELIC COMPONENTS
 ================
 All components are custom elements. Use them anywhere inside <body>.
+They render after DOMContentLoaded — never rely on their generated markup;
+author only the source form shown below.
 
 RELIC-STATUS  — coloured status badge
   <relic-status value="pending">Pending</relic-status>
@@ -272,9 +335,27 @@ INLINE MARKDOWN READER
   If a source block is empty, the reader falls back to fetch() (works on HTTP;
   blocked in Chrome on file:// due to CORS). If both fail, a graceful message is shown.
 
-  LLM OBLIGATION: after updating the HTML sections, always embed the CURRENT content
-  of spec.md, plan.md, and tasks.md into the three source blocks. This is the primary
-  delivery path for the reader — fetch() is only a fallback.
+  The Relic CLI refreshes these blocks from the markdown files on every
+  `relic scaffold` / `relic html-sync` run. LLM OBLIGATION: if you edit spec.md,
+  plan.md, or tasks.md mid-session AFTER the scaffold step, re-embed the updated
+  content into the matching source block so the reader stays current. This is the
+  primary delivery path for the reader — fetch() is only a fallback.
+
+  ESCAPING RULE (mandatory): if the markdown contains a closing script tag
+  (the character "<" immediately followed by "/script"), it MUST be written
+  with a backslash between "<" and "/" — i.e. "<\/script" — inside the source
+  blocks, or it would terminate the block and break the page. The reader
+  converts "<\/script" back before parsing. Nothing else needs escaping.
+
+MACHINE-MANAGED CHROME (do not edit)
+  Two pairs of HTML comments mark the authorable regions of this file:
+    "relic:sources:start" … "relic:sources:end"   (the embedded markdown blocks)
+    "relic:content:start" … "relic:content:end"   (the #relic-body sections)
+  Everything OUTSIDE those pairs is chrome: styles, component script, header,
+  reader script. It is owned by the Relic CLI and refreshed by `relic html-sync` /
+  `relic scaffold` — any manual edit to chrome will be overwritten. Author content
+  ONLY inside the marked regions. (Never write those marker comments anywhere else
+  in the file — the sync tool locates the regions by their first occurrence.)
 
 LLM AUTHORING RULES
   1. DO NOT copy Markdown text verbatim into HTML.
@@ -288,6 +369,7 @@ LLM AUTHORING RULES
   5. Use CSS custom properties (var(--text), var(--surface), etc.) for any custom styles
      so they work in both light and dark modes.
   6. Always populate the three relic-src-* source blocks (see INLINE MARKDOWN READER above).
+  7. Never edit chrome (see MACHINE-MANAGED CHROME above).
 </template>
 
 <script>
@@ -312,174 +394,188 @@ LLM AUTHORING RULES
       applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
   });
 
+  /* ── Component definition helper ────────────────────────────────────
+     connectedCallback fires DURING streaming parse, BEFORE the element's
+     children exist — reading textContent/innerHTML there sees nothing.
+     Defer rendering until DOMContentLoaded while the document is loading,
+     and guard against double-rendering (e.g. content cloned or re-parsed
+     after components already rendered). */
+  function defineRelic(name, render) {
+    customElements.define(name, class extends HTMLElement {
+      connectedCallback() {
+        const el = this;
+        const go = () => {
+          if (!el.isConnected || el.dataset.relicRendered) return;
+          el.dataset.relicRendered = '1';
+          render(el);
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', go, { once: true });
+        } else {
+          go();
+        }
+      }
+    });
+  }
+
   /* ── relic-status ───────────────────────────────────────────────── */
-  const STATUS = {
-    pending:      { bg:'#f1f5f9', border:'#cbd5e1', text:'#475569' },
-    'in-progress':{ bg:'#dbeafe', border:'#93c5fd', text:'#1d4ed8' },
-    done:         { bg:'#dcfce7', border:'#86efac', text:'#15803d' },
-    risk:         { bg:'#fee2e2', border:'#fca5a5', text:'#b91c1c' },
-    draft:        { bg:'#f3e8ff', border:'#d8b4fe', text:'#7c3aed' },
-  };
-  customElements.define('relic-status', class extends HTMLElement {
-    connectedCallback() {
-      const v = (this.getAttribute('value')||'pending').toLowerCase();
-      const c = STATUS[v] || STATUS.pending;
-      const label = this.textContent.trim() || v;
-      this.innerHTML = `<span style="display:inline-block;padding:2px 10px;border-radius:9999px;font-size:0.72rem;font-weight:700;letter-spacing:0.03em;background:${c.bg};border:1px solid ${c.border};color:${c.text}">${label}</span>`;
-    }
+  const STATUS_TONE = { pending:'slate', 'in-progress':'blue', done:'green', risk:'red', draft:'purple' };
+  defineRelic('relic-status', el => {
+    const v = (el.getAttribute('value')||'pending').toLowerCase();
+    const tone = STATUS_TONE[v] || 'slate';
+    const label = el.textContent.trim() || v;
+    el.textContent = '';
+    const span = document.createElement('span');
+    span.className = `rl-badge rl-tone-${tone}`;
+    span.textContent = label;
+    el.appendChild(span);
   });
 
   /* ── relic-chip ─────────────────────────────────────────────────── */
-  const CHIP = {
-    default:{ bg:'#f1f5f9', border:'#cbd5e1', text:'#475569' },
-    blue:   { bg:'#dbeafe', border:'#93c5fd', text:'#1d4ed8' },
-    green:  { bg:'#dcfce7', border:'#86efac', text:'#15803d' },
-    amber:  { bg:'#fef3c7', border:'#fde68a', text:'#92400e' },
-    red:    { bg:'#fee2e2', border:'#fca5a5', text:'#b91c1c' },
-    purple: { bg:'#f3e8ff', border:'#d8b4fe', text:'#7c3aed' },
-  };
-  customElements.define('relic-chip', class extends HTMLElement {
-    connectedCallback() {
-      const c = CHIP[(this.getAttribute('color')||'default').toLowerCase()] || CHIP.default;
-      const label = this.textContent.trim();
-      this.innerHTML = `<span style="display:inline-block;padding:1px 7px;border-radius:4px;font-size:0.72rem;font-weight:600;font-family:ui-monospace,monospace;background:${c.bg};border:1px solid ${c.border};color:${c.text}">${label}</span>`;
-    }
+  const CHIP_TONES = new Set(['blue','green','amber','red','purple']);
+  defineRelic('relic-chip', el => {
+    const c = (el.getAttribute('color')||'').toLowerCase();
+    const tone = CHIP_TONES.has(c) ? c : 'slate';
+    const label = el.textContent.trim();
+    el.textContent = '';
+    const span = document.createElement('span');
+    span.className = `rl-chip rl-tone-${tone}`;
+    span.textContent = label;
+    el.appendChild(span);
   });
 
   /* ── relic-callout ──────────────────────────────────────────────── */
-  const CALLOUT = {
-    info:   { bg:'#eff6ff', border:'#93c5fd', accent:'#3b82f6', icon:'ℹ' },
-    warn:   { bg:'#fffbeb', border:'#fde68a', accent:'#f59e0b', icon:'⚠' },
-    risk:   { bg:'#fff1f2', border:'#fecdd3', accent:'#f43f5e', icon:'✕' },
-    success:{ bg:'#f0fdf4', border:'#86efac', accent:'#22c55e', icon:'✓' },
-  };
-  customElements.define('relic-callout', class extends HTMLElement {
-    connectedCallback() {
-      const s = CALLOUT[(this.getAttribute('type')||'info').toLowerCase()] || CALLOUT.info;
-      const content = this.innerHTML;
-      Object.assign(this.style, {
-        display:'block', background:s.bg,
-        border:`1px solid ${s.border}`, borderLeft:`4px solid ${s.accent}`,
-        borderRadius:'7px', padding:'0.75rem 1rem', margin:'0.6rem 0', color:'#1e293b',
-      });
-      this.innerHTML = `<span style="font-weight:700;color:${s.accent};margin-right:0.5rem;font-size:0.88em">${s.icon}</span>${content}`;
-    }
+  const CALLOUT_ICON = { info:'ℹ', warn:'⚠', risk:'✕', success:'✓' };
+  defineRelic('relic-callout', el => {
+    let t = (el.getAttribute('type')||'info').toLowerCase();
+    if (!(t in CALLOUT_ICON)) t = 'info';
+    el.classList.add('rl-callout', `rl-callout-${t}`);
+    const icon = document.createElement('span');
+    icon.className = 'rl-ico';
+    icon.textContent = CALLOUT_ICON[t];
+    el.insertBefore(icon, el.firstChild);
   });
 
   /* ── relic-progress ─────────────────────────────────────────────── */
-  customElements.define('relic-progress', class extends HTMLElement {
-    connectedCallback() {
-      const val = parseInt(this.getAttribute('value')||'0',10);
-      const max = parseInt(this.getAttribute('max')||'100',10);
-      const label = this.getAttribute('label')||'';
-      const pct = max > 0 ? Math.round((val/max)*100) : 0;
-      const color = pct===100 ? '#22c55e' : pct>=60 ? '#3b82f6' : pct>=30 ? '#f59e0b' : '#ef4444';
-      Object.assign(this.style, { display:'block', margin:'0.5rem 0' });
-      this.innerHTML = `
-        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#64748b;margin-bottom:5px">
-          <span>${label}</span><span style="font-weight:700;color:${color}">${pct}%</span>
-        </div>
-        <div style="background:#e2e8f0;border-radius:9999px;height:8px;overflow:hidden">
-          <div style="background:${color};height:100%;border-radius:9999px;width:${pct}%;transition:width 0.4s ease"></div>
-        </div>`;
-    }
+  defineRelic('relic-progress', el => {
+    const val = parseInt(el.getAttribute('value')||'0',10);
+    const max = parseInt(el.getAttribute('max')||'100',10);
+    const label = el.getAttribute('label')||'';
+    const pct = max > 0 ? Math.round((val/max)*100) : 0;
+    const color = pct===100 ? '#22c55e' : pct>=60 ? '#3b82f6' : pct>=30 ? '#f59e0b' : '#ef4444';
+    el.innerHTML = `
+      <div class="rl-track-label">
+        <span></span><span style="font-weight:700;color:${color}"></span>
+      </div>
+      <div class="rl-track">
+        <div style="background:${color};height:100%;border-radius:9999px;width:${pct}%;transition:width 0.4s ease"></div>
+      </div>`;
+    const spans = el.querySelectorAll('.rl-track-label span');
+    spans[0].textContent = label;
+    spans[1].textContent = `${pct}%`;
   });
 
   /* ── relic-table ────────────────────────────────────────────────── */
-  customElements.define('relic-table', class extends HTMLElement {
-    connectedCallback() {
-      let headers, rows;
-      try { headers = JSON.parse(this.getAttribute('headers')||'[]'); } catch { headers=[]; }
-      try { rows = JSON.parse(this.getAttribute('rows')||'[]'); } catch { rows=[]; }
-      Object.assign(this.style, { display:'block', overflowX:'auto', margin:'0.5rem 0' });
-      const t = document.createElement('table');
-      if (headers.length) {
-        const tr = t.createTHead().insertRow();
-        headers.forEach(h => { const th=document.createElement('th'); th.textContent=h; tr.appendChild(th); });
-      }
-      const tbody = t.createTBody();
-      rows.forEach(row => {
-        const tr = tbody.insertRow();
-        (Array.isArray(row)?row:[row]).forEach(cell => { tr.insertCell().innerHTML = String(cell??''); });
-      });
-      this.innerHTML = '';
-      this.appendChild(t);
+  defineRelic('relic-table', el => {
+    let headers, rows;
+    try { headers = JSON.parse(el.getAttribute('headers')||'[]'); } catch { headers=[]; }
+    try { rows = JSON.parse(el.getAttribute('rows')||'[]'); } catch { rows=[]; }
+    const t = document.createElement('table');
+    if (headers.length) {
+      const tr = t.createTHead().insertRow();
+      headers.forEach(h => { const th=document.createElement('th'); th.textContent=h; tr.appendChild(th); });
     }
+    const tbody = t.createTBody();
+    rows.forEach(row => {
+      const tr = tbody.insertRow();
+      (Array.isArray(row)?row:[row]).forEach(cell => { tr.insertCell().innerHTML = String(cell??''); });
+    });
+    el.innerHTML = '';
+    el.appendChild(t);
   });
 
   /* ── relic-chart ────────────────────────────────────────────────── */
-  customElements.define('relic-chart', class extends HTMLElement {
-    connectedCallback() {
-      const type = this.getAttribute('type')||'bar';
-      const title = this.getAttribute('title')||'';
-      let labels, data;
-      try { labels=JSON.parse(this.getAttribute('labels')||'[]'); } catch { labels=[]; }
-      try { data=JSON.parse(this.getAttribute('data')||'[]'); } catch { data=[]; }
-      Object.assign(this.style, { display:'block', margin:'0.5rem 0' });
+  defineRelic('relic-chart', el => {
+    const type = el.getAttribute('type')||'bar';
+    const title = el.getAttribute('title')||'';
+    let labels, data;
+    try { labels=JSON.parse(el.getAttribute('labels')||'[]'); } catch { labels=[]; }
+    try { data=JSON.parse(el.getAttribute('data')||'[]'); } catch { data=[]; }
 
-      const W=500, H=280, PAD={top:40,right:20,bottom:64,left:52};
-      const CW=W-PAD.left-PAD.right, CH=H-PAD.top-PAD.bottom;
-      const nums=data.map(Number);
-      const maxVal=Math.max(...nums,1);
-      const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+    const W=500, H=280, PAD={top:40,right:20,bottom:64,left:52};
+    const CW=W-PAD.left-PAD.right, CH=H-PAD.top-PAD.bottom;
+    const nums=data.map(Number);
+    const maxVal=Math.max(...nums,1);
+    const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
 
-      const mk=(tag,attrs={})=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));return el;};
-      const tx=(x,y,txt,a={})=>{const el=mk('text',{x,y,'font-size':'11','font-family':'system-ui',fill:'#64748b',...a});el.textContent=txt;return el;};
-      const root=mk('svg',{width:'100%',viewBox:`0 0 ${W} ${H}`,style:'max-width:500px;display:block'});
-      if(title) root.appendChild(tx(W/2,22,title,{'text-anchor':'middle','font-size':'14','font-weight':'600',fill:'#1e293b'}));
+    const mk=(tag,attrs={})=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;};
+    /* theme-aware text uses class (CSS fill); fixed-colour text uses style so it
+       beats class rules regardless of specificity */
+    const tx=(x,y,txt,a={})=>{
+      const attrs={x,y,'font-size':'11','font-family':'system-ui',...a};
+      if(!attrs.style&&!attrs.class) attrs.class='rl-t-muted';
+      const e=mk('text',attrs);e.textContent=txt;return e;
+    };
+    const root=mk('svg',{width:'100%',viewBox:`0 0 ${W} ${H}`,style:'max-width:500px;display:block'});
+    if(title) root.appendChild(tx(W/2,22,title,{'text-anchor':'middle','font-size':'14','font-weight':'600',class:'rl-t-strong'}));
 
-      if(type==='bar'){
-        const barW=Math.max(8,CW/nums.length*0.55), gap=CW/nums.length;
-        [0.25,0.5,0.75,1].forEach(n=>root.appendChild(mk('line',{x1:PAD.left,y1:PAD.top+CH-(n*CH),x2:PAD.left+CW,y2:PAD.top+CH-(n*CH),stroke:'#f1f5f9','stroke-width':'1'})));
-        root.appendChild(mk('line',{x1:PAD.left,y1:PAD.top+CH,x2:PAD.left+CW,y2:PAD.top+CH,stroke:'#e2e8f0','stroke-width':'1'}));
-        nums.forEach((v,i)=>{
-          const bh=(v/maxVal)*CH, x=PAD.left+i*gap+gap/2-barW/2, y=PAD.top+CH-bh;
-          root.appendChild(mk('rect',{x,y,width:barW,height:bh,fill:COLORS[i%COLORS.length],rx:'3'}));
-          root.appendChild(tx(x+barW/2,PAD.top+CH+16,labels[i]||'',{'text-anchor':'middle','font-size':'10'}));
-          if(v>0) root.appendChild(tx(x+barW/2,y-5,v,{'text-anchor':'middle','font-size':'10',fill:'#334155'}));
-        });
-      } else if(type==='line'){
-        const pts=nums.map((v,i)=>[PAD.left+(i/Math.max(nums.length-1,1))*CW, PAD.top+CH-(v/maxVal)*CH]);
-        root.appendChild(mk('line',{x1:PAD.left,y1:PAD.top+CH,x2:PAD.left+CW,y2:PAD.top+CH,stroke:'#e2e8f0','stroke-width':'1'}));
-        if(pts.length>1){
-          const areaD=`M${pts[0][0]},${PAD.top+CH} ${pts.map(p=>`L${p[0]},${p[1]}`).join(' ')} L${pts[pts.length-1][0]},${PAD.top+CH} Z`;
-          root.appendChild(mk('path',{d:areaD,fill:COLORS[0]+'28',stroke:'none'}));
-          root.appendChild(mk('path',{d:pts.map((p,i)=>`${i===0?'M':'L'}${p[0]},${p[1]}`).join(' '),stroke:COLORS[0],'stroke-width':'2.5',fill:'none','stroke-linejoin':'round','stroke-linecap':'round'}));
-        }
-        pts.forEach(([x,y],i)=>{
-          root.appendChild(mk('circle',{cx:x,cy:y,r:'4',fill:'#fff',stroke:COLORS[0],'stroke-width':'2'}));
-          root.appendChild(tx(x,PAD.top+CH+16,labels[i]||'',{'text-anchor':'middle','font-size':'10'}));
-        });
-      } else if(type==='pie'){
-        const total=nums.reduce((a,b)=>a+b,0)||1;
-        const cx=W/2, cy=PAD.top+CH/2, r=Math.min(CW,CH)/2-8;
-        let angle=-Math.PI/2;
-        nums.forEach((v,i)=>{
-          const sweep=(v/total)*2*Math.PI;
-          const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
-          const x2=cx+r*Math.cos(angle+sweep),y2=cy+r*Math.sin(angle+sweep);
-          root.appendChild(mk('path',{d:`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${sweep>Math.PI?1:0},1 ${x2},${y2} Z`,fill:COLORS[i%COLORS.length],stroke:'#fff','stroke-width':'2'}));
-          const midA=angle+sweep/2;
-          root.appendChild(tx(cx+(r*0.65)*Math.cos(midA),cy+(r*0.65)*Math.sin(midA),`${Math.round((v/total)*100)}%`,{'text-anchor':'middle',fill:'#fff','font-weight':'700','font-size':'11'}));
-          angle+=sweep;
-        });
-        nums.forEach((_,i)=>{
-          const ly=PAD.top+CH+14+Math.floor(i/3)*18, lx=PAD.left+(i%3)*140;
-          root.appendChild(mk('rect',{x:lx,y:ly-8,width:10,height:10,fill:COLORS[i%COLORS.length],rx:'2'}));
-          root.appendChild(tx(lx+14,ly,labels[i]||'',{}));
-        });
+    if(type==='bar'){
+      const barW=Math.max(8,CW/Math.max(nums.length,1)*0.55), gap=CW/Math.max(nums.length,1);
+      [0.25,0.5,0.75,1].forEach(n=>root.appendChild(mk('line',{x1:PAD.left,y1:PAD.top+CH-(n*CH),x2:PAD.left+CW,y2:PAD.top+CH-(n*CH),class:'rl-grid','stroke-width':'1'})));
+      root.appendChild(mk('line',{x1:PAD.left,y1:PAD.top+CH,x2:PAD.left+CW,y2:PAD.top+CH,class:'rl-grid','stroke-width':'1'}));
+      nums.forEach((v,i)=>{
+        const bh=(v/maxVal)*CH, x=PAD.left+i*gap+gap/2-barW/2, y=PAD.top+CH-bh;
+        root.appendChild(mk('rect',{x,y,width:barW,height:bh,fill:COLORS[i%COLORS.length],rx:'3'}));
+        root.appendChild(tx(x+barW/2,PAD.top+CH+16,labels[i]||'',{'text-anchor':'middle','font-size':'10'}));
+        if(v>0) root.appendChild(tx(x+barW/2,y-5,v,{'text-anchor':'middle','font-size':'10'}));
+      });
+    } else if(type==='line'){
+      const pts=nums.map((v,i)=>[PAD.left+(i/Math.max(nums.length-1,1))*CW, PAD.top+CH-(v/maxVal)*CH]);
+      root.appendChild(mk('line',{x1:PAD.left,y1:PAD.top+CH,x2:PAD.left+CW,y2:PAD.top+CH,class:'rl-grid','stroke-width':'1'}));
+      if(pts.length>1){
+        const areaD=`M${pts[0][0]},${PAD.top+CH} ${pts.map(p=>`L${p[0]},${p[1]}`).join(' ')} L${pts[pts.length-1][0]},${PAD.top+CH} Z`;
+        root.appendChild(mk('path',{d:areaD,fill:COLORS[0]+'28',stroke:'none'}));
+        root.appendChild(mk('path',{d:pts.map((p,i)=>`${i===0?'M':'L'}${p[0]},${p[1]}`).join(' '),stroke:COLORS[0],'stroke-width':'2.5',fill:'none','stroke-linejoin':'round','stroke-linecap':'round'}));
       }
-      this.innerHTML=''; this.appendChild(root);
+      pts.forEach(([x,y],i)=>{
+        root.appendChild(mk('circle',{cx:x,cy:y,r:'4',style:'fill:var(--surface)',stroke:COLORS[0],'stroke-width':'2'}));
+        root.appendChild(tx(x,PAD.top+CH+16,labels[i]||'',{'text-anchor':'middle','font-size':'10'}));
+      });
+    } else if(type==='pie'){
+      const total=nums.reduce((a,b)=>a+b,0)||1;
+      const cx=W/2, cy=PAD.top+CH/2, r=Math.min(CW,CH)/2-8;
+      let angle=-Math.PI/2;
+      nums.forEach((v,i)=>{
+        const sweep=(v/total)*2*Math.PI;
+        const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+        const x2=cx+r*Math.cos(angle+sweep),y2=cy+r*Math.sin(angle+sweep);
+        root.appendChild(mk('path',{d:`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${sweep>Math.PI?1:0},1 ${x2},${y2} Z`,fill:COLORS[i%COLORS.length],stroke:'var(--surface, #fff)','stroke-width':'2'}));
+        const midA=angle+sweep/2;
+        root.appendChild(tx(cx+(r*0.65)*Math.cos(midA),cy+(r*0.65)*Math.sin(midA),`${Math.round((v/total)*100)}%`,{'text-anchor':'middle',style:'fill:#fff','font-weight':'700','font-size':'11'}));
+        angle+=sweep;
+      });
+      nums.forEach((_,i)=>{
+        const ly=PAD.top+CH+14+Math.floor(i/3)*18, lx=PAD.left+(i%3)*140;
+        root.appendChild(mk('rect',{x:lx,y:ly-8,width:10,height:10,fill:COLORS[i%COLORS.length],rx:'2'}));
+        root.appendChild(tx(lx+14,ly,labels[i]||'',{}));
+      });
     }
+    el.innerHTML=''; el.appendChild(root);
   });
 
   /* ── relic-flow ─────────────────────────────────────────────────── */
-  customElements.define('relic-flow', class extends HTMLElement {
-    connectedCallback() {
-      const src = this.textContent.trim();
-      this.innerHTML = '';
-      try { this.appendChild(renderFlow(src)); }
-      catch(e) { const p=document.createElement('pre'); p.textContent=src; this.appendChild(p); }
+  defineRelic('relic-flow', el => {
+    const src = el.textContent.trim();
+    el.innerHTML = '';
+    if (!src) return;
+    try {
+      const svg = renderFlow(src);
+      if (!svg) throw new Error('no nodes parsed');
+      el.appendChild(svg);
+    } catch(e) {
+      const p = document.createElement('pre');
+      p.textContent = src;
+      el.appendChild(p);
     }
   });
 
@@ -496,12 +592,10 @@ LLM AUTHORING RULES
       else if (label) nodes.get(id).label = label;
     };
 
-    const edgeRe = /([A-Za-z0-9_]+)(?:\[.*?\]|\{.*?\}|\(.*?\))?\s*(-{2,}>)\s*(?:\|([^|]*)\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/;
     for (const line of lines.slice(1)) {
-      const em = line.match(edgeRe);
-      if (em) {
+      if (/-{2,}>?/.test(line)) {
         const fromM = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
-        const toM   = line.match(/-{2,}>\s*(?:\|[^|]*\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
+        const toM   = line.match(/-{2,}>?\s*(?:\|[^|]*\|)?\s*([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?/);
         if (fromM && toM) {
           const [,fId,fBox,fDiam,fCirc] = fromM;
           const [,tId,tBox,tDiam,tCirc] = toM;
@@ -509,12 +603,14 @@ LLM AUTHORING RULES
           parseNode(tId, tBox??tDiam??tCirc, tDiam?'diamond':tCirc?'circle':'box');
           const lblM = line.match(/\|([^|]*)\|/);
           edges.push({ from:fId, to:tId, label:lblM?lblM[1]:'' });
+          continue;
         }
-      } else {
-        const nm = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?$/);
-        if (nm) parseNode(nm[1], nm[2]??nm[3]??nm[4], nm[3]?'diamond':nm[4]?'circle':'box');
       }
+      const nm = line.match(/^([A-Za-z0-9_]+)(?:\[([^\]]*)\]|\{([^}]*)\}|\(([^)]*)\))?$/);
+      if (nm) parseNode(nm[1], nm[2]??nm[3]??nm[4], nm[3]?'diamond':nm[4]?'circle':'box');
     }
+
+    if (!nodes.size) return null;
 
     const horiz = dir==='LR'||dir==='RL';
     const nodeW=120, nodeH=38, rankGap=horiz?150:90, nodeGap=horiz?72:136;
@@ -531,29 +627,29 @@ LLM AUTHORING RULES
       });
     });
 
-    const mk=(tag,attrs={})=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));return el;};
+    const mk=(tag,attrs={})=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;};
     const root=mk('svg',{width:'100%',viewBox:`0 0 ${svgW} ${svgH}`,style:'max-width:640px;display:block;overflow:visible'});
     const defs=mk('defs');
     const marker=mk('marker',{id:'farr',markerWidth:'8',markerHeight:'8',refX:'7',refY:'3',orient:'auto'});
-    const ap=mk('path'); ap.setAttribute('d','M0,0 L0,6 L8,3 z'); ap.setAttribute('fill','#94a3b8');
+    const ap=mk('path',{d:'M0,0 L0,6 L8,3 z',class:'rl-arrow'});
     marker.appendChild(ap); defs.appendChild(marker); root.appendChild(defs);
 
     edges.forEach(({from,to,label}) => {
       const fp=pos.get(from),tp=pos.get(to); if(!fp||!tp) return;
       const x1=fp.x+nodeW/2,y1=fp.y+nodeH/2,x2=tp.x+nodeW/2,y2=tp.y+nodeH/2;
-      root.appendChild(mk('line',{x1,y1,x2,y2,stroke:'#94a3b8','stroke-width':'1.5','marker-end':'url(#farr)'}));
-      if(label){const lt=mk('text');lt.setAttribute('x',(x1+x2)/2);lt.setAttribute('y',(y1+y2)/2-6);lt.setAttribute('text-anchor','middle');lt.setAttribute('font-size','10');lt.setAttribute('fill','#64748b');lt.setAttribute('font-family','system-ui');lt.textContent=label;root.appendChild(lt);}
+      root.appendChild(mk('line',{x1,y1,x2,y2,class:'rl-edge','stroke-width':'1.5','marker-end':'url(#farr)'}));
+      if(label){const lt=mk('text',{x:(x1+x2)/2,y:(y1+y2)/2-6,'text-anchor':'middle','font-size':'10','font-family':'system-ui',class:'rl-t-muted'});lt.textContent=label;root.appendChild(lt);}
     });
 
-    const NF={box:'#eff6ff',diamond:'#fef3c7',circle:'#f0fdf4'};
-    const NS={box:'#93c5fd',diamond:'#fbbf24',circle:'#86efac'};
     nodes.forEach(({label,shape},id)=>{
       const p=pos.get(id); if(!p) return;
       const {x,y}=p,cx=x+nodeW/2,cy=y+nodeH/2;
-      if(shape==='diamond'){const poly=mk('polygon');poly.setAttribute('points',`${cx},${y} ${x+nodeW-2},${cy} ${cx},${y+nodeH} ${x+2},${cy}`);poly.setAttribute('fill',NF.diamond);poly.setAttribute('stroke',NS.diamond);poly.setAttribute('stroke-width','1.5');root.appendChild(poly);}
-      else if(shape==='circle'){root.appendChild(mk('ellipse',{cx,cy,rx:nodeW/2,ry:nodeH/2,fill:NF.circle,stroke:NS.circle,'stroke-width':'1.5'}));}
-      else{root.appendChild(mk('rect',{x:x+2,y,width:nodeW-4,height:nodeH,rx:'6',fill:NF.box,stroke:NS.box,'stroke-width':'1.5'}));}
-      const t=mk('text');t.setAttribute('x',cx);t.setAttribute('y',cy+4);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','12');t.setAttribute('font-family','system-ui');t.setAttribute('fill','#1e293b');t.textContent=label.length>18?label.slice(0,16)+'…':label;root.appendChild(t);
+      if(shape==='diamond'){root.appendChild(mk('polygon',{points:`${cx},${y} ${x+nodeW-2},${cy} ${cx},${y+nodeH} ${x+2},${cy}`,class:'rl-node-diamond','stroke-width':'1.5'}));}
+      else if(shape==='circle'){root.appendChild(mk('ellipse',{cx,cy,rx:nodeW/2,ry:nodeH/2,class:'rl-node-circle','stroke-width':'1.5'}));}
+      else{root.appendChild(mk('rect',{x:x+2,y,width:nodeW-4,height:nodeH,rx:'6',class:'rl-node-box','stroke-width':'1.5'}));}
+      const t=mk('text',{x:cx,y:cy+4,'text-anchor':'middle','font-size':'12','font-family':'system-ui',class:'rl-t-strong'});
+      t.textContent=label.length>18?label.slice(0,16)+'…':label;
+      root.appendChild(t);
     });
     return root;
   }
@@ -576,8 +672,8 @@ LLM AUTHORING RULES
 </script>
 
 <header id="relic-header">
-  <span class="h-id">{{SPEC_ID}}</span>
-  <span class="h-title">{{TITLE}}</span>
+  <span class="h-id">base</span>
+  <span class="h-title">Relic Component Library</span>
   <nav class="h-nav">
     <a class="h-link" href="spec.md" title="Open spec.md">≡ spec</a>
     <a class="h-link" href="plan.md" title="Open plan.md">⊞ plan</a>
@@ -588,11 +684,15 @@ LLM AUTHORING RULES
 </header>
 
 <!-- Embedded markdown sources — populated by LLM during every HTML step.
-     The inline markdown reader reads from these before falling back to fetch(). -->
+     The inline markdown reader reads from these before falling back to fetch().
+     Escape literal "</script" sequences in the markdown as "<\/script". -->
+<!-- relic:sources:start -->
 <script type="text/plain" id="relic-src-spec"></script>
 <script type="text/plain" id="relic-src-plan"></script>
 <script type="text/plain" id="relic-src-tasks"></script>
+<!-- relic:sources:end -->
 
+<!-- relic:content:start -->
 <div id="relic-body">
 
 <section>
@@ -621,6 +721,7 @@ LLM AUTHORING RULES
 </section>
 
 </div>
+<!-- relic:content:end -->
 
 <script>
 /* ── Inline Markdown Reader ─────────────────────────────────────────────── */
@@ -628,6 +729,9 @@ LLM AUTHORING RULES
 
   /* Escape HTML special chars */
   function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* Undo the source-block escaping convention: "<\/script" → "</script" */
+  function unescMd(s) { return s.replace(/<\\\/(script)/gi, '</$1'); }
 
   /* Inline formatting: code > bold > italic > links (order matters) */
   function inl(s) {
@@ -686,11 +790,18 @@ LLM AUTHORING RULES
         continue;
       }
 
-      /* Unordered list */
+      /* Unordered list (incl. GFM task-list items) */
       if (/^[-*+] /.test(line)) {
         const items = [];
         while (i < lines.length && /^[-*+] /.test(lines[i])) {
-          items.push(`<li>${inl(lines[i].replace(/^[-*+] /, ''))}</li>`); i++;
+          const tm = lines[i].match(/^[-*+] \[( |x|X)\] (.*)$/);
+          if (tm) {
+            const checked = tm[1].toLowerCase() === 'x' ? ' checked' : '';
+            items.push(`<li class="rl-task"><input type="checkbox" disabled${checked}> ${inl(tm[2])}</li>`);
+          } else {
+            items.push(`<li>${inl(lines[i].replace(/^[-*+] /, ''))}</li>`);
+          }
+          i++;
         }
         out.push(`<ul>${items.join('')}</ul>`);
         continue;
@@ -723,7 +834,10 @@ LLM AUTHORING RULES
     return out.join('\n');
   }
 
-  /* Open a markdown file in the reader panel */
+  /* Open a markdown file in the reader panel.
+     The spec body is hidden (not serialised and restored) so rendered
+     components are never re-parsed — re-parsing rendered flows/callouts
+     would corrupt them. */
   async function openReader(filename, srcId, label) {
     const hTitle = document.querySelector('#relic-header .h-title');
     const hNav   = document.querySelector('#relic-header .h-nav');
@@ -731,14 +845,20 @@ LLM AUTHORING RULES
     const body   = document.getElementById('relic-body');
     if (!hTitle || !hNav || !hBack || !body) return;
 
+    let wrap = document.getElementById('relic-reader-wrap');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'relic-reader-wrap';
+      body.parentNode.insertBefore(wrap, body.nextSibling);
+    }
+
     const origTitle = hTitle.textContent;
-    const origHTML  = body.innerHTML;
 
     /* 1. Try embedded source block */
     let md = null;
     const srcEl = document.getElementById(srcId);
     if (srcEl && srcEl.textContent.trim()) {
-      md = srcEl.textContent.trim();
+      md = unescMd(srcEl.textContent.trim());
     } else {
       /* 2. Try fetch (works on HTTP or Firefox file://) */
       try {
@@ -748,27 +868,44 @@ LLM AUTHORING RULES
     }
 
     if (md) {
-      body.innerHTML = `<div id="relic-reader">${md2html(md)}</div>`;
+      wrap.innerHTML = `<div id="relic-reader">${md2html(md)}</div>`;
     } else {
-      body.innerHTML = `<div class="reader-msg">
-        <h2 style="margin-top:0">${filename}</h2>
+      const reader = document.createElement('div');
+      reader.id = 'relic-reader';
+      const msg = document.createElement('div');
+      msg.className = 'reader-msg';
+      msg.innerHTML = `
+        <h2 style="margin-top:0"></h2>
         <p>The markdown source is not embedded in this file yet and could not be fetched
         (common when opening via <code>file://</code> in Chrome due to CORS restrictions).</p>
-        <p>To fix: run any workflow command — the HTML step will embed the source automatically.</p>
-        <p><a href="${filename}" target="_blank">Open ${filename} in a new tab →</a></p>
-      </div>`;
+        <p>To fix: run any workflow command — the HTML step embeds the source automatically.
+        Run <code>relic html-sync</code> first if this file was generated by an older Relic version.</p>
+        <p><a target="_blank">Open in a new tab →</a></p>`;
+      msg.querySelector('h2').textContent = filename;
+      const link = msg.querySelector('a');
+      link.href = filename;
+      link.textContent = `Open ${filename} in a new tab →`;
+      reader.appendChild(msg);
+      wrap.innerHTML = '';
+      wrap.appendChild(reader);
     }
+
+    /* Switch view: hide spec body, show reader */
+    body.style.display = 'none';
+    wrap.style.display = '';
 
     /* Switch header: nav → back */
     hTitle.textContent = label;
     hNav.style.display = 'none';
     hBack.style.display = 'inline-flex';
     hBack.onclick = () => {
-      body.innerHTML = origHTML;
+      wrap.style.display = 'none';
+      body.style.display = '';
       hTitle.textContent = origTitle;
       hNav.style.display = '';
       hBack.style.display = 'none';
       hBack.onclick = null;
+      window.scrollTo(0, 0);
     };
 
     window.scrollTo(0, 0);
