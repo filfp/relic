@@ -22,13 +22,10 @@ describe("ENGINE_TEMPLATES", () => {
   });
 });
 
-describe("Claude engine", () => {
-  test("writes 12 command files to .claude/commands/", async () => {
+describe("Claude engine (plugin era — spec 011)", () => {
+  test("writes NO command files — the plugin carries the commands", async () => {
     await runAddEngine({ engine: "claude", projectDir: dir });
-    const commandsDir = join(dir, ".claude", "commands");
-    expect(existsSync(commandsDir)).toBe(true);
-    const files = (await import("fs")).readdirSync(commandsDir);
-    expect(files.length).toBe(12);
+    expect(existsSync(join(dir, ".claude", "commands"))).toBe(false);
   });
 
   test("writes .claude/settings.json with Bash(relic *) allow rule", async () => {
@@ -39,16 +36,32 @@ describe("Claude engine", () => {
     expect(settings.permissions.allow).toContain("Bash(relic *)");
   });
 
-  test("idempotency: calling twice keeps exactly one Bash(relic *) entry", async () => {
+  test("writes the relic marketplace + plugin enablement (per-project install)", async () => {
+    await runAddEngine({ engine: "claude", projectDir: dir });
+    const settings = JSON.parse(
+      readFileSync(join(dir, ".claude", "settings.json"), "utf8")
+    );
+    expect(settings.extraKnownMarketplaces.relic).toEqual({
+      source: { source: "github", repo: "filfp/relic" },
+    });
+    expect(settings.enabledPlugins["relic@relic"]).toBe(true);
+  });
+
+  test("preserves unrelated existing settings and stays idempotent", async () => {
+    const { mkdirSync, writeFileSync } = await import("fs");
+    mkdirSync(join(dir, ".claude"), { recursive: true });
+    writeFileSync(
+      join(dir, ".claude", "settings.json"),
+      JSON.stringify({ model: "opus", permissions: { allow: ["Bash(git *)"] } })
+    );
     await runAddEngine({ engine: "claude", projectDir: dir });
     await runAddEngine({ engine: "claude", projectDir: dir });
     const settings = JSON.parse(
       readFileSync(join(dir, ".claude", "settings.json"), "utf8")
     );
-    const count = settings.permissions.allow.filter(
-      (e: string) => e === "Bash(relic *)"
-    ).length;
-    expect(count).toBe(1);
+    expect(settings.model).toBe("opus");
+    expect(settings.permissions.allow).toEqual(["Bash(git *)", "Bash(relic *)"]);
+    expect(Object.keys(settings.enabledPlugins)).toEqual(["relic@relic"]);
   });
 });
 

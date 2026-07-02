@@ -1,6 +1,6 @@
-# /relic.analyse
+# /relic:analyse
 
-Use `/relic.analyse` to perform a non-destructive consistency check on your spec. This is a manual process to identify gaps, misalignments, and areas for improvement in your spec and its artifacts.
+Use `/relic:analyse` to perform a non-destructive consistency check on your spec. This is a manual process to identify gaps, misalignments, and areas for improvement in your spec and its artifacts.
 
 ---
 

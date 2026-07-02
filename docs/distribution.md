@@ -28,7 +28,7 @@ bun run build:npm
 
 Runs:
 1. `scripts/embed-templates.ts` — bakes all `.md`/`.sh` templates into `generated/templates.ts`
-2. `bun build --target node` — produces `packages/cli-node/dist/relic.js` (186 KB, pure JS)
+2. `bun build --target node` — produces `packages/cli-node/dist/relic:js` (186 KB, pure JS)
 3. `scripts/fix-shebang.mjs` — replaces the Bun shebang with `#!/usr/bin/env node`
 
 The shebang fix is necessary because `bun build --target node` always injects `#!/usr/bin/env bun`
@@ -39,9 +39,9 @@ bundle as a Bun package.
 
 ```
 packages/cli-node/
-  dist/relic.js       ← the Node.js bundle (built, gitignored)
+  dist/relic:js       ← the Node.js bundle (built, gitignored)
   README.md           ← npm-specific README
-  package.json        ← name: relic-cli, bin: ./dist/relic.js
+  package.json        ← name: relic-cli, bin: ./dist/relic:js
 ```
 
 `package.json` has no runtime `dependencies` — `@relic/core` and `commander` are inlined
@@ -81,7 +81,7 @@ Five platform targets:
 | `build:pypi:linux-arm64` | `bun-linux-arm64` | `packages/cli-python/relic/relic` |
 | `build:pypi:macos-x64` | `bun-darwin-x64` | `packages/cli-python/relic/relic` |
 | `build:pypi:macos-arm64` | `bun-darwin-arm64` | `packages/cli-python/relic/relic` |
-| `build:pypi:windows-x64` | `bun-windows-x64` | `packages/cli-python/relic/relic.exe` |
+| `build:pypi:windows-x64` | `bun-windows-x64` | `packages/cli-python/relic/relic:exe` |
 
 The binary is gitignored — it is placed here by the build step and included by hatchling
 via the `artifacts` field in `pyproject.toml`.
@@ -197,3 +197,19 @@ Three separate READMEs — each scoped to its audience:
 
 *Document created: April 11, 2026.*
 *Covers: npm + PyPI distribution, CI workflows, publish script, macOS signing.*
+
+
+## Claude Code plugin (added by spec 011)
+
+The relic repository doubles as a Claude Code plugin marketplace:
+
+- `.claude-plugin/marketplace.json` (repo root) lists the `relic` plugin with
+  `source: "./plugin"`.
+- `plugin/` contains the plugin: `.claude-plugin/plugin.json`, `commands/` (12 files
+  **generated** from `templates/prompts/` by `scripts/build-plugin.ts` — committed,
+  CI-checked for freshness, never hand-edited), the authored `commands/setup.md`, and
+  `skills/` (four ambient skills).
+- `scripts/publish.ts` bumps `plugin/.claude-plugin/plugin.json` `version` in lockstep
+  with the CLI — pinned versions are what trigger plugin updates for users.
+- Distribution is the git repo itself: `/plugin marketplace add filfp/relic` →
+  `/plugin install relic@relic`. No separate publish step.

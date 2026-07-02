@@ -283,7 +283,7 @@ RELIC_SPEC=001-auth relic fix
 
 Or from the AI agent slash command:
 ```
-/relic.fix TypeError: Cannot read property 'session' of undefined at auth.middleware.ts:42
+/relic:fix TypeError: Cannot read property 'session' of undefined at auth.middleware.ts:42
 ```
 
 ### Context assembled before the LLM sees the error
@@ -382,9 +382,9 @@ npm install -g relic-cli  # npm (same binary)
 ### Slash commands
 
 ```
-/relic.constitution  /relic.specify  /relic.clarify
-/relic.plan          /relic.analyse  /relic.tasks
-/relic.implement     /relic.fix
+/relic:constitution  /relic:specify  /relic:clarify
+/relic:plan          /relic:analyse  /relic:tasks
+/relic:implement     /relic:fix
 ```
 
 ---

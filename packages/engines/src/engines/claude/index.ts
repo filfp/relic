@@ -1,33 +1,54 @@
 import { join } from "path";
-import { ensureDir, writeText, fileExists, readJson, writeJson } from "@relic/utility";
-import { ENGINE_TEMPLATES } from "../../generated/engine-templates.ts";
+import { ensureDir, fileExists, readJson, writeJson } from "@relic/utility";
 
-const PROMPT_NAMES = ["specify", "clarify", "plan", "analyse", "tasks", "implement", "fix", "solve", "use", "scan", "constitution", "ask"];
+/**
+ * Claude engine — plugin era (spec 011).
+ *
+ * No command files are written into the project. The relic plugin carries the
+ * commands and ambient skills; this engine's job is the per-project
+ * installation: the committed .claude/settings.json gets the Bash(relic *)
+ * permission, the relic marketplace, and the plugin enablement — everyone
+ * opening the project gets the plugin activated.
+ */
+
+interface ClaudeSettings {
+  permissions?: { allow?: string[] };
+  extraKnownMarketplaces?: Record<string, { source: { source: string; repo: string } }>;
+  enabledPlugins?: Record<string, boolean>;
+  [key: string]: unknown;
+}
+
+export const RELIC_MARKETPLACE = { source: { source: "github", repo: "filfp/relic" } };
+export const RELIC_PLUGIN_KEY = "relic@relic";
 
 export function writeClaude(projectDir: string): void {
-  const commandsDir = join(projectDir, ".claude", "commands");
-  ensureDir(commandsDir);
-
-  for (const name of PROMPT_NAMES) {
-    const content = ENGINE_TEMPLATES[`prompts/${name}.md`];
-    if (!content) continue;
-    writeText(join(commandsDir, `relic.${name}.md`), content);
-  }
-
+  ensureDir(join(projectDir, ".claude"));
   const settingsPath = join(projectDir, ".claude", "settings.json");
-  type ClaudeSettings = { permissions?: { allow?: string[] } };
   const settings: ClaudeSettings = fileExists(settingsPath)
     ? readJson<ClaudeSettings>(settingsPath)
     : {};
+
   settings.permissions ??= {};
   settings.permissions.allow ??= [];
   if (!settings.permissions.allow.includes("Bash(relic *)")) {
     settings.permissions.allow.push("Bash(relic *)");
   }
+
+  settings.extraKnownMarketplaces ??= {};
+  settings.extraKnownMarketplaces["relic"] = RELIC_MARKETPLACE;
+
+  settings.enabledPlugins ??= {};
+  settings.enabledPlugins[RELIC_PLUGIN_KEY] = true;
+
   writeJson(settingsPath, settings);
 
-  console.log("Added Claude engine hooks:");
-  console.log(`  .claude/commands/relic.*.md  (${PROMPT_NAMES.length} slash commands)`);
+  console.log("Added Claude engine hooks (plugin era):");
   console.log("  .claude/settings.json  (Bash(relic *) allow rule)");
-  console.log("  Usage inside Claude Code: /relic.specify, /relic.plan, /relic.fix, ...");
+  console.log("  .claude/settings.json  (relic marketplace + plugin enabled for this project)");
+  console.log("");
+  console.log("Relic ships as a Claude Code plugin — commands and ambient skills load");
+  console.log("automatically when the project is opened. Manual install if needed:");
+  console.log("  /plugin marketplace add filfp/relic");
+  console.log("  /plugin install relic@relic");
+  console.log("Then run /relic:setup inside Claude Code to finish onboarding.");
 }

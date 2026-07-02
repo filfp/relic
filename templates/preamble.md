@@ -132,7 +132,7 @@ A shared artifact may be **read** by many specs but **owned** by exactly one.
 If you need to use an artifact already owned by another spec:
 1. Declare it in your `reads` array — do not duplicate it.
 2. Do not modify it — only the owning spec may do so.
-3. If it needs to change, flag it in Open Questions and coordinate via `/relic.clarify`
+3. If it needs to change, flag it in Open Questions and coordinate via `/relic:clarify`
    on the owning spec.
 
 ---
@@ -192,6 +192,37 @@ write it to `.relic/shared/assumptions/` before it influences any code.
 
 **The spec is the source of truth.** If code and spec disagree, the spec is right —
 unless a `clarify` has explicitly updated the spec to reflect the change.
+
+---
+
+## Ambient SDD
+
+Spec-driven development is the **default working practice** in a Relic project — not a
+separate flow the developer must invoke. Whatever agent or engine you are:
+
+- **Knowledge first.** Consult `relic search` before exploring the codebase; the brain
+  is the primary context source, the filesystem the fallback.
+- **New capability → new spec.** When the user's request is clearly a new capability,
+  opening the spec IS the first step of building it. Extensions of existing scope route
+  through `/relic:clarify` on the owning spec.
+- **Bug → fix pipeline.** Defect diagnosis goes through the owning spec's context
+  (`/relic:fix` → `/relic:solve`); the spec is the lens for every debugging session.
+- **Close the loop.** Work is done when the knowledge layer is true again: tasks checked,
+  drift recorded, owned artifacts synced, changelog written.
+
+**Autonomy ladder** — how much to do without asking, governed by the `sdd` field in
+`.relic/config.json` (exposed by `relic context`; `auto` when absent):
+
+| Class | Examples | `sdd: auto` (default) | `sdd: suggest` |
+|---|---|---|---|
+| Read | search, loading artifacts | silent | silent |
+| Maintain | task checkoffs, changelog, owned-artifact sync | automatic — part of the work | automatic |
+| Structural | new spec, new shared artifact, ownership/contract changes | **announce in one line, then do** | ask one line first |
+
+Announcements name the artifact before acting. Never act silently on a structural
+change; never turn an announcement into a blocking question when `sdd` is `auto`.
+Engines without skill auto-invocation (Copilot, Codex) apply this practice at
+suggest-level autonomy.
 
 ---
 

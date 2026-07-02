@@ -16,6 +16,7 @@ The JSON output of `relic context`. Used by AI agents to determine which spec is
   "spec_dir": "<absolute path>",
   "current_fix": "2026-04-13-null-session-crash",
   "mode": "md",
+  "sdd": "auto",
   "external": { "configured": false },
   "external_reads": [],
   "files": {
@@ -38,6 +39,14 @@ in `.relic/session.json`. `active_spec_source` reports `session` when the spec w
 from `session.json`. `mode` is `"md"` or `"html"` read from `.relic/config.json` (defaults
 to `"md"` if config is absent). AI commands use these fields to detect fix/spec context,
 switch behaviour accordingly, and determine whether the HTML step is active.
+
+### `sdd` (added by 011-claude-plugin)
+
+Additive field (changelog: 2026-07-02). `"auto"` or `"suggest"` — the ambient-SDD
+autonomy knob read from `config.json` (`"auto"` when absent). Ambient skills and
+workflow prompts consult it before structural actions (new specs, ownership or
+contract changes): `auto` = announce-then-do, `suggest` = ask first. See
+`ClaudePluginContract.md` (owned by 011).
 
 ### `external` / `external_reads` (added by 009-external-spec-integration)
 

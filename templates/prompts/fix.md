@@ -1,8 +1,8 @@
-# /relic.fix
+# /relic:fix
 
-`/relic.fix` is the **diagnosis stage** of the two-stage fix pipeline. It identifies the owning
+`/relic:fix` is the **diagnosis stage** of the two-stage fix pipeline. It identifies the owning
 spec, classifies the root cause, creates a fix document, and sets the active fix. It does **not**
-apply code changes. Run `/relic.solve` after reviewing the fix document.
+apply code changes. Run `/relic:solve` after reviewing the fix document.
 
 ---
 
@@ -32,7 +32,7 @@ against the file path or code area mentioned in the issue.
 
 **Resolution rules:**
 
-- **No match** → Stop. Report: _"This area is not owned by any spec. Run `/relic.specify` to
+- **No match** → Stop. Report: _"This area is not owned by any spec. Run `/relic:specify` to
   create a spec for this feature before filing a fix."_
 - **Single match** → Use that spec.
 - **Multiple matches** → Longest prefix wins. If two prefixes are equal length, list them and ask
@@ -131,7 +131,7 @@ and what changes. Identify all specs in reads[] that will be affected.>
 
 ## Changelog entry (draft)
 
-<Draft changelog entry for .relic/changelog.md. /relic.solve will write this verbatim.>
+<Draft changelog entry for .relic/changelog.md. /relic:solve will write this verbatim.>
 ```
 
 Do **not** create `<fix-id>.html` when mode is `"md"`.
@@ -164,6 +164,6 @@ Output:
 2. **Owning spec:** which spec owns the affected code area
 3. **Classification:** one of the four categories with a brief rationale
 4. **Fix document:** path to the created fix doc (`.relic/fixes/<fix-id>.html` or `.md`)
-5. **Next step:** _"Review the fix document, then run `/relic.solve` to apply the changes. If the
-   classification is `misspecification` or `misunderstanding`, run `/relic.clarify` after solving
+5. **Next step:** _"Review the fix document, then run `/relic:solve` to apply the changes. If the
+   classification is `misspecification` or `misunderstanding`, run `/relic:clarify` after solving
    to update the spec."_

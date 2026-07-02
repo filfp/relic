@@ -201,12 +201,14 @@ program
   .description("Upgrade relic-cli and refresh AI engine hook files")
   .option("--check", "Check for updates only, do not install", false)
   .option("--prompts", "Refresh engine hook files only, skip binary upgrade", false)
+  .option("--clean", "Remove superseded relic-managed command copies (.claude/commands/relic.*.md)", false)
   .option("--text", "Human-readable output instead of JSON", false)
-  .action(async (opts: { check: boolean; prompts: boolean; text: boolean }) => {
+  .action(async (opts: { check: boolean; prompts: boolean; clean: boolean; text: boolean }) => {
     const relicDir = findRelicDir(process.cwd()) ?? undefined;
     await runUpgrade({
       check: opts.check,
       promptsOnly: opts.prompts,
+      clean: opts.clean,
       text: opts.text,
       currentVersion: VERSION,
       relicDir,

@@ -3,7 +3,7 @@
 **Spec ID:** 011-claude-plugin
 **Created:** 2026-06-02 (as 011-skill-extraction)
 **Reframed:** 2026-07-02 — plugin delivery + ambient SDD supersede skill extraction
-**Status:** draft
+**Status:** implemented
 
 ---
 

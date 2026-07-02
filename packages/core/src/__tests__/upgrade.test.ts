@@ -270,3 +270,64 @@ describe("already up to date — consistent UpgradeResult shape", () => {
     expect(result).toHaveProperty("warnings");
   });
 });
+
+describe("upgrade --clean (spec 011)", () => {
+  const { mkdtempSync: mkTmp, mkdirSync: mkDir, writeFileSync: writeF, readdirSync: readDir, rmSync: rmR, existsSync: exS } = require("fs");
+  const { join: j } = require("path");
+  const { tmpdir: tmpD } = require("os");
+
+  test("removes only relic-managed command copies, reports them", async () => {
+    const projectDir = mkTmp(j(tmpD(), "relic-upgrade-clean-"));
+    try {
+      const relicDir = j(projectDir, ".relic");
+      mkDir(relicDir, { recursive: true });
+      writeF(j(relicDir, "config.json"), JSON.stringify({ engines: ["claude"], mode: "md" }));
+      const cmds = j(projectDir, ".claude", "commands");
+      mkDir(cmds, { recursive: true });
+      writeF(j(cmds, "relic.specify.md"), "old copy");
+      writeF(j(cmds, "relic.fix.md"), "old copy");
+      writeF(j(cmds, "my-own-command.md"), "user file");
+      writeF(j(cmds, "relic-unrelated.md"), "user file — dash, not dot");
+
+      const logs: string[] = [];
+      const orig = console.log;
+      console.log = (m: string) => logs.push(String(m));
+      try {
+        await runUpgrade({ check: false, promptsOnly: true, clean: true, text: false, currentVersion: "0.0.1", relicDir, _channel: "npm" });
+      } finally {
+        console.log = orig;
+      }
+      const result = JSON.parse(logs.join(""));
+      expect(result.cleaned.sort()).toEqual([".claude/commands/relic.fix.md", ".claude/commands/relic.specify.md"]);
+      expect(readDir(cmds).sort()).toEqual(["my-own-command.md", "relic-unrelated.md"]);
+    } finally {
+      rmR(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  test("without --clean, copies are left untouched", async () => {
+    const projectDir = mkTmp(j(tmpD(), "relic-upgrade-noclean-"));
+    try {
+      const relicDir = j(projectDir, ".relic");
+      mkDir(relicDir, { recursive: true });
+      writeF(j(relicDir, "config.json"), JSON.stringify({ engines: ["claude"], mode: "md" }));
+      const cmds = j(projectDir, ".claude", "commands");
+      mkDir(cmds, { recursive: true });
+      writeF(j(cmds, "relic.specify.md"), "old copy");
+
+      const logs: string[] = [];
+      const orig = console.log;
+      console.log = (m: string) => logs.push(String(m));
+      try {
+        await runUpgrade({ check: false, promptsOnly: true, text: false, currentVersion: "0.0.1", relicDir, _channel: "npm" });
+      } finally {
+        console.log = orig;
+      }
+      const result = JSON.parse(logs.join(""));
+      expect(result.cleaned).toEqual([]);
+      expect(exS(j(cmds, "relic.specify.md"))).toBe(true);
+    } finally {
+      rmR(projectDir, { recursive: true, force: true });
+    }
+  });
+});

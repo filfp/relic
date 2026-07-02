@@ -1,6 +1,6 @@
-# /relic.clarify
+# /relic:clarify
 
-Use `/relic.clarify` to update an existing spec with new information, decisions, or constraints. This is for when you have already created a spec and need to amend it based on new insights, open question resolutions, or changes in direction.
+Use `/relic:clarify` to update an existing spec with new information, decisions, or constraints. This is for when you have already created a spec and need to amend it based on new insights, open question resolutions, or changes in direction.
 
 ---
 
@@ -43,7 +43,7 @@ creation, or artifacts.json updates.
 If a cross-artifact mutation occurred, run:
 
 ```bash
-relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic.clarify","description":"<why it changed>"}'
+relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic:clarify","description":"<why it changed>"}'
 ```
 
 Do not open or edit `changelog.md` directly.

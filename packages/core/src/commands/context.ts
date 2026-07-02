@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { join } from "path";
-import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode } from "@relic/utility";
+import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode, readSdd } from "@relic/utility";
 import { inferSpecFromBranch, availableSpecs } from "@relic/utility";
 import {
   readExternalTypes,
@@ -41,6 +41,7 @@ interface ContextResult {
   spec_dir: string;
   current_fix: string | null;
   mode: "md" | "html";
+  sdd: "auto" | "suggest";
   external: ExternalContextField;
   external_reads: ExternalReadRef[];
   files: {
@@ -163,6 +164,7 @@ export async function runContext(options: ContextOptions): Promise<void> {
     spec_dir: specDir,
     current_fix: currentFix,
     mode: readMode(relicDir),
+    sdd: readSdd(relicDir),
     external,
     external_reads: externalReads,
     files: {
@@ -181,6 +183,7 @@ export async function runContext(options: ContextOptions): Promise<void> {
     console.log(`Spec:    ${specId}  (resolved from: ${source})`);
     console.log(`Fix:     ${currentFix ?? "(none)"}`);
     console.log(`Mode:    ${result.mode}`);
+    console.log(`SDD:     ${result.sdd}`);
     console.log(`Dir:     ${specDir}`);
     console.log(`Relic:   ${relicDir}`);
     console.log("");

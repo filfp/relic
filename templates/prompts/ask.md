@@ -1,6 +1,6 @@
-# /relic.ask
+# /relic:ask
 
-Use `/relic.ask` to query the shared Relic knowledge layer before committing to a workflow
+Use `/relic:ask` to query the shared Relic knowledge layer before committing to a workflow
 command. Ask anything: "which spec owns the auth domain?", "what assumptions exist about
 our payment provider?", "has anyone defined a contract for the order event?"
 
@@ -38,6 +38,6 @@ If the knowledge base does not contain enough information to answer, say so expl
 - Do NOT run `relic write` — not for registering, not for any reason
 - Do NOT run `relic scaffold`
 - Do NOT create, edit, or delete any file
-- Do NOT suggest the user run `/relic.specify`, `/relic.clarify`, `/relic.plan`, or any other
+- Do NOT suggest the user run `/relic:specify`, `/relic:clarify`, `/relic:plan`, or any other
   workflow command — answer the question and stop
 - Do NOT invent information not present in the knowledge base — cite or admit uncertainty

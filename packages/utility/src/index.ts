@@ -23,6 +23,7 @@ export { readSession, writeSession } from "./session.ts";
 
 export type {
   ProjectConfig,
+  SddMode,
   ExternalConfig,
   ExternalType,
   ExternalEntry,
@@ -35,6 +36,7 @@ export {
   writeEngines,
   readMode,
   writeMode,
+  readSdd,
   EXTERNAL_TYPES,
   ExternalConfigError,
   isExternalType,

@@ -1,8 +1,8 @@
-# /relic.solve
+# /relic:solve
 
-`/relic.solve` is the **application stage** of the two-stage fix pipeline. It reads the active fix
-document (created by `/relic.fix`), applies the proposed code changes, updates the knowledge layer
-if needed, and closes the fix. Run `/relic.fix <issue>` first if no fix is active.
+`/relic:solve` is the **application stage** of the two-stage fix pipeline. It reads the active fix
+document (created by `/relic:fix`), applies the proposed code changes, updates the knowledge layer
+if needed, and closes the fix. Run `/relic:fix <issue>` first if no fix is active.
 
 ---
 
@@ -16,7 +16,7 @@ if needed, and closes the fix. Run `/relic.fix <issue>` first if no fix is activ
 
 Also read the `current_fix` field from the same `relic context` output:
 
-- **`current_fix` is null** → Stop. Report: _"No active fix. Run `/relic.fix <issue>` first to diagnose the issue and create a fix document."_
+- **`current_fix` is null** → Stop. Report: _"No active fix. Run `/relic:fix <issue>` first to diagnose the issue and create a fix document."_
 - **`current_fix` is set** → Continue. The fix document is at `.relic/fixes/<current_fix>.html` (mode `html`) or `.md` (mode `md`).
 
 ---
@@ -64,7 +64,7 @@ the fix document's **Proposed changes** section before proceeding.
 - For each updated artifact, scan all `specs/*/artifacts.json` for `reads` entries that reference
   it. In each affected spec's `spec.md`, append to Open Questions:
   `[!] Shared artifact [name] updated by fix <fix-id>. Review required.`
-- Tell the user which specs need a follow-up `/relic.clarify`.
+- Tell the user which specs need a follow-up `/relic:clarify`.
 
 ---
 
@@ -76,7 +76,7 @@ cross-artifact mutation occurred). Do not write one when the fix touched only so
 If a cross-artifact mutation occurred, run:
 
 ```bash
-relic write --changelog --payload '{"name":"<owning-spec> / <fix-id>: <what was changed>","slash_command":"/relic.solve","description":"<brief description of what was fixed and what artifact was amended>"}'
+relic write --changelog --payload '{"name":"<owning-spec> / <fix-id>: <what was changed>","slash_command":"/relic:solve","description":"<brief description of what was fixed and what artifact was amended>"}'
 ```
 
 Use the **Changelog draft** from the fix document as the basis for the `description` field.
@@ -113,4 +113,4 @@ Output:
 1. **Files changed** — list of code files modified
 2. **Knowledge layer updates** — spec/plan/shared artifact changes made (or "none")
 3. **Changelog entry** — the entry written to `changelog.md` (or "none — no cross-artifact mutation")
-4. **Follow-up required** — list of specs needing `/relic.clarify` (or "none")
+4. **Follow-up required** — list of specs needing `/relic:clarify` (or "none")

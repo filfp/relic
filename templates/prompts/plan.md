@@ -1,6 +1,6 @@
-# /relic.plan
+# /relic:plan
 
-Use `/relic.plan` to create an implementation plan for your spec. This is a manual process to design the architecture, break down the work into phases, and identify all file and artifact changes needed to implement the spec.
+Use `/relic:plan` to create an implementation plan for your spec. This is a manual process to design the architecture, break down the work into phases, and identify all file and artifact changes needed to implement the spec.
 
 ---
 
@@ -45,7 +45,7 @@ when only new artifacts are being defined.
 If a cross-artifact mutation occurred, run:
 
 ```bash
-relic write --changelog --payload '{"name":"<spec-id>: Plan updated — <what changed>","slash_command":"/relic.plan","description":"<what changed and why>"}'
+relic write --changelog --payload '{"name":"<spec-id>: Plan updated — <what changed>","slash_command":"/relic:plan","description":"<what changed and why>"}'
 ```
 
 Do not open or edit `changelog.md` directly.

@@ -1,6 +1,6 @@
-# /relic.tasks
+# /relic:tasks
 
-Use `/relic.tasks` to create a task list for the implementation phase of your spec. This is where you break down the work into concrete, actionable items that can be checked off as you go.
+Use `/relic:tasks` to create a task list for the implementation phase of your spec. This is where you break down the work into concrete, actionable items that can be checked off as you go.
 
 ---
 
@@ -43,4 +43,4 @@ Fill in `specs/{{SPEC_ID}}/tasks.md`:
 ## What NOT to do
 
 - Do not write code.
-- Do not modify `plan.md` — if the plan is wrong, run `/relic.plan` again.
+- Do not modify `plan.md` — if the plan is wrong, run `/relic:plan` again.

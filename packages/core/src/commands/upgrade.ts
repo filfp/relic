@@ -1,5 +1,6 @@
 import { spawnSync } from "child_process";
 import { join } from "path";
+import { readdirSync, unlinkSync } from "fs";
 import {
   readEngines,
   readText,
@@ -20,6 +21,8 @@ const channel = typeof INSTALL_CHANNEL !== "undefined" ? INSTALL_CHANNEL : "dev"
 export interface UpgradeOptions {
   check: boolean;
   promptsOnly: boolean;
+  /** Remove superseded relic-managed command copies (.claude/commands/relic.*.md). */
+  clean?: boolean;
   text: boolean;
   currentVersion: string;
   relicDir?: string;
@@ -41,6 +44,7 @@ export interface UpgradeResult {
   preamble_updated: boolean;
   base_html_updated: boolean;
   html_synced: string[];
+  cleaned: string[];
   toon_migrated: boolean;
   toon_warnings: string[];
   warnings: string[];
@@ -160,6 +164,31 @@ function upgradeBinary(targetVersion: string, resolvedChannel: string): void {
   }
 }
 
+/**
+ * Remove superseded relic-managed Claude command copies. The plugin carries
+ * the commands now (spec 011); only files matching the relic-managed pattern
+ * are ever touched — user files are never deleted.
+ */
+function cleanSupersededClaudeCommands(projectDir: string, result: UpgradeResult): void {
+  const commandsDir = join(projectDir, ".claude", "commands");
+  let entries: string[];
+  try {
+    entries = readdirSync(commandsDir);
+  } catch {
+    return; // no commands dir — nothing to clean
+  }
+  for (const entry of entries) {
+    if (/^relic\.[a-z-]+\.md$/.test(entry)) {
+      try {
+        unlinkSync(join(commandsDir, entry));
+        result.cleaned.push(`.claude/commands/${entry}`);
+      } catch (err) {
+        result.warnings.push(`Warning: failed to remove superseded ${entry}: ${String(err)}`);
+      }
+    }
+  }
+}
+
 async function refreshHooks(
   relicDir: string,
   projectDir: string,
@@ -214,21 +243,6 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
   const resolvedChannel = options._channel ?? channel;
   const relicDir = options.relicDir ?? findRelicDir(process.cwd()) ?? undefined;
 
-  // FR-4: dev channel warning
-  if (resolvedChannel === "dev") {
-    const output = {
-      warning: "INSTALL_CHANNEL is not set (dev build). Cannot determine upgrade channel.",
-      instructions: "Upgrade manually: npm install -g relic-cli  OR  uv tool upgrade relic-cli",
-    };
-    if (options.text) {
-      console.log(output.warning);
-      console.log(output.instructions);
-    } else {
-      console.log(JSON.stringify(output, null, 2));
-    }
-    return;
-  }
-
   // --prompts: refresh hooks only, no version check or binary upgrade
   if (options.promptsOnly) {
     if (!relicDir) {
@@ -243,11 +257,13 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       preamble_updated: false,
       base_html_updated: false,
       html_synced: [],
+      cleaned: [],
       toon_migrated: false,
       toon_warnings: [],
       warnings: [],
     };
     await refreshHooks(relicDir, projectDir, result);
+    if (options.clean) cleanSupersededClaudeCommands(projectDir, result);
     if (options.text) {
       if (result.warnings.length > 0) result.warnings.forEach((w) => console.log(w));
       if (result.hooks_refreshed.length > 0)
@@ -256,8 +272,25 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       if (result.base_html_updated) console.log("base.html updated.");
       if (result.html_synced.length > 0)
         console.log(`Spec HTML re-based: ${result.html_synced.join(", ")}`);
+      if (result.cleaned.length > 0)
+        console.log(`Superseded command copies removed: ${result.cleaned.length}`);
     } else {
       console.log(JSON.stringify(result, null, 2));
+    }
+    return;
+  }
+
+  // FR-4: dev channel warning
+  if (resolvedChannel === "dev") {
+    const output = {
+      warning: "INSTALL_CHANNEL is not set (dev build). Cannot determine upgrade channel.",
+      instructions: "Upgrade manually: npm install -g relic-cli  OR  uv tool upgrade relic-cli",
+    };
+    if (options.text) {
+      console.log(output.warning);
+      console.log(output.instructions);
+    } else {
+      console.log(JSON.stringify(output, null, 2));
     }
     return;
   }
@@ -286,6 +319,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       preamble_updated: false,
       base_html_updated: false,
       html_synced: [],
+      cleaned: [],
       toon_migrated: false,
       toon_warnings: [],
       warnings: [],
@@ -305,6 +339,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
     preamble_updated: false,
     base_html_updated: false,
     html_synced: [],
+    cleaned: [],
     toon_migrated: false,
     toon_warnings: [],
     warnings: [],
@@ -323,7 +358,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
     // still completes.
     const promptsResult = spawnSync(
       "relic",
-      ["upgrade", "--prompts"],
+      ["upgrade", "--prompts", ...(options.clean ? ["--clean"] : [])],
       { stdio: "pipe", cwd: projectDir }
     );
 
@@ -334,6 +369,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
         result.preamble_updated = parsed.preamble_updated;
         result.base_html_updated = parsed.base_html_updated ?? false;
         result.html_synced = parsed.html_synced ?? [];
+        result.cleaned = parsed.cleaned ?? [];
         result.warnings.push(...parsed.warnings);
       } catch {
         result.warnings.push("Hooks refreshed by new binary (output not parseable).");
@@ -341,6 +377,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
     } else {
       // Spawn failed — fall back to in-process refresh.
       await refreshHooks(relicDir, projectDir, result);
+      if (options.clean) cleanSupersededClaudeCommands(projectDir, result);
       result.warnings.push(
         "Hooks refreshed in-process (templates may be from the previous version). " +
           "Run `relic upgrade --prompts` once more to ensure latest templates."

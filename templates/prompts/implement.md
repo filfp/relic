@@ -1,6 +1,6 @@
-# /relic.implement
+# /relic:implement
 
-Use `/relic.implement` to execute the implementation phase of your spec. This is where you work through the tasks defined in `tasks.md`, update shared artifacts as needed, and track progress.
+Use `/relic:implement` to execute the implementation phase of your spec. This is where you work through the tasks defined in `tasks.md`, update shared artifacts as needed, and track progress.
 
 ---
 
@@ -23,7 +23,7 @@ Work through `tasks.md` in order.
 ## Constraints
 
 - Implement exactly what the plan describes. Do not add features not in scope.
-- If you discover the plan is wrong or incomplete, stop and run `/relic.plan` to update it first.
+- If you discover the plan is wrong or incomplete, stop and run `/relic:plan` to update it first.
 - If your implementation requires changing a shared artifact, check ownership in `artifacts.json`
   before modifying it. If you do not own it, flag it and do not modify.
 - Write a changelog entry only if implementation requires amending a shared artifact owned by
@@ -40,7 +40,7 @@ Check it off in `tasks.md`:
 ## When a shared artifact is amended during implementation
 
 ```bash
-relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic.implement","description":"<why the artifact was amended during implementation>"}'
+relic write --changelog --payload '{"name":"<spec-id>: <what changed>","slash_command":"/relic:implement","description":"<why the artifact was amended during implementation>"}'
 ```
 
 Do not open or edit `changelog.md` directly.

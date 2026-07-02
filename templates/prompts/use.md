@@ -1,4 +1,4 @@
-# /relic.use
+# /relic:use
 
 Switch the active spec or fix for this session. Works from any AI session — including remote
 sessions (Claude.ai, Copilot Chat) where the user has no terminal access.
@@ -44,7 +44,7 @@ After activation, report:
 - **Active fix:** `<fix-id>`
 - **Owning spec:** read from the fix document (`**Owning spec:**` field)
 - **Status:** read from the fix document (`**Status:**` field)
-- **Next step:** _"Run `/relic.solve` to apply the proposed changes."_
+- **Next step:** _"Run `/relic:solve` to apply the proposed changes."_
 
 ---
 
@@ -77,10 +77,10 @@ After switching, report:
 - **Title:** derived from the spec ID
 - **Files ready:** which of `spec.md`, `plan.md`, `tasks.md` exist (from `files_created` — empty means all existed)
 - **Suggested next step:** based on what exists
-  - If `spec.md` is empty or new → `/relic.specify`
-  - If `plan.md` is empty or new → `/relic.plan`
-  - If `tasks.md` is empty or new → `/relic.tasks`
-  - If all exist → `/relic.implement` or `/relic.fix`
+  - If `spec.md` is empty or new → `/relic:specify`
+  - If `plan.md` is empty or new → `/relic:plan`
+  - If `tasks.md` is empty or new → `/relic:tasks`
+  - If all exist → `/relic:implement` or `/relic:fix`
 
 ## If spec ID not found
 

@@ -234,3 +234,23 @@ describe("external config (spec 009)", () => {
     expect([...EXTERNAL_TYPES]).toEqual(["fr", "nfr", "br", "adr", "us", "epic"]);
   });
 });
+
+describe("sdd knob (spec 011)", () => {
+  const { readSdd } = require("../project-config.ts");
+
+  test("defaults to auto when absent or invalid", () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "md" }));
+    expect(readSdd(relicDir)).toBe("auto");
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "md", sdd: "yolo" }));
+    expect(readSdd(relicDir)).toBe("auto");
+  });
+
+  test("reads suggest and survives round-trips", () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "html", sdd: "suggest" }));
+    expect(readSdd(relicDir)).toBe("suggest");
+    // round-trip through an unrelated write preserves sdd
+    writeMode(relicDir, "md");
+    expect(readSdd(relicDir)).toBe("suggest");
+    expect(readProjectConfig(relicDir).mode).toBe("md");
+  });
+});

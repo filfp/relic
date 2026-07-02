@@ -40,8 +40,8 @@ cd my-project
 relic init
 
 # Open your AI agent (Claude Code, Copilot, Codex) and run:
-# Existing codebase:  /relic.scan  then  /relic.constitution
-# New project:        /relic.constitution  then  /relic.specify
+# Existing codebase:  /relic:scan  then  /relic:constitution
+# New project:        /relic:constitution  then  /relic:specify
 ```
 
 ---
@@ -92,7 +92,7 @@ relic init
 | `relic validate [--text]` | Check artifact integrity and ownership conflicts |
 | `relic search <keywords...>` | Search shared artifact manifests by keyword tags |
 | `relic deep-search` | Return all manifest entries consolidated (tldr-first triage) |
-| `relic upgrade [--check] [--prompts]` | Upgrade relic-cli and refresh engine hook files |
+| `relic upgrade [--check] [--prompts] [--clean]` | Upgrade relic-cli and refresh engine hook files (`--clean` removes pre-plugin command copies) |
 
 ### Workflow commands (direct model invocation)
 
@@ -120,23 +120,43 @@ Env var overrides: `RELIC_MODEL_BASE_URL`, `RELIC_MODEL_MODEL`, `RELIC_MODEL_API
 
 ---
 
+## Claude Code plugin
+
+For Claude Code, Relic ships as a **plugin** — commands and ambient skills in one
+versioned unit. `relic init --engine claude` writes the per-project installation into
+`.claude/settings.json` (marketplace + plugin enablement), so everyone opening the
+project gets it automatically. Manual install:
+
+```
+/plugin marketplace add filfp/relic
+/plugin install relic@relic
+```
+
+Then `/relic:setup` finishes onboarding (installs the CLI if missing, runs `relic init`).
+The plugin's ambient skills make SDD part of everyday work: Claude searches the brain
+before exploring code, opens a spec when you ask for a new capability, routes bugs
+through the fix pipeline, and keeps tasks/changelog true — governed by the `sdd` knob in
+`config.json` (`auto` announce-then-do, default; `suggest` ask-first).
+
 ## AI slash commands
 
-The workflow lives inside your AI agent. After `relic init`, these slash commands are written to your agent's hooks directory:
+The workflow lives inside your AI agent. In Claude Code the commands come from the
+plugin; for Copilot/Codex they are written to the engine's hooks directory by
+`relic init`:
 
 | Slash command | Purpose |
 |---|---|
-| `/relic.constitution` | Extract project-specific coding principles from the codebase |
-| `/relic.scan` | Bootstrap shared artifacts (domains, contracts, rules, assumptions) |
-| `/relic.specify` | Create a new spec from a PRD or user story |
-| `/relic.clarify` | Append details or change contracts (checks intersections) |
-| `/relic.plan` | Create an implementation plan (principal intersection point) |
-| `/relic.analyse` | Non-destructive consistency check |
-| `/relic.tasks` | Generate tasks from the current plan |
-| `/relic.implement` | Build the plan |
-| `/relic.fix` | Cross-spec ownership check + diagnosis → writes fix document to `.relic/fixes/` |
-| `/relic.solve` | Apply the active fix document, update knowledge layer, close the fix |
-| `/relic.use` | Switch the active spec or fix from inside the AI session |
+| `/relic:constitution` | Extract project-specific coding principles from the codebase |
+| `/relic:scan` | Bootstrap shared artifacts (domains, contracts, rules, assumptions) |
+| `/relic:specify` | Create a new spec from a PRD or user story |
+| `/relic:clarify` | Append details or change contracts (checks intersections) |
+| `/relic:plan` | Create an implementation plan (principal intersection point) |
+| `/relic:analyse` | Non-destructive consistency check |
+| `/relic:tasks` | Generate tasks from the current plan |
+| `/relic:implement` | Build the plan |
+| `/relic:fix` | Cross-spec ownership check + diagnosis → writes fix document to `.relic/fixes/` |
+| `/relic:solve` | Apply the active fix document, update knowledge layer, close the fix |
+| `/relic:use` | Switch the active spec or fix from inside the AI session |
 
 ---
 
@@ -151,7 +171,7 @@ relic add-engine copilot                # add to an existing project
 
 | Engine | Hook location | Format |
 |---|---|---|
-| Claude Code | `.claude/commands/relic.*.md` | 11 slash commands |
+| Claude Code | plugin (`relic@relic`) + `.claude/settings.json` | 13 commands + 4 ambient skills |
 | GitHub Copilot | `.github/prompts/relic.*.prompt.md` | 11 slash commands (with YAML frontmatter) |
 | Codex | `.codex/commands/relic.*.md` | 11 slash commands |
 
@@ -161,17 +181,17 @@ relic add-engine copilot                # add to an existing project
 
 **Bootstrap** (existing codebase):
 ```
-relic init → /relic.scan → /relic.constitution → /relic.specify
+relic init → /relic:scan → /relic:constitution → /relic:specify
 ```
 
 **Forward** (new feature):
 ```
-/relic.specify → /relic.clarify → /relic.plan → /relic.tasks → /relic.implement
+/relic:specify → /relic:clarify → /relic:plan → /relic:tasks → /relic:implement
 ```
 
 **Feedback** (bug fix, keeps the spec alive):
 ```
-/relic.fix → [review fix doc] → /relic.solve → [contract changed?] → /relic.clarify
+/relic:fix → [review fix doc] → /relic:solve → [contract changed?] → /relic:clarify
 ```
 
 ---

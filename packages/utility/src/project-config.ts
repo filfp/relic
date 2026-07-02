@@ -9,9 +9,12 @@ export type ExternalType = (typeof EXTERNAL_TYPES)[number];
  *  to the .relic/ parent), resolved at runtime — never normalised on write. */
 export type ExternalConfig = Partial<Record<ExternalType, string>>;
 
+export type SddMode = "auto" | "suggest";
+
 export interface ProjectConfig {
   engines: string[];
   mode: "md" | "html";
+  sdd?: SddMode;
   external?: ExternalConfig;
 }
 
@@ -41,7 +44,10 @@ export function readProjectConfig(relicDir: string): ProjectConfig {
           : [];
         const mode = obj["mode"] === "html" ? "html" : "md";
         const external = parseExternalConfig(obj["external"]);
-        return external ? { engines, mode, external } : { engines, mode };
+        const config: ProjectConfig = { engines, mode };
+        if (obj["sdd"] === "suggest") config.sdd = "suggest";
+        if (external) config.external = external;
+        return config;
       }
     } catch {
       // fall through to default
@@ -93,6 +99,11 @@ export function readMode(relicDir: string): "md" | "html" {
 export function writeMode(relicDir: string, mode: "md" | "html"): void {
   const config = readProjectConfig(relicDir);
   writeProjectConfig(relicDir, { ...config, mode });
+}
+
+/** Ambient-SDD autonomy knob (spec 011). "auto" unless config.json says "suggest". */
+export function readSdd(relicDir: string): SddMode {
+  return readProjectConfig(relicDir).sdd ?? "auto";
 }
 
 /* ── External spec integration (spec 009) ──────────────────────────────── */

@@ -98,28 +98,30 @@ Planned, task-generated, and implemented 2026-07-02 via the relic workflow itsel
 
 ---
 
-## Phase 4 — Spec 011: Claude Plugin — Ambient SDD (reframed 2026-07-02)
+## Phase 4 — Spec 011: Claude Plugin — Ambient SDD ✅ (this branch)
 
-Reframed with the project owner from "skill extraction" to a two-shift redesign
-(spec + plan rewritten and committed; **tasks deferred pending owner review**):
+Reframed with the owner (plugin delivery + ambient SDD, D-1..D-9), then implemented
+2026-07-02 — 26/26 tasks:
 
-- **Delivery:** a first-party Claude Code **plugin** (`plugin/` in this repo, repo doubles
-  as its own marketplace). Commands are generated from `templates/prompts/`; four ambient
-  skills are authored plugin-native. The plugin replaces per-project
-  `.claude/commands/relic.*.md` copies entirely (D-2) — `add-engine claude` becomes
-  settings + plugin recommendation, `relic upgrade --clean` removes superseded copies.
-- **Behaviour:** ambient SDD — Claude treats `.relic/` as its own documentation practice.
-  Skills: `relic-knowledge-first`, `relic-spec-detector`, `relic-fix-pipeline`,
-  `relic-doc-keeper` (D-4). Graduated autonomy ladder: read silent / maintain automatic /
-  structural **auto-with-announce**, downgradeable via the `config.json` `sdd` knob (D-1).
-  Hooks deferred (D-3).
-- Knowledge layer: `ClaudePluginContract.md` created (schema fields to be verified against
-  live docs in implementation Phase 1); `SkillExtractionContract.md` superseded as a
-  historical pointer. Cross-spec `sdd` field notices recorded for `ContextResultContract`
-  (003) and `ProjectConfigDomain` (008).
-
-Next: owner reviews spec+plan → `/relic.tasks` → implement (6 plan phases, starting with
-live-docs verification of plugin/marketplace schemas).
+- **Plugin:** `plugin/` with 12 commands generated from `templates/prompts/`
+  (`scripts/build-plugin.ts`, committed output, CI freshness check) + authored
+  `/relic:setup`; repo-root `.claude-plugin/marketplace.json` — the repo is its own
+  marketplace; `claude plugin validate --strict` green; publish script bumps the plugin
+  version in lockstep.
+- **Ambient skills:** `relic-knowledge-first`, `relic-spec-detector`,
+  `relic-fix-pipeline`, `relic-doc-keeper` — byte-identical shared guard/ladder blocks
+  (build-asserted), consent-gated CLI bootstrap (once per session, npm/uv), HTML files
+  untouched (D-9).
+- **Autonomy:** `config.json` `sdd` knob (`auto` announce-then-do default | `suggest`),
+  surfaced in `relic context`; ladder documented in the preamble's new Ambient SDD
+  section (reaches Copilot/Codex at suggest level).
+- **Engine transition:** `writeClaude` now writes the per-project installation
+  (permission + `extraKnownMarketplaces` + `enabledPlugins`) — no command copies;
+  `relic upgrade --clean` removes superseded `relic.*.md` files (pattern-matched only);
+  `--prompts` no longer blocked on dev channel. `/relic.x` → `/relic:x` renamed across
+  templates/README/docs (123 occurrences).
+- Cross-spec amendments with provenance: `ContextResultContract` (003) and
+  `ProjectConfigDomain` (008) gained the `sdd` field.
 
 ## Phase 5 — Hardening, docs, release hygiene
 
