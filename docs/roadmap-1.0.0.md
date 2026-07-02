@@ -98,26 +98,28 @@ Planned, task-generated, and implemented 2026-07-02 via the relic workflow itsel
 
 ---
 
-## Phase 4 — Implement spec 011: Skill Extraction
+## Phase 4 — Spec 011: Claude Plugin — Ambient SDD (reframed 2026-07-02)
 
-Replaces the old "modernise AI-engine integrations" phase — main scoped this properly
-as a spec. Key decisions already recorded there:
+Reframed with the project owner from "skill extraction" to a two-shift redesign
+(spec + plan rewritten and committed; **tasks deferred pending owner review**):
 
-- Skills live in `.claude/skills/<name>/SKILL.md` directories (current Claude Code best
-  practice), supporting multi-file bundles (scripts/helpers alongside SKILL.md).
-- `embed-engine-templates.ts` walks `templates/skills/` recursively into a `SKILLS`
-  export; written by both `relic init` and `relic add-engine`, routed through the
-  claude engine writer.
-- Proactive auto-invocation via the `description` frontmatter field.
-- `<!-- use: relic.<skill> -->` directive replaces prose skill references in prompts.
-- Ownership boundary: relic writes only relic-owned files in `.claude/` — never
-  user-maintained files (`CLAUDE.md`, `agents.md`).
+- **Delivery:** a first-party Claude Code **plugin** (`plugin/` in this repo, repo doubles
+  as its own marketplace). Commands are generated from `templates/prompts/`; four ambient
+  skills are authored plugin-native. The plugin replaces per-project
+  `.claude/commands/relic.*.md` copies entirely (D-2) — `add-engine claude` becomes
+  settings + plugin recommendation, `relic upgrade --clean` removes superseded copies.
+- **Behaviour:** ambient SDD — Claude treats `.relic/` as its own documentation practice.
+  Skills: `relic-knowledge-first`, `relic-spec-detector`, `relic-fix-pipeline`,
+  `relic-doc-keeper` (D-4). Graduated autonomy ladder: read silent / maintain automatic /
+  structural **auto-with-announce**, downgradeable via the `config.json` `sdd` knob (D-1).
+  Hooks deferred (D-3).
+- Knowledge layer: `ClaudePluginContract.md` created (schema fields to be verified against
+  live docs in implementation Phase 1); `SkillExtractionContract.md` superseded as a
+  historical pointer. Cross-spec `sdd` field notices recorded for `ContextResultContract`
+  (003) and `ProjectConfigDomain` (008).
 
-Steps: `/relic.tasks` → implement → verify skills load in Claude Code. Fold in the old
-phase-4 secondary items: verify Codex (`.codex/commands/` + `config.toml`) and Copilot
-(`.github/prompts/*.prompt.md`) layouts against current docs.
-
----
+Next: owner reviews spec+plan → `/relic.tasks` → implement (6 plan phases, starting with
+live-docs verification of plugin/marketplace schemas).
 
 ## Phase 5 — Hardening, docs, release hygiene
 

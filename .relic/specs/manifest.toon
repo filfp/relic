@@ -7,5 +7,6 @@ Toon Manifest Format | 005-toon-manifest-format/ |  |
 Structured Write Command | 006-structured-write-command/ |  | 
 Ask Knowledge Query | 007-ask-knowledge-query/ |  | 
 HTML Spec Mode | 008-html-spec-mode/ |  | 
-External Spec Integration | 009-external-spec-integration/ | external enterprise config adr fr nfr integration specs-dir | Extends config.json with an external specsDir pointer so Relic AI workflow commands automatically read company-owned FRs, NFRs, User Stories, and ADRs from a separate spec repository.
+External Spec Integration | 009-external-spec-integration/ | external enterprise config adr fr nfr submodule external-reads | config.external per-type path map (fr/nfr/br/adr/us/epic) wiring a git-submodule spec repo into every workflow command: relic external init/set/link/create/list, context and validate extensions, external-reads snippet.
 Prompt Snippet Injection | 010-prompt-snippet-injection/ | snippet include template build embed prompts injection maintainability | Build-time include directive system for reusable Markdown snippets in prompt templates, eliminating copy-paste repetition across commands.
+Claude Plugin | 011-claude-plugin/ | plugin claude skills ambient proactive marketplace sdd autonomy | First-party Claude Code plugin (commands + ambient skills) that replaces per-project file copies and makes SDD Claude's default working practice — auto-and-announce documentation upkeep, spec creation, and fix routing.
