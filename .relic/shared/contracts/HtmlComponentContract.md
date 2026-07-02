@@ -6,6 +6,16 @@
 
 ## Description
 
+> **SUPERSEDED (planned, 2026-07-02).** Spec 012-spec-viewer replaces the
+> self-contained-document model this contract describes — chrome-in-every-file,
+> LLM-maintained pages, `relic html-sync` re-basing — with server-rendered views over a
+> local read-only server and minimal `<relic-body>` fragments. See
+> [`ViewerContract.md`](ViewerContract.md). This file remains authoritative until 012
+> ships, then becomes a historical record. Cross-spec edit recorded in the changelog
+> (008 owns this contract).
+
+
+
 The component API contract between `base.html` (provider) and the LLM writing spec/fix HTML files (consumer). Defines the available component primitives, the CSS utility layer, invocation syntax, file naming conventions, and the rules the LLM must follow to produce valid HTML output with low token cost.
 
 ## Design Principles

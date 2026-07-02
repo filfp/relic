@@ -148,7 +148,21 @@ Reframed with the owner (plugin delivery + ambient SDD, D-1..D-9), then implemen
   (plugin era), preamble, base.html, spec HTML chrome, and removes pre-plugin command
   copies.
 
-## Phase 6 — Ship 1.0.0
+## Phase 6 — Spec 012: Spec Viewer — server-rendered views over MCP (planned)
+
+Owner-driven reshape of the HTML surface (spec + plan written 2026-07-02; tasks await
+owner review). Replaces the per-file HTML application model: `.relic/` is the backend,
+an embedded **React** viewer is served by a per-project **read-only** localhost server
+(`relic serve`, port via `config.json` `viewer.port`, lazy lifecycle), and agents
+deliver views through **MCP tools** (`view_spec`/`view_fix`/`list_views`) shipped in
+the plugin's `.mcp.json`. Spec/fix HTML shrinks to semantic `<relic-body>` fragments;
+data components (tasks, artifacts, meta, changelog) are **server-derived** and can
+never be stale or typo'd; unknown/malformed tags degrade to inline warnings instead of
+breaking pages; `relic validate` lints fragments. `html-sync` retires;
+`viewer-migrate` converts legacy files. Future (out of scope): rendering the brain
+graph on this same infrastructure.
+
+## Phase 7 — Ship 1.0.0
 
 1. All phases merged; `bun test`, `bun run test`, `tsc --noEmit` green.
 2. Manual smoke: `relic init` (md + html modes) in a throwaway project; full forward
@@ -169,4 +183,5 @@ Reframed with the owner (plugin delivery + ambient SDD, D-1..D-9), then implemen
 | 2 | Phase 3 (spec 009) | M | 0.9.x |
 | 3 | Phase 4 (spec 011 skills) | M | 0.10.0 |
 | 4 | Phase 5 (hardening + docs) | S | 0.10.x |
-| 5 | Phase 6 (release) | S | **1.0.0** |
+| 5 | Phase 6 (spec 012 — viewer/MCP) | L | 0.11.0 |
+| 6 | Phase 7 (release) | S | **1.0.0** |
