@@ -58,3 +58,11 @@ announce-then-do, `suggest` = one-line confirmation first. Read/maintain actions
 unaffected. Read via `readSdd()` in `@relic/utility`; exposed as `sdd` in `relic context`
 output. Committed — a team convention, like `mode` and `external`. Authoritative
 behaviour contract: `ClaudePluginContract.md` (owned by 011).
+
+## `viewer` Field (added by 012-spec-viewer, 2026-07-03)
+
+Optional block: `{ "port": <number> }` — the spec viewer server port (`relic serve`),
+default 4747 when absent. Same-project healthy instances are reused; foreign occupants
+trigger auto-increment (up to +19). Read via `readViewerPort()`; committed — a team
+convention. Server lifecycle state lives in gitignored `.relic/viewer.json`
+({port, pid, started_at}). Authoritative behaviour: `ViewerContract.md` (owned by 012).

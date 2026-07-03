@@ -58,7 +58,7 @@ export const AUTHORED_TAGS = new Set([
 /** Plain prose subset allowed inside sections. */
 export const PROSE_TAGS = new Set([
   "p", "ul", "ol", "li", "code", "pre", "strong", "em", "b", "i", "a",
-  "br", "hr", "div", "span", "h3", "h4", "blockquote",
+  "br", "hr", "div", "span", "h1", "h2", "h3", "h4", "blockquote",
   "table", "thead", "tbody", "tr", "th", "td",
 ]);
 

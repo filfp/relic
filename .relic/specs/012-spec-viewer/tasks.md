@@ -36,38 +36,32 @@
 - [x] **T-16** `commands/serve.ts`: HTTP router (GET-only), embedded static assets at `/` + SPA fallback (D-9), localhost bind
 - [x] **T-17** JSON API: `/api/health` (project identity), `/api/project` (specs+fixes+validate summary), `/api/spec/<id>` (fragment tree + derived data + md files), `/api/fix/<id>`; shapes recorded in `ViewerContract`
 - [x] **T-18** Port + lifecycle: `viewer.port` in project-config (default 4747), auto-increment on foreign conflict, same-project reuse via health check, `.relic/viewer.json` (gitignored) — FR-10/11
-- [x] **T-19** `relic context`: additive `viewer` field `{ running, port, url }` (OQ-2) — *contract amendment + changelog still pending (T-27)*
-- [x] **T-20** Register `serve` in `bin.ts`/`bin.debug.ts` — *dedicated server tests still pending; covered by manual smoke (health/project/spec APIs, SPA fallback, 405 on POST, derived tasks) for now*
+- [x] **T-19** `relic context`: additive `viewer` field `{ running, port, url }` (OQ-2) + `ContextResultContract` amendment + changelog
+- [x] **T-20** Register `serve` in `bin.ts`/`bin.debug.ts`; 7 API tests (health identity, project/spec/fix shapes, 404s, read-only 405, SPA fallback)
 
 ### Phase 5 — MCP + plugin
 
-- [ ] **T-21** `commands/mcp.ts`: stdio MCP server per T-1 facts — `view_spec` / `view_fix` / `list_views`, ensure-running (health → spawn detached → poll), URL + context results
-- [ ] **T-22** `plugin/.mcp.json` wiring `relic mcp`; `ClaudePluginContract` amendment; bin registration; MCP handshake smoke test over stdio
+- [x] **T-21** `commands/mcp.ts`: stdio MCP server per T-1 facts — `view_spec` / `view_fix` / `list_views`, ensure-running (health → spawn detached → poll), URL + context results
+- [x] **T-22** `plugin/.mcp.json` wiring `relic mcp`; `ClaudePluginContract` amendment; bin registration; MCP handshake smoke test over stdio
 
 ### Phase 6 — Migration + re-teaching
 
-- [ ] **T-23** `commands/viewer-migrate.ts`: legacy full-document → fragment (reuse html-rebase extractor; mechanical tag mapping; best-effort raw sections + lint warnings for the rest — OQ-3)
-- [ ] **T-24** Run migration on this repo: 5 spec HTMLs + 2 fix HTMLs converted; validate clean
-- [ ] **T-25** `relic upgrade`: run migration + remove `.relic/base.html` (reported); `html-sync` retirement stub (FR-16)
-- [ ] **T-26** Rewrite `templates/snippets/html-mode.md` for fragment authoring; add `templates/snippets/viewer-components.md`; regenerate embeds + plugin
-- [ ] **T-27** Knowledge layer: `ViewerContract` finalised (API shapes, MCP facts); `HtmlComponentContract` supersession completed; `ProjectConfigDomain` `viewer.port`; changelog entries for all cross-spec amendments
+- [x] **T-23** `commands/viewer-migrate.ts`: legacy full-document → fragment (reuse html-rebase extractor; mechanical tag mapping; best-effort raw sections + lint warnings for the rest — OQ-3)
+- [x] **T-24** Run migration on this repo: 5 spec HTMLs + 4 fix HTMLs converted (zero lints); `.relic/base.html` removed; validate clean
+- [x] **T-25** `relic upgrade`: run migration + remove `.relic/base.html` (reported); `html-sync` retirement stub (FR-16)
+- [x] **T-26** Rewrite `templates/snippets/html-mode.md` for fragment authoring; add `templates/snippets/viewer-components.md`; regenerate embeds + plugin
+- [x] **T-27** Knowledge layer: `ViewerContract` finalised (API shapes, MCP facts); `HtmlComponentContract` supersession completed; `ProjectConfigDomain` `viewer.port`; changelog entries for all cross-spec amendments
 
 ### Phase 7 — Verification
 
-- [ ] **T-28** E2E: temp project → scaffold (fragment created) → `relic serve` → curl `/api/*` + `/` shell + SPA fallback → migrate a legacy file → validate lint clean
-- [ ] **T-29** MCP smoke: initialize → tools/list → `view_spec` returns working URL against the running server
-- [ ] **T-30** Full suite + typecheck green; `bun test` root green; plugin validate --strict; owner browser pass of `/`, `/spec/<id>`, `/fix/<id>`, `/docs` (headless env can't render — flagged for owner)
+- [x] **T-28** E2E: temp project → scaffold (fragment created) → `relic serve` → curl `/api/*` + `/` shell + SPA fallback → migrate a legacy file → validate lint clean
+- [x] **T-29** MCP smoke: initialize → tools/list → `view_spec` returns working URL against the running server
+- [x] **T-30** Full suite + typecheck green; `bun test` root green; plugin validate --strict; owner browser pass of `/`, `/spec/<id>`, `/fix/<id>`, `/docs` (headless env can't render — flagged for owner)
 
 ---
 
 ## Notes
 
-**State at pause (2026-07-02):** Phases 1–4 implemented (T-1..T-20); Phases 5–7 open
-(MCP + plugin wiring, migration, snippets, knowledge layer, e2e/tests). Known and
-expected: `relic validate` currently reports 5 fragment errors — the repo's own legacy
-spec HTML files (008–012) await `relic viewer-migrate` (T-23/T-24). The viewer was
-smoke-tested live against this repo: health/project/spec APIs, derived task data,
-legacy lint, SPA fallback, and the read-only guarantee all behave per contract.
 
 
 - Ordering: Phase 1 → (2 → 3 → 4) → 5; Phase 6 needs 2+4; Phase 7 last. Phases 3 and 4

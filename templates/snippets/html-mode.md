@@ -4,37 +4,25 @@ If `mode = "md"`, skip the rest of this step entirely.
 
 If `mode = "html"`:
 
-1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
-2. Read `<spec-id>.html` in the spec directory.
-3. Update it with **synthesised** content reflecting the changes made in this session.
+The spec's HTML file (`<spec-id>.html`, created by `relic scaffold`) is a **fragment**:
+one `<relic-body>` root containing semantic tags only — no doctype, no scripts, no
+styles, no chrome. It is rendered by the embedded viewer (`relic serve`); never write
+page infrastructure into it.
 
-   **Choose synthesis depth based on what changed:**
-   - **Deep pass** — for structural changes (new spec written, plan rewritten, requirements added or changed, task list generated, a major implementation milestone reached). Re-render the affected sections from scratch using components that match the new content.
-   - **Light pass** — for incremental updates (a single task checked off, one open question resolved, a single decision recorded). Touch only the affected component(s); leave the rest as-is.
+<!-- include: relic snippet viewer-components -->
 
-   **Anti-transcription rules (always apply):**
-   - Do NOT copy Markdown text verbatim into the HTML.
-   - If a section would look identical to the Markdown source, you are doing it wrong.
-   - Choose `<relic-*>` components that fit what changed:
-     - `<relic-progress>` / `<relic-status>` — completion ratios and lifecycle state
-     - `<relic-table>` — lists of items, before/after diffs, file changes
-     - `<relic-callout type="info|warn|success">` — decisions, deviations, milestones
-     - `<relic-chip>` — inline metadata, counts, badges
-   - Use `var(--text)`, `var(--surface)`, `var(--border)` for any custom CSS so dark mode works.
+1. Read the current fragment.
+2. Update it to reflect this session's work — **synthesis, not transcription**:
+   - Keep the derived tags (`<relic-spec-meta/>`, `<relic-tasks/>`, `<relic-artifacts/>`,
+     `<relic-changelog/>`) in place and NEVER author the data they render — the server
+     computes it live from the real files.
+   - Author only what needs synthesis: narrative sections, decision callouts, flow
+     diagrams of architectures and pipelines, comparison tables.
+   - If a section would just restate what a derived tag or the Markdown files already
+     show, delete it instead of writing it.
+3. Write the fragment back. Run `relic validate` if unsure — it lints fragments
+   (unknown tags, malformed attributes) and a typo degrades to an inline warning in
+   the viewer, never a broken page.
 
-4. Keep the inline reader source blocks current. The CLI embeds spec.md/plan.md/tasks.md into
-   the three `relic-src-*` blocks automatically on every `relic scaffold` / `relic html-sync` run —
-   you only need to act if you edited a Markdown file **after** the scaffold step of this session:
-   - Replace the content of `<script type="text/plain" id="relic-src-spec">` with the full text of `spec.md`.
-   - Replace the content of `<script type="text/plain" id="relic-src-plan">` with the full text of `plan.md` (empty string if not yet created).
-   - Replace the content of `<script type="text/plain" id="relic-src-tasks">` with the full text of `tasks.md` (empty string if not yet created).
-
-   **Escaping rule:** if any embedded markdown contains a closing script tag (the character `<`
-   immediately followed by `/script`), write it as `<\/script` inside the source block — otherwise
-   it terminates the block and breaks the whole page. The reader converts it back.
-
-5. Write the updated `<spec-id>.html` back. **Edit only the content regions** — the areas between
-   `<!-- relic:content:start -->` / `<!-- relic:content:end -->` and
-   `<!-- relic:sources:start -->` / `<!-- relic:sources:end -->`. Everything else (styles, component
-   script, header, reader script) is machine-managed chrome kept current by `relic scaffold` /
-   `relic html-sync` — never modify, reformat, or regenerate it.
+To show the result: the viewer serves it at `http://localhost:<port>/spec/<spec-id>`
+(`relic serve`, or the `view_spec` MCP tool).

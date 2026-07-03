@@ -19,6 +19,8 @@ plugin/
     plugin.json           ← manifest (schema below)
   commands/               ← GENERATED from templates/prompts/*.md — committed, never hand-edited
     specify.md … ask.md      (simple markdown files → /relic:<name> shortcuts)
+  .mcp.json               ← MCP wiring (spec 012): {"mcpServers":{"relic":{"command":"relic","args":["mcp"]}}}
+                             gives agents view_spec / view_fix / list_views with zero config
   skills/                 ← AUTHORED — Claude-native ambient skills (directories with SKILL.md)
     relic-knowledge-first/SKILL.md
     relic-spec-detector/SKILL.md

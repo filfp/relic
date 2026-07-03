@@ -21,7 +21,7 @@ class Boundary extends Component<{ tag: string; children: ReactNode }, { failed:
 
 const PROSE = new Set([
   "p", "ul", "ol", "li", "code", "pre", "strong", "em", "b", "i", "a",
-  "br", "hr", "div", "span", "h3", "h4", "blockquote",
+  "br", "hr", "div", "span", "h1", "h2", "h3", "h4", "blockquote",
   "table", "thead", "tbody", "tr", "th", "td",
 ]);
 
@@ -101,8 +101,15 @@ function ElementNode({ node }: { node: Extract<FragmentNode, { kind: "element" }
     default:
       if (PROSE.has(tag)) {
         const Tag = tag as keyof HTMLElementTagNameMap;
+        const cls = attrs.class || undefined;
         rendered =
-          tag === "br" || tag === "hr" ? <Tag /> : tag === "a" ? <a href={attrs.href}>{kids}</a> : <Tag>{kids}</Tag>;
+          tag === "br" || tag === "hr" ? (
+            <Tag />
+          ) : tag === "a" ? (
+            <a href={attrs.href} className={cls}>{kids}</a>
+          ) : (
+            <Tag className={cls}>{kids}</Tag>
+          );
       } else {
         rendered = <InlineWarning message={`unknown tag <${tag}>`} />;
       }

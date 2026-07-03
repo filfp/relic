@@ -2,7 +2,7 @@
 
 **Spec ID:** 012-spec-viewer
 **Created:** 2026-07-02
-**Status:** draft
+**Status:** implemented
 
 ---
 
@@ -213,16 +213,16 @@ follow-up).
 - [ ] **OQ-1:** MCP stdio protocol/SDK details (framing, tool schema format, `.mcp.json`
   shape for plugins) — pin against current docs at implementation start, recorded in
   `ViewerContract.md`.
-- [ ] **OQ-2:** Should `relic context` expose the viewer state (port/running) so agents
-  can link without the MCP round-trip? Lean: yes, additive `viewer` field — decide at
-  plan review.
-- [ ] **OQ-3:** Legacy component usages that are not mechanically mappable during
-  migration (hand-written layout divs, custom CSS in content regions) — migrate
-  best-effort into a `<relic-section>` with raw content, or flag-and-skip? Lean:
-  best-effort + validation warning.
-- [ ] **OQ-4:** Does `relic-doc-keeper` (011) stay HTML-free after this spec? Lean: yes
-  — derived components remove most of the need; fragment authoring stays inside
-  workflow commands' HTML step only (D-9 becomes permanent policy).
+- [x] **OQ-2:** **Resolved → yes.** `relic context` exposes `viewer: {running, port,
+  url}` (300ms identity-checked probe); `ContextResultContract` amended.
+- [x] **OQ-3:** **Resolved → best-effort.** `viewer-migrate` maps `<section>` →
+  `<relic-section>`, preserves prose/layout (class passes through on prose tags; table
+  cells render a safe inline subset for legacy chip/status strings), and anything
+  unparsable degrades to inline warnings + validate lints. All 9 legacy files in this
+  repo converted with zero lints.
+- [x] **OQ-4:** **Resolved → yes, permanent.** Ambient skills never touch HTML;
+  derived components remove the need, and fragment authoring lives only in the
+  workflow commands' HTML step (D-9 is standing policy).
 
 ---
 

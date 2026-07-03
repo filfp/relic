@@ -17,6 +17,7 @@ The JSON output of `relic context`. Used by AI agents to determine which spec is
   "current_fix": "2026-04-13-null-session-crash",
   "mode": "md",
   "sdd": "auto",
+  "viewer": { "running": false, "port": 4747, "url": null },
   "external": { "configured": false },
   "external_reads": [],
   "files": {
@@ -47,6 +48,13 @@ autonomy knob read from `config.json` (`"auto"` when absent). Ambient skills and
 workflow prompts consult it before structural actions (new specs, ownership or
 contract changes): `auto` = announce-then-do, `suggest` = ask first. See
 `ClaudePluginContract.md` (owned by 011).
+
+### `viewer` (added by 012-spec-viewer)
+
+Additive field (changelog: 2026-07-03). `{ running, port, url }` — the spec viewer
+state: `port` is the configured port (`config.json` `viewer.port`, default 4747);
+`running`/`url` reflect a 300ms identity-checked health probe. Lets agents link to
+views without an MCP round-trip. See `ViewerContract.md` (owned by 012).
 
 ### `external` / `external_reads` (added by 009-external-spec-integration)
 

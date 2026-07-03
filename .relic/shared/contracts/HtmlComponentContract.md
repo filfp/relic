@@ -6,7 +6,7 @@
 
 ## Description
 
-> **SUPERSEDED (planned, 2026-07-02).** Spec 012-spec-viewer replaces the
+> **SUPERSEDED (completed 2026-07-03).** Spec 012-spec-viewer replaces the
 > self-contained-document model this contract describes — chrome-in-every-file,
 > LLM-maintained pages, `relic html-sync` re-basing — with server-rendered views over a
 > local read-only server and minimal `<relic-body>` fragments. See

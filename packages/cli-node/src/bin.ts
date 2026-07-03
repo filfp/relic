@@ -18,6 +18,8 @@ import {
   runHtmlSync,
   runExternal,
   runServe,
+  runMcp,
+  runViewerMigrate,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -251,8 +253,23 @@ program
   });
 
 program
+  .command("mcp")
+  .description("Run the Relic MCP server on stdio (tools: view_spec, view_fix, list_views)")
+  .action(async () => {
+    await runMcp({ version: VERSION });
+  });
+
+program
+  .command("viewer-migrate")
+  .description("Convert pre-012 full-document spec/fix HTML files into <relic-body> fragments")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (opts: { text: boolean }) => {
+    await runViewerMigrate({ text: opts.text });
+  });
+
+program
   .command("html-sync")
-  .description("Re-base generated spec HTML files onto the current base.html template (chrome only; authored content preserved)")
+  .description("RETIRED — use relic viewer-migrate / relic serve")
   .option("--spec <id>", "Sync a single spec instead of all")
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (opts: { spec?: string; text: boolean }) => {

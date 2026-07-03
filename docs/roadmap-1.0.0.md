@@ -148,19 +148,19 @@ Reframed with the owner (plugin delivery + ambient SDD, D-1..D-9), then implemen
   (plugin era), preamble, base.html, spec HTML chrome, and removes pre-plugin command
   copies.
 
-## Phase 6 — Spec 012: Spec Viewer — server-rendered views over MCP (planned)
+## Phase 6 — Spec 012: Spec Viewer ✅ (this branch)
 
-Owner-driven reshape of the HTML surface (spec + plan written 2026-07-02; tasks await
-owner review). Replaces the per-file HTML application model: `.relic/` is the backend,
-an embedded **React** viewer is served by a per-project **read-only** localhost server
-(`relic serve`, port via `config.json` `viewer.port`, lazy lifecycle), and agents
-deliver views through **MCP tools** (`view_spec`/`view_fix`/`list_views`) shipped in
-the plugin's `.mcp.json`. Spec/fix HTML shrinks to semantic `<relic-body>` fragments;
-data components (tasks, artifacts, meta, changelog) are **server-derived** and can
-never be stale or typo'd; unknown/malformed tags degrade to inline warnings instead of
-breaking pages; `relic validate` lints fragments. `html-sync` retires;
-`viewer-migrate` converts legacy files. Future (out of scope): rendering the brain
-graph on this same infrastructure.
+Implemented in full (30/30 tasks): tolerant fragment parser feeding the viewer API and
+`relic validate` lint; `packages/viewer` React app (Vite-built, embedded, error
+boundaries per component, server-derived data components); `relic serve` (read-only,
+per-project, port/lifecycle model, live JSON API, SPA fallback); `relic mcp`
+(hand-rolled newline-delimited JSON-RPC stdio; `view_spec`/`view_fix`/`list_views`
+ensure the server and return URLs) shipped via the plugin's `.mcp.json`;
+`viewer-migrate` converted all 9 legacy HTML files in this repo to lint-clean
+fragments and removed `base.html`; `html-sync` retired; snippets rewritten for
+fragment authoring. Verified: 7 server API tests, migrate tests, MCP stdio smoke,
+full temp-project e2e (scaffold → legacy lint → migrate → custom port → context
+viewer field). The brain-graph view is the noted follow-up on this infrastructure.
 
 ## Phase 7 — Ship 1.0.0
 

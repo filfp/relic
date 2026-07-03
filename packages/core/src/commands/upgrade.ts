@@ -12,7 +12,7 @@ import {
 import { runAddEngine, SUPPORTED_ENGINES } from "@relic/engines";
 import { TEMPLATES } from "../generated/templates.ts";
 import { runToonMigrate } from "./toon-migrate.ts";
-import { syncAllSpecHtml } from "./html-sync.ts";
+import { migrateProject } from "./viewer-migrate.ts";
 
 // Injected at build time by bun build --define. Undefined in dev builds.
 declare const INSTALL_CHANNEL: string | undefined;
@@ -45,8 +45,8 @@ export interface UpgradeResult {
   binary_upgraded: boolean;
   hooks_refreshed: string[];
   preamble_updated: boolean;
-  base_html_updated: boolean;
-  html_synced: string[];
+  base_html_removed: boolean;
+  html_migrated: string[];
   cleaned: string[];
   toon_migrated: boolean;
   toon_warnings: string[];
@@ -236,11 +236,14 @@ async function refreshHooks(
     result.preamble_updated = true;
   }
 
-  // In html mode, refresh base.html and re-base spec HTML files onto the
-  // current template (chrome only — authored content is preserved)
-  const sync = syncAllSpecHtml(relicDir);
-  result.base_html_updated = sync.base_html_updated;
-  result.html_synced = sync.specs.filter((s) => s.status === "synced").map((s) => s.spec);
+  // spec 012: convert any pre-012 full-document HTML to fragments and drop
+  // the superseded base.html chrome copy
+  const migration = migrateProject(relicDir);
+  result.base_html_removed = migration.base_html_removed;
+  result.html_migrated = migration.converted.map((c) => c.file);
+  for (const f of migration.failed) {
+    result.warnings.push(`Warning: could not migrate ${f.file}: ${f.reason}`);
+  }
 }
 
 export async function runUpgrade(options: UpgradeOptions): Promise<void> {
@@ -259,8 +262,8 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       binary_upgraded: false,
       hooks_refreshed: [],
       preamble_updated: false,
-      base_html_updated: false,
-      html_synced: [],
+      base_html_removed: false,
+      html_migrated: [],
       cleaned: [],
       toon_migrated: false,
       toon_warnings: [],
@@ -273,9 +276,9 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       if (result.hooks_refreshed.length > 0)
         console.log(`Hooks refreshed: ${result.hooks_refreshed.join(", ")}`);
       if (result.preamble_updated) console.log("preamble.md updated.");
-      if (result.base_html_updated) console.log("base.html updated.");
-      if (result.html_synced.length > 0)
-        console.log(`Spec HTML re-based: ${result.html_synced.join(", ")}`);
+      if (result.base_html_removed) console.log("base.html removed (superseded by the embedded viewer).");
+      if (result.html_migrated.length > 0)
+        console.log(`HTML migrated to fragments: ${result.html_migrated.join(", ")}`);
       if (result.cleaned.length > 0)
         console.log(`Superseded command copies removed: ${result.cleaned.length}`);
     } else {
@@ -321,8 +324,8 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       binary_upgraded: false,
       hooks_refreshed: [],
       preamble_updated: false,
-      base_html_updated: false,
-      html_synced: [],
+      base_html_removed: false,
+      html_migrated: [],
       cleaned: [],
       toon_migrated: false,
       toon_warnings: [],
@@ -341,8 +344,8 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
     binary_upgraded: false,
     hooks_refreshed: [],
     preamble_updated: false,
-    base_html_updated: false,
-    html_synced: [],
+    base_html_removed: false,
+    html_migrated: [],
     cleaned: [],
     toon_migrated: false,
     toon_warnings: [],
@@ -371,8 +374,8 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
         const parsed = JSON.parse(promptsResult.stdout.toString()) as UpgradeResult;
         result.hooks_refreshed = parsed.hooks_refreshed;
         result.preamble_updated = parsed.preamble_updated;
-        result.base_html_updated = parsed.base_html_updated ?? false;
-        result.html_synced = parsed.html_synced ?? [];
+        result.base_html_removed = parsed.base_html_removed ?? false;
+        result.html_migrated = parsed.html_migrated ?? [];
         result.cleaned = parsed.cleaned ?? [];
         result.warnings.push(...parsed.warnings);
       } catch {

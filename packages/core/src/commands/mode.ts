@@ -1,5 +1,4 @@
 import { findRelicDir, readMode, writeMode } from "@relic/utility";
-import { refreshBaseHtml } from "./html-sync.ts";
 
 export interface ModeOptions {
   value?: string;
@@ -36,22 +35,12 @@ export async function runMode(options: ModeOptions): Promise<void> {
   const mode = options.value as "md" | "html";
   writeMode(relicDir, mode);
 
-  // When switching to html, write base.html from the current template
-  // (creates it if absent, refreshes it if stale)
-  if (mode === "html") {
-    const updated = refreshBaseHtml(relicDir);
-    if (options.text) {
-      console.log(`Mode set to html.`);
-      if (updated) console.log(`Wrote .relic/base.html (component library).`);
-    } else {
-      console.log(JSON.stringify({ mode, base_html_updated: updated }, null, 2));
-    }
-    return;
-  }
-
+  // spec 012: html mode needs no per-project chrome — the embedded viewer
+  // (`relic serve`) renders <relic-body> fragments
   if (options.text) {
     console.log(`Mode set to ${mode}.`);
+    if (mode === "html") console.log("Spec HTML files are fragments — view them with: relic serve");
   } else {
-    console.log(JSON.stringify({ mode, base_html_updated: false }, null, 2));
+    console.log(JSON.stringify({ mode }, null, 2));
   }
 }

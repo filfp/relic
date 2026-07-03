@@ -2,7 +2,7 @@
 
 **Type:** contract
 **Owned by:** 012-spec-viewer
-**Confidence:** medium — MCP protocol details and final tag grammar are pinned in implementation Phase 1/2
+**Confidence:** high — implemented and verified 2026-07-03 (MCP stdio facts from modelcontextprotocol.io; API/tag grammar as shipped)
 
 ## Description
 
@@ -42,9 +42,12 @@ chrome of any kind:
 ### Authored tags (synthesis only — the smallest grammar that still expresses meaning)
 
 `<relic-section title>` · `<relic-callout type=info|warn|risk|success>` ·
-`<relic-flow>` (mermaid-style, unchanged syntax) · `<relic-chart type=bar|pie|line
-labels data title>` · `<relic-table headers rows>` · `<relic-chip color?>` ·
-`<relic-status value>` · plain `<p>/<ul>/<code>` prose inside sections.
+`<relic-flow>` (mermaid-style, unchanged syntax; raw-text content) ·
+`<relic-chart type=bar|pie|line labels data title>` · `<relic-table headers rows>`
+(JSON attrs; cells render a safe inline subset for legacy chip/status content) ·
+`<relic-chip color?>` · `<relic-status value>` · `<relic-progress>` (legacy-compat) ·
+prose subset `p ul ol li code pre strong em b i a br hr div span h1–h4 blockquote
+table thead tbody tr th td` (class attribute passes through on prose tags).
 
 ### Guarantees
 
@@ -61,9 +64,14 @@ labels data title>` · `<relic-table headers rows>` · `<relic-chip color?>` ·
   instance is reused, otherwise auto-increment.
 - Lifecycle: `.relic/viewer.json` (gitignored) `{ port, pid, started_at }`;
   `/api/health` returns `{ project, version }` for identity checks.
-- Routes: `/` dashboard · `/spec/<id>` · `/fix/<id>` · `/docs` (tag reference).
-- JSON API: `/api/health` · `/api/project` · `/api/spec/<id>` · `/api/fix/<id>`
-  (exact shapes recorded here during implementation).
+- Routes: `/` dashboard · `/spec/<id>` · `/fix/<id>` · `/docs` (tag reference);
+  unknown non-API GETs fall back to the app shell (client routing).
+- JSON API (implemented shapes — `packages/viewer/src/api.ts` mirrors them):
+  - `/api/health` → `{ relic: true, project: <absolute project dir>, version }`
+    (identity check for same-project reuse)
+  - `/api/project` → `{ project{name,path}, mode, specs[{id,title,status,tasks{done,total},has_html}], fixes[{id,format}], validate{valid,errors,warnings} }`
+  - `/api/spec/<id>` → `{ id, title, status, fragment: FragmentNode[], lints, files{spec,plan,tasks: string|null}, derived{meta,tasks{done,total,phases},artifacts,external_reads,changelog} }`
+  - `/api/fix/<id>` → `{ id, format: html|md, fragment|null, lints, markdown|null }`
 
 ## Build & Toolchain (D-8/D-9)
 
@@ -77,12 +85,19 @@ labels data title>` · `<relic-table headers rows>` · `<relic-chip color?>` ·
   future pages are additive).
 - Vite never ships to users; the CLI stays a single self-contained artifact.
 
-## MCP
+## MCP (implemented — facts pinned 2026-07-02 from modelcontextprotocol.io)
 
-`relic mcp` (stdio), tools only: `view_spec(spec_id)` / `view_fix(fix_id)` /
-`list_views()` — each ensures the server is running and returns the URL + minimal
-context. Shipped via the plugin's `.mcp.json`. Protocol details pinned at
-implementation (OQ-1).
+`relic mcp` — stdio transport: newline-delimited JSON-RPC 2.0, UTF-8, no embedded
+newlines; stdout carries only MCP messages, stderr is free for logs. Hand-rolled,
+zero-dependency (T-2). Handshake: `initialize` (echoes the client's
+`protocolVersion`, fallback `2025-06-18`; capabilities `{tools:{}}`; serverInfo
+`relic`) → `notifications/initialized` → `tools/list` / `tools/call`. In-flight tool
+calls drain before exit on stdin close.
+
+Tools only (D-4): `view_spec(spec_id)` / `view_fix(fix_id)` / `list_views()` — each
+finds a healthy same-project server on ports base..base+19 or spawns `relic serve`
+detached and polls up to 6s, then returns the URL (+title/status context).
+Shipped via `plugin/.mcp.json`: `{"mcpServers":{"relic":{"command":"relic","args":["mcp"]}}}`.
 
 ## Migration
 
