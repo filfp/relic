@@ -45,8 +45,8 @@ Other project files: `preamble.md` (invariants — machine-refreshed, never hand
 `constitution.md` (project governance, amendable), `changelog.md` (append-only — write
 via `relic write --changelog`, never directly), `config.json` (engines, `mode`,
 `sdd`, `external`), `session.json` (gitignored per-user state: active spec + fix),
-`fixes/` (fix documents + manifest), `base.html` (component library reference copy,
-machine-refreshed).
+`fixes/` (fix documents + manifest), `viewer.json` (gitignored server lifecycle state:
+port/pid).
 
 ### Spec resolution order (all commands)
 
@@ -72,17 +72,21 @@ packages/
   cli-node/       relic-cli npm package — bin.ts (production), bin.debug.ts (adds
                   AI-workflow stubs)
   cli-python/     PyPI wheel packaging (pre-compiled platform binaries)
-plugin/           Claude Code plugin (spec 011): .claude-plugin/plugin.json,
+  viewer/         @relic/viewer — React spec viewer (Vite dev/build only; output
+                  embedded into the CLI by scripts/embed-viewer.ts)
+plugin/           Claude Code plugin (specs 011/012): .claude-plugin/plugin.json,
                   commands/ (12 GENERATED from templates/prompts + authored
-                  setup.md), skills/ (4 authored ambient skills)
+                  setup.md), skills/ (4 authored ambient skills), .mcp.json
+                  (wires `relic mcp` view tools)
 .claude-plugin/   marketplace.json — this repo is its own plugin marketplace
 templates/
   prompts/        12 AI command prompts — SINGLE SOURCE OF TRUTH (consumed by the
                   plugin build and the copilot/codex engines)
-  snippets/       10 shared prompt fragments, resolved at LLM runtime via
+  snippets/       11 shared prompt fragments, resolved at LLM runtime via
                   `relic snippet <name>` (<!-- include: relic snippet X --> directives)
   external/       6 document templates (fr/nfr/br/adr/us/epic) for `relic external create`
-  base.html       spec-HTML chrome + component library (machine-managed regions)
+  fragment.html   minimal <relic-body> scaffold for spec HTML (spec 012)
+  base.html       RETIRED chrome template (historical; no longer scaffolded)
   preamble.md / constitution.md / spec.md / plan.md / tasks.md
 scripts/
   embed-templates.ts / embed-engine-templates.ts / build-plugin.ts (generation +
@@ -91,7 +95,7 @@ scripts/
 ```
 
 **Build chain:** `bun run build:templates` = embed engine templates → embed scaffold
-templates → build plugin commands. Generated dirs (`packages/*/src/generated/`) are
+templates → build plugin commands → build + embed viewer assets. Generated dirs (`packages/*/src/generated/`) are
 gitignored; `plugin/commands/` is **committed** (repo must be installable as a
 marketplace) and CI enforces freshness via `build-plugin.ts --check`.
 
@@ -105,14 +109,16 @@ marketplace) and CI enforces freshness via `build-plugin.ts --check`.
 | `relic add-engine <claude\|copilot\|codex>` | Add engine hooks (claude = settings + plugin enablement only) |
 | `relic use [spec-id] [--fix id] [--clear-fix]` | Set active spec/fix in `session.json` |
 | `relic scan [--json]` | Project manifest for the `/relic:scan` bootstrap |
-| `relic context [--spec id] [--text]` | Resolve spec; files, shared artifacts, `mode`, `sdd`, `external`, `external_reads`, `current_fix` |
-| `relic scaffold [--title t\|--spec id]` | Ensure spec folder; create from templates; html create/sync + source embed |
+| `relic context [--spec id] [--text]` | Resolve spec; files, shared artifacts, `mode`, `sdd`, `viewer`, `external`, `external_reads`, `current_fix` |
+| `relic scaffold [--title t\|--spec id]` | Ensure spec folder; create from templates (html mode: `<relic-body>` fragment) |
 | `relic validate [--text]` | Ownership conflicts, missing artifacts, illegal spec files, manifest health, hard `external_errors` |
 | `relic search <kw...> [--deep] [--knowledge\|--spec\|--fix]` | Scored search over all three toon index spaces |
 | `relic write --changelog\|--specs\|--fixes\|--knowledge-* --payload <json>` | Structured writes — the ONLY way manifests/changelog are mutated |
 | `relic snippet <name>` | Print a snippet (LLM runtime include resolution, nested) |
-| `relic mode [md\|html] [--text]` | Get/set artifact mode; refreshes `base.html` on html |
-| `relic html-sync [--spec id] [--text]` | Re-base spec HTML chrome onto current template + embed md sources |
+| `relic mode [md\|html] [--text]` | Get/set artifact mode (html = fragment files rendered by the viewer) |
+| `relic serve [--port] [--text]` | Spec viewer server: read-only localhost, embedded React app + live JSON API |
+| `relic mcp` | MCP stdio server (view_spec / view_fix / list_views) — shipped in the plugin |
+| `relic viewer-migrate [--text]` | Convert pre-012 full-document spec/fix HTML into fragments |
 | `relic external [init\|set\|link\|create\|list] [--text]` | External spec repo integration (spec 009) |
 | `relic upgrade [--check] [--prompts] [--clean] [--text]` | Upgrade CLI + refresh hooks/preamble/html; `--clean` removes pre-plugin command copies |
 
@@ -131,7 +137,9 @@ it per-project via `extraKnownMarketplaces` + `enabledPlugins`. Commands are nam
 `/relic:specify` … `/relic:setup` (13 total). Four ambient skills make SDD the default
 practice: `relic-knowledge-first`, `relic-spec-detector`, `relic-fix-pipeline`,
 `relic-doc-keeper`. All skills: inactive without `.relic/`; consent-gated CLI bootstrap
-(once per session, npm/uv/pip); **never touch spec HTML files**.
+(once per session, npm/uv/pip); **never touch spec HTML files**. The plugin's
+`.mcp.json` adds the viewer MCP tools (`view_spec`/`view_fix`/`list_views`) — "show me
+spec X" resolves to a `http://localhost:<port>/spec/<id>` URL.
 
 ### Autonomy ladder (`sdd` knob in config.json)
 
@@ -164,11 +172,15 @@ document in `.relic/fixes/`, activation) → `/relic:solve` (apply, update knowl
 layer, close + clear fix). Contract changes propagate: amend artifact + changelog +
 flag reading specs.
 
-**HTML mode** (`mode: "html"` in config.json): each spec folder carries
-`<spec-id>.html` — machine-managed chrome (styles/components/reader, sentinel-marked)
-with LLM-authored content regions. `relic scaffold`/`html-sync` re-base chrome and
-embed md sources deterministically. An HTML reshape is planned as the next spec — do
-not invest in the current HTML surface beyond keeping sync green.
+**HTML mode** (`mode: "html"` in config.json, spec 012): each spec folder carries
+`<spec-id>.html` — a minimal `<relic-body>` **fragment** of semantic tags, rendered by
+the embedded viewer (`relic serve`). Derived tags (`<relic-spec-meta/>`,
+`<relic-tasks/>`, `<relic-artifacts/>`, `<relic-changelog/>`) are computed server-side
+from the real files — never author their data. Authored tags are synthesis only
+(sections, callouts, flows, charts); unknown/malformed tags degrade to inline warnings
+and `relic validate` lints them. No chrome exists in project files; the viewer app
+lives in `packages/viewer/` and ships embedded in the CLI. The brain-graph view is the
+planned follow-up on this infrastructure (future spec 013).
 
 **External specs** (spec 009): `config.external` maps doc types
 (`fr|nfr|br|adr|us|epic`) to directories (typically a git submodule spec repo).
@@ -185,8 +197,9 @@ broken entries; `relic external create` writes + commits + auto-links.
   process-global and leak into other packages' test files. Use injection seams
   (`_channel`, `_runAddEngine` in `runUpgrade`).
 - Command tests: pass `relicDir` in options; capture `console.log` for JSON output.
-- Templates are the source of truth — after editing `templates/**`, run
-  `bun run build:templates` (regenerates embeds + plugin commands).
+- Templates are the source of truth — after editing `templates/**` or
+  `packages/viewer/**`, run `bun run build:templates` (regenerates embeds, plugin
+  commands, and viewer assets).
 - The preamble instance (`.relic/preamble.md`) must stay byte-identical to
   `templates/preamble.md` (upgrade refresh relies on exact comparison).
 - Versioning: `scripts/publish.ts <x.y.z>` bumps 7 sites (root+cli package.json, both
@@ -201,7 +214,7 @@ broken entries; `relic external create` writes + commits + auto-links.
 |---|---|---|
 | npm | `relic-cli` | Node 18+ bundle (`bun build --target node`) |
 | PyPI | `relic-cli` | platform wheels with pre-compiled Bun binaries (macOS ad-hoc codesigned) |
-| Claude Code | `relic@relic` plugin | this repo is the marketplace; no separate publish |
+| Claude Code | `relic@relic` plugin | this repo is the marketplace (commands + skills + MCP tools); no separate publish |
 | Homebrew | planned | post-1.0 |
 
 ---

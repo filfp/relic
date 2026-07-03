@@ -92,7 +92,10 @@ relic init
 | `relic validate [--text]` | Check artifact integrity and ownership conflicts |
 | `relic search <keywords...>` | Search shared artifact manifests by keyword tags |
 | `relic deep-search` | Return all manifest entries consolidated (tldr-first triage) |
-| `relic upgrade [--check] [--prompts] [--clean]` | Upgrade relic-cli and refresh engine hook files (`--clean` removes pre-plugin command copies) |
+| `relic serve [--port]` | Spec viewer: browse specs/fixes at `http://localhost:<port>` (read-only, per-project) |
+| `relic mcp` | MCP server for AI agents (view_spec / view_fix / list_views) — ships with the plugin |
+| `relic viewer-migrate` | Convert pre-viewer HTML spec files into `<relic-body>` fragments |
+| `relic upgrade [--check] [--prompts] [--clean]` | Upgrade relic-cli, refresh hooks, migrate HTML (`--clean` removes pre-plugin command copies) |
 
 ### Workflow commands (direct model invocation)
 
@@ -136,7 +139,9 @@ Then `/relic:setup` finishes onboarding (installs the CLI if missing, runs `reli
 The plugin's ambient skills make SDD part of everyday work: Claude searches the brain
 before exploring code, opens a spec when you ask for a new capability, routes bugs
 through the fix pipeline, and keeps tasks/changelog true — governed by the `sdd` knob in
-`config.json` (`auto` announce-then-do, default; `suggest` ask-first).
+`config.json` (`auto` announce-then-do, default; `suggest` ask-first). The bundled MCP
+tools let Claude hand you live spec views: ask "show me spec 009" and get
+`http://localhost:4747/spec/009-…` served by the embedded viewer.
 
 ## AI slash commands
 

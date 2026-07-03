@@ -213,3 +213,12 @@ The relic repository doubles as a Claude Code plugin marketplace:
   with the CLI — pinned versions are what trigger plugin updates for users.
 - Distribution is the git repo itself: `/plugin marketplace add filfp/relic` →
   `/plugin install relic@relic`. No separate publish step.
+
+
+## Embedded spec viewer (added by spec 012)
+
+`packages/viewer/` (React + Vite) is built at release time and embedded into the CLI
+by `scripts/embed-viewer.ts` (base64 asset map in `packages/core/src/generated/`).
+`relic serve` ships it from a single self-contained artifact on both channels — Vite
+is a dev/build dependency only and never reaches users. The plugin's `.mcp.json`
+exposes the viewer to agents as MCP tools.
