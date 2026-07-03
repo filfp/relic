@@ -227,8 +227,8 @@ describe("syncSpecHtml / syncAllSpecHtml", () => {
   });
 });
 
-describe("scaffold html creation embeds sources immediately", () => {
-  test("a freshly scaffolded spec HTML carries the markdown sources", async () => {
+describe("scaffold html creation (spec 012: fragments)", () => {
+  test("a freshly scaffolded spec HTML is a <relic-body> fragment", async () => {
     const { runScaffold } = await import("../commands/scaffold.ts");
     const dir = mkdtempSync(join(tmpdir(), "relic-scaffold-embed-"));
     const relicDir = join(dir, ".relic");
@@ -240,8 +240,12 @@ describe("scaffold html creation embeds sources immediately", () => {
         join(relicDir, "specs", "001-demo-feature", "001-demo-feature.html"),
         "utf8"
       );
-      // the scaffolded spec.md template content is embedded on creation
-      expect(html).toMatch(/id="relic-src-spec">[\s\S]*Demo Feature/);
+      // spec 012: fragments carry no chrome and no embedded sources —
+      // the viewer server reads markdown live from disk
+      expect(html.trim().startsWith("<relic-body>")).toBe(true);
+      expect(html).toContain("<relic-spec-meta/>");
+      expect(html).not.toContain("<script");
+      expect(html).not.toContain("relic-src-spec");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
