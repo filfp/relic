@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { join } from "path";
-import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode, readSdd } from "@relic/utility";
+import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode, readSdd, readViewerPort, fetchWithTimeout } from "@relic/utility";
 import { inferSpecFromBranch, availableSpecs } from "@relic/utility";
 import {
   readExternalTypes,
@@ -42,6 +42,7 @@ interface ContextResult {
   current_fix: string | null;
   mode: "md" | "html";
   sdd: "auto" | "suggest";
+  viewer: { running: boolean; port: number; url: string | null };
   external: ExternalContextField;
   external_reads: ExternalReadRef[];
   files: {
@@ -141,6 +142,19 @@ export async function runContext(options: ContextOptions): Promise<void> {
     }
   }
 
+  // Viewer state (spec 012): configured port + liveness probe
+  const viewerPort = readViewerPort(relicDir);
+  let viewerRunning = false;
+  try {
+    const res = await fetchWithTimeout(`http://127.0.0.1:${viewerPort}/api/health`, 300);
+    if (res.ok) {
+      const body = (await res.json()) as { relic?: boolean; project?: string };
+      viewerRunning = body.relic === true && body.project === join(relicDir, "..");
+    }
+  } catch {
+    // not running — fine
+  }
+
   // External per-type config (ExternalConfigContract §3)
   const configuredTypes = readExternalTypes(relicDir);
   const configuredKeys = Object.keys(configuredTypes) as ExternalType[];
@@ -165,6 +179,7 @@ export async function runContext(options: ContextOptions): Promise<void> {
     current_fix: currentFix,
     mode: readMode(relicDir),
     sdd: readSdd(relicDir),
+    viewer: { running: viewerRunning, port: viewerPort, url: viewerRunning ? `http://localhost:${viewerPort}` : null },
     external,
     external_reads: externalReads,
     files: {
@@ -184,6 +199,7 @@ export async function runContext(options: ContextOptions): Promise<void> {
     console.log(`Fix:     ${currentFix ?? "(none)"}`);
     console.log(`Mode:    ${result.mode}`);
     console.log(`SDD:     ${result.sdd}`);
+    console.log(`Viewer:  ${result.viewer.running ? result.viewer.url : `not running (port ${result.viewer.port})`}`);
     console.log(`Dir:     ${specDir}`);
     console.log(`Relic:   ${relicDir}`);
     console.log("");

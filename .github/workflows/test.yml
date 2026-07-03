@@ -13,7 +13,7 @@ jobs:
         with:
           bun-version: latest
       - run: bun install
-      - run: bun run build:engine-templates && bun run scripts/embed-templates.ts
+      - run: bun run build:engine-templates && bun run scripts/embed-templates.ts && bun run scripts/embed-viewer.ts
       - run: bun run scripts/build-plugin.ts --check
       - run: bun run typecheck
       - run: bun run test

@@ -37,6 +37,8 @@ export {
   readMode,
   writeMode,
   readSdd,
+  readViewerPort,
+  DEFAULT_VIEWER_PORT,
   EXTERNAL_TYPES,
   ExternalConfigError,
   isExternalType,

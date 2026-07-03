@@ -2,6 +2,7 @@ import { join } from "path";
 import { readdirSync, statSync } from "fs";
 import { findRelicDir, fileExists, dirExists, readJson, readText, decodeToon, readMode, resolveExternalRead } from "@relic/utility";
 import { loadRegistry } from "../core/artifact-registry.ts";
+import { lintFragment } from "../core/fragment.ts";
 import { SHARED_SUBDIRS } from "../types.ts";
 
 export interface ValidateOptions {
@@ -22,6 +23,7 @@ interface ValidateResult {
   invalid_manifests: Array<{ subdir: string }>;
   unregistered_files: Array<{ subdir: string; file: string }>;
   external_errors: Array<{ spec: string; entry: string; resolved_path: string | null; reason: string }>;
+  fragment_lints: Array<{ file: string; level: "error" | "warning"; message: string }>;
   warnings: string[];
 }
 
@@ -44,6 +46,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
   const invalidManifests: ValidateResult["invalid_manifests"] = [];
   const unregisteredFiles: ValidateResult["unregistered_files"] = [];
   const externalErrors: ValidateResult["external_errors"] = [];
+  const fragmentLints: ValidateResult["fragment_lints"] = [];
   const warnings: ValidateResult["warnings"] = [];
 
   // Build ownership map to detect conflicts
@@ -58,6 +61,27 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
 
   for (const [artifact, specs] of ownershipMap.entries()) {
     if (specs.length > 1) conflicts.push({ artifact, specs });
+  }
+
+  // Fragment lint (spec 012): spec + fix HTML files must be <relic-body>
+  // fragments; the tolerant parser reports problems as lints
+  if (mode === "html") {
+    for (const spec of registry) {
+      const htmlPath = join(spec.path, `${spec.id}.html`);
+      if (!fileExists(htmlPath)) continue;
+      for (const lint of lintFragment(readText(htmlPath))) {
+        fragmentLints.push({ file: `specs/${spec.id}/${spec.id}.html`, ...lint });
+      }
+    }
+    const fixesDir = join(relicDir, "fixes");
+    if (dirExists(fixesDir)) {
+      for (const entry of readdirSync(fixesDir)) {
+        if (!entry.endsWith(".html")) continue;
+        for (const lint of lintFragment(readText(join(fixesDir, entry)))) {
+          fragmentLints.push({ file: `fixes/${entry}`, ...lint });
+        }
+      }
+    }
   }
 
   // external_reads — missing files, unconfigured types, and traversal are all
@@ -174,7 +198,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
   }
 
   const result: ValidateResult = {
-    valid: conflicts.length === 0 && missingOwned.length === 0 && missingReads.length === 0 && illegalFiles.length === 0 && invalidPaths.length === 0 && missingManifests.length === 0 && invalidManifests.length === 0 && unregisteredFiles.length === 0 && externalErrors.length === 0,
+    valid: conflicts.length === 0 && missingOwned.length === 0 && missingReads.length === 0 && illegalFiles.length === 0 && invalidPaths.length === 0 && missingManifests.length === 0 && invalidManifests.length === 0 && unregisteredFiles.length === 0 && externalErrors.length === 0 && !fragmentLints.some((l) => l.level === "error"),
     conflicts,
     missing_owned: missingOwned,
     missing_reads: missingReads,
@@ -184,6 +208,7 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
     invalid_manifests: invalidManifests,
     unregistered_files: unregisteredFiles,
     external_errors: externalErrors,
+    fragment_lints: fragmentLints,
     warnings,
   };
 
@@ -224,6 +249,10 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
     if (externalErrors.length > 0) {
       console.log("\nExternal read errors (hard errors — fix before any workflow command):");
       for (const e of externalErrors) console.log(`  [${e.spec}] ${e.entry}: ${e.reason}`);
+    }
+    if (fragmentLints.length > 0) {
+      console.log("\nFragment lints (spec/fix HTML):");
+      for (const l of fragmentLints) console.log(`  [${l.level}] ${l.file}: ${l.message}`);
     }
     if (warnings.length > 0) {
       console.log("\nWarnings:");

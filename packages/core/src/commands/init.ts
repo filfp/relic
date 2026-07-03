@@ -45,7 +45,7 @@ export async function runInit(options: InitOptions): Promise<void> {
   }
 
   writeJson(join(relicDir, "session.json"), { spec: null, fix: null });
-  writeText(join(relicDir, ".gitignore"), "session.json\n");
+  writeText(join(relicDir, ".gitignore"), "session.json\nviewer.json\n");
   writeText(join(relicDir, "preamble.md"), TEMPLATES["preamble.md"] ?? "");
   writeText(join(relicDir, "constitution.md"), TEMPLATES["constitution.md"] ?? "");
   writeText(

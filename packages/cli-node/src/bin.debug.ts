@@ -24,6 +24,7 @@ import {
   runMode,
   runHtmlSync,
   runExternal,
+  runServe,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -342,6 +343,15 @@ program
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (args: string[], opts: { path?: string; spec?: string; text: boolean }) => {
     await runExternal({ args: args ?? [], path: opts.path, spec: opts.spec, text: opts.text });
+  });
+
+program
+  .command("serve")
+  .description("Start the spec viewer server (read-only, localhost; port from config.json viewer.port)")
+  .option("--port <n>", "Port override")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (opts: { port?: string; text: boolean }) => {
+    await runServe({ port: opts.port ? parseInt(opts.port, 10) : undefined, text: opts.text, version: VERSION });
   });
 
 program

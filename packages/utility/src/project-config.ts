@@ -16,6 +16,7 @@ export interface ProjectConfig {
   mode: "md" | "html";
   sdd?: SddMode;
   external?: ExternalConfig;
+  viewer?: { port?: number };
 }
 
 const DEFAULT_CONFIG: ProjectConfig = { engines: [], mode: "md" };
@@ -47,6 +48,13 @@ export function readProjectConfig(relicDir: string): ProjectConfig {
         const config: ProjectConfig = { engines, mode };
         if (obj["sdd"] === "suggest") config.sdd = "suggest";
         if (external) config.external = external;
+        const viewer = obj["viewer"];
+        if (viewer && typeof viewer === "object" && !Array.isArray(viewer)) {
+          const port = (viewer as Record<string, unknown>)["port"];
+          if (typeof port === "number" && Number.isInteger(port) && port > 0 && port < 65536) {
+            config.viewer = { port };
+          }
+        }
         return config;
       }
     } catch {
@@ -104,6 +112,13 @@ export function writeMode(relicDir: string, mode: "md" | "html"): void {
 /** Ambient-SDD autonomy knob (spec 011). "auto" unless config.json says "suggest". */
 export function readSdd(relicDir: string): SddMode {
   return readProjectConfig(relicDir).sdd ?? "auto";
+}
+
+export const DEFAULT_VIEWER_PORT = 4747;
+
+/** Spec viewer port (spec 012): config.json viewer.port, default 4747. */
+export function readViewerPort(relicDir: string): number {
+  return readProjectConfig(relicDir).viewer?.port ?? DEFAULT_VIEWER_PORT;
 }
 
 /* ── External spec integration (spec 009) ──────────────────────────────── */
