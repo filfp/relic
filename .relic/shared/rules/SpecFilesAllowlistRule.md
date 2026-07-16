@@ -13,7 +13,7 @@ Only four files are permitted in a spec directory: `spec.md`, `plan.md`, `tasks.
 - Illegal files are reported as validation failures
 
 ## Exceptions
-- `<spec-id>.html` in html mode only. It is CLI-managed: created by `relic scaffold`, chrome re-based and reader sources embedded by `relic html-sync`. The filename must match the spec ID exactly — a generic `spec.html` or any other `.html` name remains illegal.
+- `<spec-id>.html` in html mode only. It is created by `relic scaffold` as a `<relic-body>` fragment and rendered by the embedded viewer (`relic serve`) — it carries no chrome, and `relic validate` lints it. The filename must match the spec ID exactly — a generic `spec.html` or any other `.html` name remains illegal.
 - No other exceptions — this is a hard constraint to keep spec directories clean and predictable
 
 ## Owned by

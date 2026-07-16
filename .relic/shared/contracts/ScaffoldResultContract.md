@@ -43,13 +43,13 @@ When the project `config.json` has `mode = "html"`, `files_created` additionally
 
 `"<spec-id>.html"` is always the last entry in `files_created` when present. The filename is always the spec ID with `.html` extension — never a generic `"spec.html"`. When `mode = "md"` (default), `files_created` is unchanged.
 
-### `files_synced` (added with `relic html-sync`)
+### `files_synced` (vestigial since spec 012)
 
-When `mode = "html"` and the spec HTML file already exists, `relic scaffold` re-bases its
-chrome onto the current base template and refreshes the embedded reader sources from the
-markdown files. If that produced changes, `files_synced` contains `["<spec-id>.html"]`;
-otherwise it is `[]`. A file is never in both `files_created` and `files_synced`. When
-`mode = "md"`, `files_synced` is always `[]`.
+Always `[]`. It was populated in the `relic html-sync` era, when scaffold re-based
+chrome and embedded reader sources into existing spec HTML. Spec 012 replaced chrome
+with `<relic-body>` fragments rendered by the embedded viewer — there is nothing to
+sync — and `html-sync` was retired. The field is retained so the output shape stays
+stable for existing consumers.
 
 ## Owned by
 008-html-spec-mode

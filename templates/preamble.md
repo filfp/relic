@@ -64,8 +64,8 @@ Exactly four files — five when the project runs in html mode. No others.
 - `tasks.md` — atomic task checklist
 - `artifacts.json` — ownership and dependency declarations (pointers, not containers)
 - `<spec-id>.html` — ONLY when `config.json` has `mode = "html"`: the visual spec
-  document. It is created by `relic scaffold` and its chrome is maintained by
-  `relic html-sync` — never create or delete it manually.
+  document. It is created by `relic scaffold` as a `<relic-body>` fragment and
+  rendered by the embedded viewer (`relic serve`) — never create or delete it manually.
 
 **If you are about to create any other file inside a spec folder, stop.**
 Whatever you are creating belongs in `shared/` instead.

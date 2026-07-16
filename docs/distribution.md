@@ -28,7 +28,7 @@ bun run build:npm
 
 Runs:
 1. `scripts/embed-templates.ts` — bakes all `.md`/`.sh` templates into `generated/templates.ts`
-2. `bun build --target node` — produces `packages/cli-node/dist/relic:js` (186 KB, pure JS)
+2. `bun build --target node` — produces `packages/cli-node/dist/relic.js` (186 KB, pure JS)
 3. `scripts/fix-shebang.mjs` — replaces the Bun shebang with `#!/usr/bin/env node`
 
 The shebang fix is necessary because `bun build --target node` always injects `#!/usr/bin/env bun`
@@ -39,9 +39,9 @@ bundle as a Bun package.
 
 ```
 packages/cli-node/
-  dist/relic:js       ← the Node.js bundle (built, gitignored)
+  dist/relic.js       ← the Node.js bundle (built, gitignored)
   README.md           ← npm-specific README
-  package.json        ← name: relic-cli, bin: ./dist/relic:js
+  package.json        ← name: relic-cli, bin: ./dist/relic.js
 ```
 
 `package.json` has no runtime `dependencies` — `@relic/core` and `commander` are inlined
@@ -81,7 +81,7 @@ Five platform targets:
 | `build:pypi:linux-arm64` | `bun-linux-arm64` | `packages/cli-python/relic/relic` |
 | `build:pypi:macos-x64` | `bun-darwin-x64` | `packages/cli-python/relic/relic` |
 | `build:pypi:macos-arm64` | `bun-darwin-arm64` | `packages/cli-python/relic/relic` |
-| `build:pypi:windows-x64` | `bun-windows-x64` | `packages/cli-python/relic/relic:exe` |
+| `build:pypi:windows-x64` | `bun-windows-x64` | `packages/cli-python/relic/relic.exe` |
 
 The binary is gitignored — it is placed here by the build step and included by hatchling
 via the `artifacts` field in `pyproject.toml`.

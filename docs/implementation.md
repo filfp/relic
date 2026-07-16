@@ -106,16 +106,16 @@ via `npm install -g relic-cli` on Linux or Windows.
 
 ```bash
 bun run build:npm
-# → packages/cli-node/dist/relic:js (175 KB, pure JS, no Bun runtime required)
+# → packages/cli-node/dist/relic.js (175 KB, pure JS, no Bun runtime required)
 ```
 
-The npm bin entrypoint (`bin/relic:js`) is a 2-line shim:
+The npm bin entrypoint (`bin/relic.js`) is a 2-line shim:
 ```javascript
 #!/usr/bin/env node
-import "../dist/relic:js";
+import "../dist/relic.js";
 ```
 
-When published, `npm pack` includes only 3 files: `bin/relic:js`, `dist/relic:js`, `package.json`.
+When published, `npm pack` includes only 3 files: `bin/relic.js`, `dist/relic.js`, `package.json`.
 The Bun-compiled binary (`dist/relic`) remains available for local development but is excluded
 from the published package via the `files` field.
 
