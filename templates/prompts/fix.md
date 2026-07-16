@@ -72,23 +72,27 @@ the issue description (e.g. `2026-04-13-null-session-read-on-missing-file`).
 
 **If `mode = "html"`** (determined in Step 0):
 
-1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
-2. Create `.relic/fixes/<fix-id>.html` by **copying `.relic/base.html` wholesale** and then editing
-   only the content region (between `<!-- relic:content:start -->` and `<!-- relic:content:end -->`):
-   - Replace the placeholder sections with the fix sections listed below (all fields from
-     `FixDocumentContract` expressed via components). Do **not** create `<fix-id>.md`.
-   - In the header, set the `h-id` span to the fix ID and the `h-title` span to a short issue title.
-   - Leave the three `relic-src-*` source blocks empty and everything else (styles, scripts,
-     header structure) untouched — that chrome is machine-managed.
+Create `.relic/fixes/<fix-id>.html` as a **fragment**: one `<relic-body>` root containing
+semantic tags only — no doctype, no scripts, no styles, no chrome. The embedded viewer
+(`relic serve`) renders it; never write page infrastructure into it. Do **not** create
+`<fix-id>.md`.
 
-   Required sections:
-   - `<relic-status value="pending">pending</relic-status>` — fix status badge
-   - Owning spec, date, classification as metadata
-   - **Issue** — prose description
-   - **Root Cause** — `<relic-callout type="info">` with classification badge and explanation
-   - **Proposed Changes** — `<relic-flow>` for code-change flow; `<relic-table>` for affected files
-   - **Spec / shared artifact amendments** — `<relic-callout>` per amendment (if any)
-   - **Changelog entry (draft)** — verbatim `<pre>` code block
+<!-- include: relic snippet viewer-components -->
+
+Required content (all fields from `FixDocumentContract` expressed via components):
+
+- Header: an `<h1>` with a short issue title, then a `<div class="meta">` of `<span>`s
+  carrying the fix ID, date, owning spec (`<relic-chip>`),
+  `<relic-status value="pending">pending</relic-status>`, and the classification
+  (`<relic-chip>`)
+- **Issue** — prose description inside a `<relic-section>`
+- **Root Cause** — `<relic-callout type="info">` with classification badge and explanation
+- **Proposed Changes** — `<relic-flow>` for code-change flow; `<relic-table>` for affected files
+- **Spec / shared artifact amendments** — `<relic-callout>` per amendment (if any)
+- **Changelog entry (draft)** — verbatim `<pre>` code block
+
+Run `relic validate` afterwards — it lints fragments; unknown tags or malformed attributes
+degrade to inline viewer warnings, never a broken page.
 
 **If `mode = "md"`** (determined in Step 0):
 

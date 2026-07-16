@@ -37,7 +37,7 @@ Run:
 relic use --fix <fix-id>
 ```
 
-This validates `.relic/fixes/<fix-id>.md` exists and writes the fix ID to `session.json`.
+This validates `.relic/fixes/<fix-id>.md` (or `.html` in html mode) exists and writes the fix ID to `session.json`.
 
 After activation, report:
 
