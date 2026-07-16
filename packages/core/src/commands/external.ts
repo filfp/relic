@@ -281,7 +281,21 @@ function runList(relicDir: string, specFilter: string | undefined, text?: boolea
   for (const specId of specIds) {
     const artifactsPath = join(specsDir, specId, "artifacts.json");
     if (!fileExists(artifactsPath)) continue;
-    const artifacts = readJson<{ external_reads?: string[] }>(artifactsPath);
+    let artifacts: { external_reads?: string[] };
+    try {
+      artifacts = readJson<{ external_reads?: string[] }>(artifactsPath);
+    } catch (err) {
+      entries.push({
+        spec: specId,
+        entry: null,
+        type: "",
+        filename: "",
+        resolved_path: null,
+        exists: false,
+        error: `malformed artifacts.json: ${err instanceof Error ? err.message : String(err)}`,
+      });
+      continue;
+    }
     for (const entry of artifacts.external_reads ?? []) {
       try {
         const r = resolveExternalRead(relicDir, entry);

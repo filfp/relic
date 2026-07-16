@@ -81,7 +81,9 @@ const ATTR_RE = /([a-zA-Z-]+)(?:\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
 function parseAttrs(src: string): Record<string, string> {
   const attrs: Record<string, string> = {};
   for (const m of src.matchAll(ATTR_RE)) {
-    attrs[m[1]!] = m[3] ?? m[4] ?? m[5] ?? "";
+    // an unclosed opening quote (`x="y>`) falls through to the unquoted
+    // branch with the quote char included — drop it to keep the intended value
+    attrs[m[1]!] = (m[3] ?? m[4] ?? m[5] ?? "").replace(/^["']/, "");
   }
   return attrs;
 }

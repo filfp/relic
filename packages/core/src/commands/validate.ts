@@ -69,16 +69,25 @@ export async function runValidate(options: ValidateOptions): Promise<void> {
     for (const spec of registry) {
       const htmlPath = join(spec.path, `${spec.id}.html`);
       if (!fileExists(htmlPath)) continue;
-      for (const lint of lintFragment(readText(htmlPath))) {
-        fragmentLints.push({ file: `specs/${spec.id}/${spec.id}.html`, ...lint });
+      const file = `specs/${spec.id}/${spec.id}.html`;
+      try {
+        for (const lint of lintFragment(readText(htmlPath))) {
+          fragmentLints.push({ file, ...lint });
+        }
+      } catch (err) {
+        fragmentLints.push({ file, level: "error", message: `unreadable file: ${err instanceof Error ? err.message : String(err)}` });
       }
     }
     const fixesDir = join(relicDir, "fixes");
     if (dirExists(fixesDir)) {
       for (const entry of readdirSync(fixesDir)) {
         if (!entry.endsWith(".html")) continue;
-        for (const lint of lintFragment(readText(join(fixesDir, entry)))) {
-          fragmentLints.push({ file: `fixes/${entry}`, ...lint });
+        try {
+          for (const lint of lintFragment(readText(join(fixesDir, entry)))) {
+            fragmentLints.push({ file: `fixes/${entry}`, ...lint });
+          }
+        } catch (err) {
+          fragmentLints.push({ file: `fixes/${entry}`, level: "error", message: `unreadable file: ${err instanceof Error ? err.message : String(err)}` });
         }
       }
     }

@@ -303,7 +303,19 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
   }
 
   // --check: version check only
-  const checkResult = await checkVersion(options.currentVersion, resolvedChannel);
+  let checkResult: Awaited<ReturnType<typeof checkVersion>>;
+  try {
+    checkResult = await checkVersion(options.currentVersion, resolvedChannel);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (options.text) {
+      console.error(message);
+    } else {
+      console.log(JSON.stringify({ error: message }, null, 2));
+    }
+    process.exitCode = 1;
+    return;
+  }
 
   if (options.check) {
     if (options.text) {

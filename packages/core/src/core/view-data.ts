@@ -52,7 +52,7 @@ export function parseTaskPhases(tasksMd: string | null): { done: number; total: 
   let current: TaskPhase | null = null;
   let done = 0;
   let total = 0;
-  for (const line of tasksMd.split("\n")) {
+  for (const line of tasksMd.split(/\r?\n/)) {
     const ph = line.match(/^###\s+(.+)$/);
     if (ph) {
       current = { title: ph[1]!.replace(/\s*\(.*\)\s*$/, "").trim(), done: 0, total: 0, items: [] };

@@ -37,6 +37,12 @@ describe("parseFragment", () => {
     expect(tags).toEqual(["relic-artifacts", "p"]);
   });
 
+  test("unclosed attribute quote degrades to the intended value", () => {
+    const r = parseFragment(wrap(`<relic-section title="unclosed>\n<p>hi</p>\n</relic-section>`));
+    const section: any = r.body.find((n: any) => n.kind === "element" && n.tag === "relic-section");
+    expect(section.attrs.title).toBe("unclosed");
+  });
+
   test("unknown tag degrades to an element with a warning, page keeps parsing", () => {
     const r = parseFragment(wrap(`<relic-tabel headers='["A"]'>x</relic-tabel><p>ok</p>`));
     const bad: any = r.body.find((n: any) => n.tag === "relic-tabel");
