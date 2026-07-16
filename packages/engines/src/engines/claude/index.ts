@@ -24,12 +24,23 @@ export const RELIC_PLUGIN_KEY = "relic@relic";
 export function writeClaude(projectDir: string): void {
   ensureDir(join(projectDir, ".claude"));
   const settingsPath = join(projectDir, ".claude", "settings.json");
-  const settings: ClaudeSettings = fileExists(settingsPath)
-    ? readJson<ClaudeSettings>(settingsPath)
-    : {};
+  let settings: ClaudeSettings = {};
+  if (fileExists(settingsPath)) {
+    try {
+      settings = readJson<ClaudeSettings>(settingsPath);
+    } catch {
+      // never overwrite a file we could not parse
+      throw new Error(
+        ".claude/settings.json exists but is not valid JSON — fix it and re-run"
+      );
+    }
+  }
 
-  settings.permissions ??= {};
-  settings.permissions.allow ??= [];
+  if (typeof settings.permissions !== "object" || settings.permissions === null || Array.isArray(settings.permissions)) {
+    settings.permissions = {};
+  }
+  const allow = settings.permissions.allow;
+  settings.permissions.allow = Array.isArray(allow) ? allow : typeof allow === "string" ? [allow] : [];
   if (!settings.permissions.allow.includes("Bash(relic *)")) {
     settings.permissions.allow.push("Bash(relic *)");
   }

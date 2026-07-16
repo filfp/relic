@@ -63,6 +63,26 @@ describe("Claude engine (plugin era — spec 011)", () => {
     expect(settings.permissions.allow).toEqual(["Bash(git *)", "Bash(relic *)"]);
     expect(Object.keys(settings.enabledPlugins)).toEqual(["relic@relic"]);
   });
+
+  test("refuses to overwrite an unparseable settings.json", async () => {
+    const { mkdirSync, writeFileSync } = await import("fs");
+    mkdirSync(join(dir, ".claude"), { recursive: true });
+    writeFileSync(join(dir, ".claude", "settings.json"), "{ not json !");
+    await expect(runAddEngine({ engine: "claude", projectDir: dir })).rejects.toThrow(/not valid JSON/);
+    expect(readFileSync(join(dir, ".claude", "settings.json"), "utf8")).toBe("{ not json !");
+  });
+
+  test("normalizes a string permissions.allow instead of crashing", async () => {
+    const { mkdirSync, writeFileSync } = await import("fs");
+    mkdirSync(join(dir, ".claude"), { recursive: true });
+    writeFileSync(
+      join(dir, ".claude", "settings.json"),
+      JSON.stringify({ permissions: { allow: "Bash(git *)" } })
+    );
+    await runAddEngine({ engine: "claude", projectDir: dir });
+    const settings = JSON.parse(readFileSync(join(dir, ".claude", "settings.json"), "utf8"));
+    expect(settings.permissions.allow).toEqual(["Bash(git *)", "Bash(relic *)"]);
+  });
 });
 
 describe("Copilot engine", () => {
