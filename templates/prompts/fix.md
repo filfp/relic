@@ -1,8 +1,8 @@
-# /relic.fix
+# /relic:fix
 
-`/relic.fix` is the **diagnosis stage** of the two-stage fix pipeline. It identifies the owning
+`/relic:fix` is the **diagnosis stage** of the two-stage fix pipeline. It identifies the owning
 spec, classifies the root cause, creates a fix document, and sets the active fix. It does **not**
-apply code changes. Run `/relic.solve` after reviewing the fix document.
+apply code changes. Run `/relic:solve` after reviewing the fix document.
 
 ---
 
@@ -32,7 +32,7 @@ against the file path or code area mentioned in the issue.
 
 **Resolution rules:**
 
-- **No match** → Stop. Report: _"This area is not owned by any spec. Run `/relic.specify` to
+- **No match** → Stop. Report: _"This area is not owned by any spec. Run `/relic:specify` to
   create a spec for this feature before filing a fix."_
 - **Single match** → Use that spec.
 - **Multiple matches** → Longest prefix wins. If two prefixes are equal length, list them and ask
@@ -43,6 +43,8 @@ against the file path or code area mentioned in the issue.
 ## Step 2 — Load spec context
 
 <!-- include: relic snippet load-spec-context -->
+
+<!-- include: relic snippet external-reads -->
 
 ---
 
@@ -70,18 +72,27 @@ the issue description (e.g. `2026-04-13-null-session-read-on-missing-file`).
 
 **If `mode = "html"`** (determined in Step 0):
 
-1. Read `.relic/base.html` — open the `<template id="relic-docs">` element for the component inventory.
-2. Create `.relic/fixes/<fix-id>.html` with the following structure (all fields from
-   `FixDocumentContract` expressed via components). Do **not** create `<fix-id>.md`.
+Create `.relic/fixes/<fix-id>.html` as a **fragment**: one `<relic-body>` root containing
+semantic tags only — no doctype, no scripts, no styles, no chrome. The embedded viewer
+(`relic serve`) renders it; never write page infrastructure into it. Do **not** create
+`<fix-id>.md`.
 
-   Required sections:
-   - `<relic-status value="pending">pending</relic-status>` — fix status badge
-   - Owning spec, date, classification as metadata
-   - **Issue** — prose description
-   - **Root Cause** — `<relic-callout type="info">` with classification badge and explanation
-   - **Proposed Changes** — `<relic-flow>` for code-change flow; `<relic-table>` for affected files
-   - **Spec / shared artifact amendments** — `<relic-callout>` per amendment (if any)
-   - **Changelog entry (draft)** — verbatim `<pre>` code block
+<!-- include: relic snippet viewer-components -->
+
+Required content (all fields from `FixDocumentContract` expressed via components):
+
+- Header: an `<h1>` with a short issue title, then a `<div class="meta">` of `<span>`s
+  carrying the fix ID, date, owning spec (`<relic-chip>`),
+  `<relic-status value="pending">pending</relic-status>`, and the classification
+  (`<relic-chip>`)
+- **Issue** — prose description inside a `<relic-section>`
+- **Root Cause** — `<relic-callout type="info">` with classification badge and explanation
+- **Proposed Changes** — `<relic-flow>` for code-change flow; `<relic-table>` for affected files
+- **Spec / shared artifact amendments** — `<relic-callout>` per amendment (if any)
+- **Changelog entry (draft)** — verbatim `<pre>` code block
+
+Run `relic validate` afterwards — it lints fragments; unknown tags or malformed attributes
+degrade to inline viewer warnings, never a broken page.
 
 **If `mode = "md"`** (determined in Step 0):
 
@@ -124,7 +135,7 @@ and what changes. Identify all specs in reads[] that will be affected.>
 
 ## Changelog entry (draft)
 
-<Draft changelog entry for .relic/changelog.md. /relic.solve will write this verbatim.>
+<Draft changelog entry for .relic/changelog.md. /relic:solve will write this verbatim.>
 ```
 
 Do **not** create `<fix-id>.html` when mode is `"md"`.
@@ -157,6 +168,6 @@ Output:
 2. **Owning spec:** which spec owns the affected code area
 3. **Classification:** one of the four categories with a brief rationale
 4. **Fix document:** path to the created fix doc (`.relic/fixes/<fix-id>.html` or `.md`)
-5. **Next step:** _"Review the fix document, then run `/relic.solve` to apply the changes. If the
-   classification is `misspecification` or `misunderstanding`, run `/relic.clarify` after solving
+5. **Next step:** _"Review the fix document, then run `/relic:solve` to apply the changes. If the
+   classification is `misspecification` or `misunderstanding`, run `/relic:clarify` after solving
    to update the spec."_

@@ -136,7 +136,7 @@ describe("runSearch — scoring and filtering", () => {
     const dataLines = lines.filter((l) => !l.startsWith("#") && l.trim());
     expect(dataLines.length).toBe(1);
     expect(dataLines[0]).toContain("UserAuth");
-    const score = parseInt(dataLines[0].split(" | ")[5], 10);
+    const score = parseInt(dataLines[0]!.split(" | ")[5]!, 10);
     expect(score).toBe(2);
   });
 
@@ -173,8 +173,8 @@ describe("runSearch — scoring and filtering", () => {
 
     const dataLines = lines.filter((l) => !l.startsWith("#") && l.trim());
     expect(dataLines.length).toBe(2);
-    const scores = dataLines.map((l) => parseInt(l.split(" | ")[5], 10));
-    expect(scores[0]).toBeGreaterThan(scores[1]);
+    const scores = dataLines.map((l) => parseInt(l.split(" | ")[5]!, 10));
+    expect(scores[0]!).toBeGreaterThan(scores[1]!);
   });
 });
 
@@ -192,10 +192,10 @@ describe("runSearch — output format", () => {
     await runSearch({ keywords: ["auth"], deep: false, knowledge: false, spec: false, fix: false, json: false, relicDir });
     restore();
 
-    expect(lines[0].startsWith("#")).toBe(true);
+    expect(lines[0]!.startsWith("#")).toBe(true);
     const dataLines = lines.filter((l) => !l.startsWith("#") && l.trim());
     expect(dataLines.length).toBe(1);
-    expect(dataLines[0].split(" | ")).toHaveLength(6);
+    expect(dataLines[0]!.split(" | ")).toHaveLength(6);
   });
 
   test("--json output: valid JSON array with all SearchResultEntry fields", async () => {

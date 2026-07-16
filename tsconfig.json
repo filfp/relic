@@ -27,4 +27,5 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   }
+  ,"exclude": ["packages/viewer", "node_modules"]
 }

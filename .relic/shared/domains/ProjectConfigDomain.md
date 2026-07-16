@@ -47,3 +47,22 @@ The per-project configuration domain. `config.json` is the single committed conf
 - Replaces UpgradeDomain (spec 004) reference to `engines.json` — `relic upgrade` and `relic add-engine` must read/write `config.json` via `project-config.ts` instead of `engines-registry.ts`
 - Extends TemplateDomain (spec 004) — `templates/base.html` is embedded via the same `embed-templates.ts` pipeline
 - Extends ScaffoldResultContract — `files_created` conditionally includes `spec.html` when created in HTML mode
+
+
+## `sdd` Field (added by 011-claude-plugin, 2026-07-02)
+
+Optional ambient-SDD autonomy knob: `"auto"` (default when absent) or `"suggest"`.
+Governs how autonomously AI agents perform **structural** Relic actions (creating specs,
+claiming artifact ownership, changing contracts other specs read): `auto` =
+announce-then-do, `suggest` = one-line confirmation first. Read/maintain actions are
+unaffected. Read via `readSdd()` in `@relic/utility`; exposed as `sdd` in `relic context`
+output. Committed — a team convention, like `mode` and `external`. Authoritative
+behaviour contract: `ClaudePluginContract.md` (owned by 011).
+
+## `viewer` Field (added by 012-spec-viewer, 2026-07-03)
+
+Optional block: `{ "port": <number> }` — the spec viewer server port (`relic serve`),
+default 4747 when absent. Same-project healthy instances are reused; foreign occupants
+trigger auto-increment (up to +19). Read via `readViewerPort()`; committed — a team
+convention. Server lifecycle state lives in gitignored `.relic/viewer.json`
+({port, pid, started_at}). Authoritative behaviour: `ViewerContract.md` (owned by 012).

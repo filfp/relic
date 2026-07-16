@@ -1,6 +1,4 @@
-import { join } from "path";
-import { findRelicDir, fileExists, writeText, readMode, writeMode } from "@relic/utility";
-import { TEMPLATES } from "../generated/templates.ts";
+import { findRelicDir, readMode, writeMode } from "@relic/utility";
 
 export interface ModeOptions {
   value?: string;
@@ -37,30 +35,12 @@ export async function runMode(options: ModeOptions): Promise<void> {
   const mode = options.value as "md" | "html";
   writeMode(relicDir, mode);
 
-  // When switching to html, scaffold base.html if absent
-  if (mode === "html") {
-    const baseHtmlPath = join(relicDir, "base.html");
-    if (!fileExists(baseHtmlPath)) {
-      const template = (TEMPLATES["base.html"] ?? "")
-        .replace(/\{\{SPEC_ID\}\}/g, "base")
-        .replace(/\{\{TITLE\}\}/g, "Relic Component Library")
-        .replace(/\{\{DATE\}\}/g, new Date().toISOString().slice(0, 10));
-      writeText(baseHtmlPath, template);
-      if (options.text) {
-        console.log(`Mode set to html.`);
-        console.log(`Created .relic/base.html (component library).`);
-      } else {
-        console.log(
-          JSON.stringify({ mode, base_html_created: true }, null, 2)
-        );
-      }
-      return;
-    }
-  }
-
+  // spec 012: html mode needs no per-project chrome — the embedded viewer
+  // (`relic serve`) renders <relic-body> fragments
   if (options.text) {
     console.log(`Mode set to ${mode}.`);
+    if (mode === "html") console.log("Spec HTML files are fragments — view them with: relic serve");
   } else {
-    console.log(JSON.stringify({ mode, base_html_created: false }, null, 2));
+    console.log(JSON.stringify({ mode }, null, 2));
   }
 }

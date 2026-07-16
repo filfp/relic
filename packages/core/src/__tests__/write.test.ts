@@ -55,7 +55,7 @@ describe("appendChangelogEntry", () => {
   test("creates changelog.md on first call with new-format heading", () => {
     appendChangelogEntry(relicDir, { name: "MySpec: contract added", description: "Added field X." });
     const content = readFileSync(join(relicDir, "changelog.md"), "utf8");
-    expect(content).toMatch(/## \[\d{4}-\d{2}-\d{2}T[\d:.Z]+\] \/relic\.write — MySpec: contract added/);
+    expect(content).toMatch(/## \[\d{4}-\d{2}-\d{2}T[\d:.Z]+\] \/relic:write — MySpec: contract added/);
     expect(content).toContain("Added field X.");
   });
 
@@ -131,7 +131,7 @@ describe("runWrite --changelog", () => {
       relicDir,
     });
     const content = readFileSync(join(relicDir, "changelog.md"), "utf8");
-    expect(content).toMatch(/## \[.*\] \/relic\.write — spec-id: something changed/);
+    expect(content).toMatch(/## \[.*\] \/relic:write — spec-id: something changed/);
     expect(content).toContain("Why it changed.");
   });
 

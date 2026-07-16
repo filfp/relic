@@ -35,7 +35,7 @@ export async function runUse(options: UseOptions): Promise<void> {
     const fixDoc = join(relicDir, "fixes", options.fix + ext);
     if (!fileExists(fixDoc)) {
       console.error(`Fix document not found: .relic/fixes/${options.fix}${ext}`);
-      console.error("Run /relic.fix first to create a fix document.");
+      console.error("Run /relic:fix first to create a fix document.");
       process.exit(1);
     }
     writeSession(relicDir, { ...readSession(relicDir), fix: options.fix });
@@ -58,7 +58,7 @@ export async function runUse(options: UseOptions): Promise<void> {
       console.error("Available specs:");
       for (const s of available) console.error(`  ${s}`);
     } else {
-      console.error("No specs found. Run: relic init, then use /relic.specify");
+      console.error("No specs found. Run: relic init, then use /relic:specify");
     }
     process.exit(1);
   }

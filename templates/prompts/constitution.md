@@ -1,7 +1,7 @@
-# /relic.constitution
+# /relic:constitution
 
 Extract project-specific coding principles, tech standards, and architecture decisions
-into `.relic/constitution.md`. Run this **once** when adopting Relic — after `/relic.scan`
+into `.relic/constitution.md`. Run this **once** when adopting Relic — after `/relic:scan`
 if the codebase exists, or standalone for new projects.
 
 ---
@@ -10,7 +10,7 @@ if the codebase exists, or standalone for new projects.
 
 <!-- include: relic snippet preamble-guard -->
 
-> The constitution is the HOW of your project. `/relic.scan` captures the WHAT (domains,
+> The constitution is the HOW of your project. `/relic:scan` captures the WHAT (domains,
 > contracts, rules). Together they give the AI complete context before every interaction.
 
 ## Step 0 — Detect mode
@@ -143,5 +143,5 @@ Tell the user:
 - How many principles were extracted (or defined)
 - Which ones are `(inferred)` and need confirmation
 - Recommended next step:
-  - If scan has not been run: `/relic.scan` to populate the shared artifact brain
-  - If scan is done: `/relic.specify` to create the first feature spec
+  - If scan has not been run: `/relic:scan` to populate the shared artifact brain
+  - If scan is done: `/relic:specify` to create the first feature spec

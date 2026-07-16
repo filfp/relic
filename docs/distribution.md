@@ -197,3 +197,28 @@ Three separate READMEs — each scoped to its audience:
 
 *Document created: April 11, 2026.*
 *Covers: npm + PyPI distribution, CI workflows, publish script, macOS signing.*
+
+
+## Claude Code plugin (added by spec 011)
+
+The relic repository doubles as a Claude Code plugin marketplace:
+
+- `.claude-plugin/marketplace.json` (repo root) lists the `relic` plugin with
+  `source: "./plugin"`.
+- `plugin/` contains the plugin: `.claude-plugin/plugin.json`, `commands/` (12 files
+  **generated** from `templates/prompts/` by `scripts/build-plugin.ts` — committed,
+  CI-checked for freshness, never hand-edited), the authored `commands/setup.md`, and
+  `skills/` (four ambient skills).
+- `scripts/publish.ts` bumps `plugin/.claude-plugin/plugin.json` `version` in lockstep
+  with the CLI — pinned versions are what trigger plugin updates for users.
+- Distribution is the git repo itself: `/plugin marketplace add filfp/relic` →
+  `/plugin install relic@relic`. No separate publish step.
+
+
+## Embedded spec viewer (added by spec 012)
+
+`packages/viewer/` (React + Vite) is built at release time and embedded into the CLI
+by `scripts/embed-viewer.ts` (base64 asset map in `packages/core/src/generated/`).
+`relic serve` ships it from a single self-contained artifact on both channels — Vite
+is a dev/build dependency only and never reaches users. The plugin's `.mcp.json`
+exposes the viewer to agents as MCP tools.

@@ -157,3 +157,100 @@ describe("readMode / writeMode", () => {
     expect(readMode(relicDir)).toBe("md");
   });
 });
+
+describe("external config (spec 009)", () => {
+  const { mkdirSync, readFileSync } = require("fs");
+  const { EXTERNAL_TYPES, readExternalTypes, writeExternalType, resolveExternalDir, parseExternalEntry, resolveExternalRead, ExternalConfigError } = require("../project-config.ts");
+
+  // parent project dir with .relic inside — external paths resolve against the parent
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "relic-external-test-"));
+    relicDir = join(dir, ".relic");
+    mkdirSync(relicDir, { recursive: true });
+  });
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("external map round-trips through read/write and preserves other fields", () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: ["claude"], mode: "html" }));
+    writeExternalType(relicDir, "fr", "./docs/fr");
+    writeExternalType(relicDir, "adr", "/abs/decisions");
+    const config = readProjectConfig(relicDir);
+    expect(config.engines).toEqual(["claude"]);
+    expect(config.mode).toBe("html");
+    expect(config.external).toEqual({ fr: "./docs/fr", adr: "/abs/decisions" });
+    // stored as given — not normalised to absolute
+    const raw = JSON.parse(readFileSync(join(relicDir, "config.json"), "utf8"));
+    expect(raw.external.fr).toBe("./docs/fr");
+  });
+
+  test("readExternalTypes returns empty map when unconfigured", () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "md" }));
+    expect(readExternalTypes(relicDir)).toEqual({});
+  });
+
+  test("resolveExternalDir resolves relative paths against the .relic parent", () => {
+    writeExternalType(relicDir, "fr", "./docs/fr");
+    expect(resolveExternalDir(relicDir, "fr")).toBe(join(dir, "docs", "fr"));
+    expect(resolveExternalDir(relicDir, "nfr")).toBeNull();
+  });
+
+  test("resolveExternalDir passes absolute paths through", () => {
+    writeExternalType(relicDir, "adr", join(dir, "decisions"));
+    expect(resolveExternalDir(relicDir, "adr")).toBe(join(dir, "decisions"));
+  });
+
+  test("parseExternalEntry splits type and filename, normalising separators", () => {
+    expect(parseExternalEntry("fr/FR-001-auth.md")).toEqual({ entry: "fr/FR-001-auth.md", type: "fr", filename: "FR-001-auth.md" });
+    expect(parseExternalEntry("adr\\ADR-002-db.md").filename).toBe("ADR-002-db.md");
+  });
+
+  test("parseExternalEntry rejects malformed and unknown-type entries", () => {
+    expect(() => parseExternalEntry("no-slash")).toThrow(ExternalConfigError);
+    expect(() => parseExternalEntry("wat/FILE.md")).toThrow(/unknown type/);
+    expect(() => parseExternalEntry("fr/")).toThrow(ExternalConfigError);
+  });
+
+  test("resolveExternalRead reports existence", () => {
+    mkdirSync(join(dir, "docs", "fr"), { recursive: true });
+    writeFileSync(join(dir, "docs", "fr", "FR-001-auth.md"), "# FR-001");
+    writeExternalType(relicDir, "fr", "./docs/fr");
+    const hit = resolveExternalRead(relicDir, "fr/FR-001-auth.md");
+    expect(hit.exists).toBe(true);
+    expect(hit.resolved_path).toBe(join(dir, "docs", "fr", "FR-001-auth.md"));
+    expect(resolveExternalRead(relicDir, "fr/FR-404-nope.md").exists).toBe(false);
+  });
+
+  test("resolveExternalRead hard-errors on unconfigured type and traversal", () => {
+    writeExternalType(relicDir, "fr", "./docs/fr");
+    expect(() => resolveExternalRead(relicDir, "adr/ADR-001.md")).toThrow(/not configured/);
+    expect(() => resolveExternalRead(relicDir, "fr/../secrets.md")).toThrow(/traversal/);
+    expect(() => resolveExternalRead(relicDir, "fr/nested/../../secrets.md")).toThrow(/traversal/);
+  });
+
+  test("EXTERNAL_TYPES covers the six documented types", () => {
+    expect([...EXTERNAL_TYPES]).toEqual(["fr", "nfr", "br", "adr", "us", "epic"]);
+  });
+});
+
+describe("sdd knob (spec 011)", () => {
+  const { readSdd } = require("../project-config.ts");
+
+  test("defaults to auto when absent or invalid", () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "md" }));
+    expect(readSdd(relicDir)).toBe("auto");
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "md", sdd: "yolo" }));
+    expect(readSdd(relicDir)).toBe("auto");
+  });
+
+  test("reads suggest and survives round-trips", () => {
+    writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "html", sdd: "suggest" }));
+    expect(readSdd(relicDir)).toBe("suggest");
+    // round-trip through an unrelated write preserves sdd
+    writeMode(relicDir, "md");
+    expect(readSdd(relicDir)).toBe("suggest");
+    expect(readProjectConfig(relicDir).mode).toBe("md");
+  });
+});

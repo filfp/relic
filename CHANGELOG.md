@@ -9,6 +9,91 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Claude Code plugin (`relic@relic`)** — the relic repo doubles as a plugin
+  marketplace. Ships the 12 workflow commands (as `/relic:<name>`), the `/relic:setup`
+  onboarding command (consent-gated CLI install + `relic init`), and four ambient
+  skills that make SDD the default working practice: `relic-knowledge-first`,
+  `relic-spec-detector`, `relic-fix-pipeline`, `relic-doc-keeper`. Per-project
+  installation via committed `.claude/settings.json` (marketplace + `enabledPlugins`).
+- **Ambient SDD autonomy ladder** — read silent / maintain automatic / structural
+  announce-then-do, governed by the new `config.json` `"sdd"` knob (`auto` default,
+  `suggest` for ask-first teams); exposed in `relic context`.
+- **Spec viewer** — `relic serve` starts a per-project, read-only localhost server
+  with an embedded React app: project dashboard, spec views (live derived task
+  progress, artifact tables, changelog), fix views, markdown tabs rendered from disk,
+  and a `/docs` tag reference. Port via `config.json` `viewer.port` (default 4747,
+  same-project reuse, auto-increment).
+- **MCP server** — `relic mcp` (stdio; zero dependencies) with `view_spec`,
+  `view_fix`, and `list_views` tools that ensure the viewer is running and return
+  URLs; wired into the plugin via `.mcp.json`.
+- **Fragment format for spec/fix HTML** — files are now minimal `<relic-body>`
+  fragments of semantic tags; derived tags (`<relic-spec-meta/>`, `<relic-tasks/>`,
+  `<relic-artifacts/>`, `<relic-changelog/>`) are computed server-side from the real
+  files and can never go stale. `relic validate` lints fragments; malformed tags
+  degrade to inline warnings instead of breaking pages.
+- **`relic viewer-migrate`** — converts pre-fragment full-document HTML files;
+  also run automatically by `relic upgrade`.
+- **External spec integration (spec 009)** — `config.json` `external` per-type path
+  map (`fr`/`nfr`/`br`/`adr`/`us`/`epic`, typically a git-submodule spec repo);
+  `relic external` command (`init` submodule, `set`, `link`, `create` with sequential
+  IDs + auto git commit + auto-link, `list`); `external_reads` in `artifacts.json`;
+  hard validate errors on broken entries; `relic init --external-<type>` flags; six
+  document templates; workflow prompts read linked documents before working.
+- **Prompt snippet injection (spec 010)** — `<!-- include: relic snippet <name> -->`
+  directives resolved at runtime via the new `relic snippet` command; shared prompt
+  fragments live once in `templates/snippets/`.
+- **`relic upgrade --clean`** — removes superseded pre-plugin
+  `.claude/commands/relic.*.md` copies (relic-managed pattern only, each reported).
+
+### Changed
+- **Command spelling** — `/relic.command` is now `/relic:command` everywhere (plugin
+  namespace form; single spelling, no compatibility period).
+- **Claude engine** — `relic init --engine claude` / `add-engine claude` write the
+  per-project plugin installation (permission + marketplace + enablement) instead of
+  copying 12 command files into the project.
+- **Preamble** — spec-folder file allowlist is mode-conditional (4 files, plus the
+  CLI-created `<spec-id>.html` in html mode); new Ambient SDD section documents the
+  autonomy ladder for all engines.
+- **`relic mode html`** — no longer writes `.relic/base.html`; fragments need no
+  per-project chrome.
+- **`relic context`** — output gains `sdd`, `viewer` (`{running, port, url}`), and
+  `external`/`external_reads` fields.
+
+### Fixed
+- **HTML components broke pages** — custom-element parse-timing bug (flows rendered
+  from empty sources and dumped raw text), `</script` truncation in embedded reader
+  sources, and the docs `<template>` swallowing the component script (blank pages);
+  fixed in 0.9-era chrome, then the whole chrome model was superseded by the viewer.
+- **Flow diagrams** — edge operator no longer matches inside node labels
+  (`A[foo---bar]`); undirected `A --- B` edges now render.
+- **`relic validate`** — permits `<spec-id>.html` in html mode spec folders.
+- **`relic upgrade --prompts`** — now works in dev-channel builds (was unreachable
+  behind the channel warning).
+- **Tooling** — root `bun test` no longer fails from a process-global
+  `mock.module` leak; all 16 legacy typecheck errors fixed; `tsc --noEmit`, plugin
+  freshness, and viewer embed run in CI.
+- **Pre-1.0 review sweep** — `/relic:fix` html-mode step authored fragments again
+  (was still instructing a copy of the retired `base.html`); viewer markdown links
+  are scheme-filtered and quote-escaped; task parsing tolerates CRLF files (Windows
+  checkouts reported wrong counts); `relic validate`, `relic external list`,
+  `relic upgrade`, and `add-engine claude` report unreadable/malformed inputs and
+  network failures as errors instead of crashing (an unparseable
+  `.claude/settings.json` is never overwritten); viewer markdown handles nested
+  lists, nested/multi-line emphasis; charts clamp non-numeric/negative data; the
+  fragment parser drops a dangling quote from unclosed attribute values.
+- **Viewer dogfooding trio** — markdown tabs no longer freeze on paragraph lines
+  starting with inline code (renderer infinite loop); concurrent MCP tool calls no
+  longer spawn duplicate viewer servers (`ensureServer` serialized); `relic context`
+  finds a viewer running on an auto-incremented port (probes the `viewer.json`
+  runtime port before the configured one).
+
+### Removed
+- **`relic html-sync`** — retired; there is no per-file chrome to sync. Legacy files
+  are converted by `relic viewer-migrate`.
+- **`.relic/base.html`** — removed by `relic upgrade` (superseded by the embedded
+  viewer).
+
 ---
 
 ## [0.8.19] — 2026-05-20

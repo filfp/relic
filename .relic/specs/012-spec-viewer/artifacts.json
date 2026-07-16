@@ -1,0 +1,32 @@
+{
+  "owns": [
+    "shared/contracts/ViewerContract.md"
+  ],
+  "reads": [
+    "shared/contracts/HtmlComponentContract.md",
+    "shared/domains/ProjectConfigDomain.md",
+    "shared/contracts/ContextResultContract.md",
+    "shared/contracts/ClaudePluginContract.md",
+    "shared/domains/TemplateDomain.md"
+  ],
+  "touches_files": [
+    "packages/viewer/",
+    "scripts/embed-viewer.ts",
+    "packages/core/src/core/fragment.ts",
+    "packages/core/src/commands/serve.ts",
+    "packages/core/src/commands/mcp.ts",
+    "packages/core/src/commands/viewer-migrate.ts",
+    "packages/core/src/commands/html-sync.ts",
+    "packages/core/src/commands/validate.ts",
+    "packages/core/src/commands/context.ts",
+    "packages/core/src/commands/scaffold.ts",
+    "packages/core/src/commands/upgrade.ts",
+    "packages/utility/src/project-config.ts",
+    "packages/cli-node/src/bin.ts",
+    "packages/cli-node/src/bin.debug.ts",
+    "templates/fragment.html",
+    "templates/snippets/html-mode.md",
+    "templates/snippets/viewer-components.md",
+    "plugin/.mcp.json"
+  ]
+}

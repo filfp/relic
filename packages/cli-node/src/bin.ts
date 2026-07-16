@@ -15,6 +15,11 @@ import {
   runWrite,
   runMode,
   runSnippet,
+  runHtmlSync,
+  runExternal,
+  runServe,
+  runMcp,
+  runViewerMigrate,
   findRelicDir,
   SUPPORTED_ENGINES,
   type Engine,
@@ -39,12 +44,23 @@ program
     `AI engines to configure, comma-separated (${SUPPORTED_ENGINES.join("|")})`,
     "claude"
   )
-  .action(async (opts: { dir: string; force: boolean; engine: string }) => {
+  .option("--external-fr <path>", "External Functional Requirements directory")
+  .option("--external-nfr <path>", "External Non-Functional Requirements directory")
+  .option("--external-br <path>", "External Business Requirements directory")
+  .option("--external-adr <path>", "External Architecture Decision Records directory")
+  .option("--external-us <path>", "External User Stories directory")
+  .option("--external-epic <path>", "External Epics directory")
+  .action(async (opts: { dir: string; force: boolean; engine: string; externalFr?: string; externalNfr?: string; externalBr?: string; externalAdr?: string; externalUs?: string; externalEpic?: string }) => {
     const engines = opts.engine
       .split(",")
       .map((e) => e.trim())
       .filter(Boolean) as Engine[];
-    await runInit({ dir: opts.dir, force: opts.force, engines });
+    const external = {
+      fr: opts.externalFr, nfr: opts.externalNfr, br: opts.externalBr,
+      adr: opts.externalAdr, us: opts.externalUs, epic: opts.externalEpic,
+    };
+    const hasExternal = Object.values(external).some(Boolean);
+    await runInit({ dir: opts.dir, force: opts.force, engines, ...(hasExternal ? { external } : {}) });
   });
 
 program
@@ -188,12 +204,14 @@ program
   .description("Upgrade relic-cli and refresh AI engine hook files")
   .option("--check", "Check for updates only, do not install", false)
   .option("--prompts", "Refresh engine hook files only, skip binary upgrade", false)
+  .option("--clean", "Remove superseded relic-managed command copies (.claude/commands/relic.*.md)", false)
   .option("--text", "Human-readable output instead of JSON", false)
-  .action(async (opts: { check: boolean; prompts: boolean; text: boolean }) => {
+  .action(async (opts: { check: boolean; prompts: boolean; clean: boolean; text: boolean }) => {
     const relicDir = findRelicDir(process.cwd()) ?? undefined;
     await runUpgrade({
       check: opts.check,
       promptsOnly: opts.prompts,
+      clean: opts.clean,
       text: opts.text,
       currentVersion: VERSION,
       relicDir,
@@ -202,7 +220,7 @@ program
 
 program
   .command("mode [value]")
-  .description("Get or set the project mode (md|html). When switching to html, scaffolds .relic/base.html if absent.")
+  .description("Get or set the project mode (md|html). In html mode, specs carry a <spec-id>.html fragment rendered by the embedded viewer (relic serve).")
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (value: string | undefined, opts: { text: boolean }) => {
     await runMode({ value, text: opts.text });
@@ -213,6 +231,49 @@ program
   .description("Output named snippet content from baked SNIPPETS registry")
   .action((name: string) => {
     runSnippet(name);
+  });
+
+program
+  .command("external [args...]")
+  .description("External spec repo integration: report, set <type> <path>, link <type>/<file>, create <type> <title>, list, init <remote-url>")
+  .option("--path <local-path>", "Submodule path for external init (default: specs/)")
+  .option("--spec <id>", "Spec ID override for link/create/list")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (args: string[], opts: { path?: string; spec?: string; text: boolean }) => {
+    await runExternal({ args: args ?? [], path: opts.path, spec: opts.spec, text: opts.text });
+  });
+
+program
+  .command("serve")
+  .description("Start the spec viewer server (read-only, localhost; port from config.json viewer.port)")
+  .option("--port <n>", "Port override")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (opts: { port?: string; text: boolean }) => {
+    await runServe({ port: opts.port ? parseInt(opts.port, 10) : undefined, text: opts.text, version: VERSION });
+  });
+
+program
+  .command("mcp")
+  .description("Run the Relic MCP server on stdio (tools: view_spec, view_fix, list_views)")
+  .action(async () => {
+    await runMcp({ version: VERSION });
+  });
+
+program
+  .command("viewer-migrate")
+  .description("Convert pre-012 full-document spec/fix HTML files into <relic-body> fragments")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (opts: { text: boolean }) => {
+    await runViewerMigrate({ text: opts.text });
+  });
+
+program
+  .command("html-sync")
+  .description("RETIRED — use relic viewer-migrate / relic serve")
+  .option("--spec <id>", "Sync a single spec instead of all")
+  .option("--text", "Human-readable output instead of JSON", false)
+  .action(async (opts: { spec?: string; text: boolean }) => {
+    await runHtmlSync({ spec: opts.spec, text: opts.text });
   });
 
 program.parse(process.argv);

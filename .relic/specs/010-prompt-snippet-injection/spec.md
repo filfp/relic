@@ -2,7 +2,7 @@
 
 **Spec ID:** 010-prompt-snippet-injection
 **Created:** 2026-05-25
-**Status:** draft
+**Status:** implemented
 
 ---
 

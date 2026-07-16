@@ -1,7 +1,14 @@
 import { execSync } from "child_process";
 import { join } from "path";
-import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode } from "@relic/utility";
+import { findRelicDir, fileExists, dirExists, readJson, readSession, readMode, readSdd, readViewerPort, fetchWithTimeout } from "@relic/utility";
 import { inferSpecFromBranch, availableSpecs } from "@relic/utility";
+import {
+  readExternalTypes,
+  resolveExternalDir,
+  resolveExternalRead,
+  type ExternalType,
+  type ResolvedExternalRead,
+} from "@relic/utility";
 import type { ArtifactsJson } from "../types.ts";
 
 export interface ContextOptions {
@@ -16,6 +23,17 @@ interface SharedArtifactRef {
   exists: boolean;
 }
 
+type ExternalContextField =
+  | { configured: false }
+  | {
+      configured: true;
+      types: Partial<Record<ExternalType, { path: string; resolved_path: string; exists: boolean }>>;
+    };
+
+interface ExternalReadRef extends ResolvedExternalRead {
+  error?: string;
+}
+
 interface ContextResult {
   relic_dir: string;
   spec_id: string;
@@ -23,6 +41,10 @@ interface ContextResult {
   spec_dir: string;
   current_fix: string | null;
   mode: "md" | "html";
+  sdd: "auto" | "suggest";
+  viewer: { running: boolean; port: number; url: string | null };
+  external: ExternalContextField;
+  external_reads: ExternalReadRef[];
   files: {
     preamble: boolean;
     constitution: boolean;
@@ -91,19 +113,81 @@ export async function runContext(options: ContextOptions): Promise<void> {
 
   // Check shared artifacts if artifacts.json exists
   const sharedArtifacts: SharedArtifactRef[] = [];
+  const externalReads: ExternalReadRef[] = [];
   if (fileExists(artifactsPath)) {
     try {
-      const art = readJson<ArtifactsJson>(artifactsPath);
+      const art = readJson<ArtifactsJson & { external_reads?: string[] }>(artifactsPath);
       for (const p of art.owns) {
         sharedArtifacts.push({ path: p, role: "owns", exists: fileExists(join(relicDir, p)) });
       }
       for (const p of art.reads) {
         sharedArtifacts.push({ path: p, role: "reads", exists: fileExists(join(relicDir, p)) });
       }
+      for (const entry of art.external_reads ?? []) {
+        try {
+          externalReads.push(resolveExternalRead(relicDir, entry));
+        } catch (err) {
+          externalReads.push({
+            entry,
+            type: (entry.split("/")[0] ?? "") as ExternalType,
+            filename: entry.split("/").slice(1).join("/"),
+            resolved_path: "",
+            exists: false,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
     } catch {
       // malformed artifacts.json — skip artifact refs
     }
   }
+
+  // Viewer state (spec 012): probe the port recorded by the running server
+  // (viewer.json — it auto-increments when the configured port is taken)
+  // before falling back to the configured port.
+  const configuredPort = readViewerPort(relicDir);
+  const candidatePorts = [configuredPort];
+  try {
+    const lifecycle = readJson<{ port?: number }>(join(relicDir, "viewer.json"));
+    if (typeof lifecycle.port === "number" && lifecycle.port !== configuredPort) {
+      candidatePorts.unshift(lifecycle.port);
+    }
+  } catch {
+    // no lifecycle file — configured port only
+  }
+  let viewerPort = configuredPort;
+  let viewerRunning = false;
+  for (const port of candidatePorts) {
+    try {
+      const res = await fetchWithTimeout(`http://127.0.0.1:${port}/api/health`, 300);
+      if (res.ok) {
+        const body = (await res.json()) as { relic?: boolean; project?: string };
+        if (body.relic === true && body.project === join(relicDir, "..")) {
+          viewerRunning = true;
+          viewerPort = port;
+          break;
+        }
+      }
+    } catch {
+      // not running on this port — try the next candidate
+    }
+  }
+
+  // External per-type config (ExternalConfigContract §3)
+  const configuredTypes = readExternalTypes(relicDir);
+  const configuredKeys = Object.keys(configuredTypes) as ExternalType[];
+  const external: ExternalContextField =
+    configuredKeys.length === 0
+      ? { configured: false }
+      : {
+          configured: true,
+          types: Object.fromEntries(
+            configuredKeys.map((t) => {
+              const resolvedDir = resolveExternalDir(relicDir, t)!;
+              return [t, { path: configuredTypes[t]!, resolved_path: resolvedDir, exists: dirExists(resolvedDir) }];
+            })
+          ),
+        };
 
   const result: ContextResult = {
     relic_dir: relicDir,
@@ -112,6 +196,10 @@ export async function runContext(options: ContextOptions): Promise<void> {
     spec_dir: specDir,
     current_fix: currentFix,
     mode: readMode(relicDir),
+    sdd: readSdd(relicDir),
+    viewer: { running: viewerRunning, port: viewerPort, url: viewerRunning ? `http://localhost:${viewerPort}` : null },
+    external,
+    external_reads: externalReads,
     files: {
       preamble: fileExists(join(relicDir, "preamble.md")),
       constitution: fileExists(join(relicDir, "constitution.md")),
@@ -128,6 +216,8 @@ export async function runContext(options: ContextOptions): Promise<void> {
     console.log(`Spec:    ${specId}  (resolved from: ${source})`);
     console.log(`Fix:     ${currentFix ?? "(none)"}`);
     console.log(`Mode:    ${result.mode}`);
+    console.log(`SDD:     ${result.sdd}`);
+    console.log(`Viewer:  ${result.viewer.running ? result.viewer.url : `not running (port ${result.viewer.port})`}`);
     console.log(`Dir:     ${specDir}`);
     console.log(`Relic:   ${relicDir}`);
     console.log("");
@@ -140,6 +230,20 @@ export async function runContext(options: ContextOptions): Promise<void> {
       console.log("Shared artifacts:");
       for (const a of sharedArtifacts) {
         console.log(`  [${a.role}] ${a.path}  ${a.exists ? "(exists)" : "(MISSING)"}`);
+      }
+    }
+    if (external.configured) {
+      console.log("");
+      console.log("External types:");
+      for (const [t, info] of Object.entries(external.types)) {
+        console.log(`  ${t}: ${info.path}  ${info.exists ? "(exists)" : "(MISSING)"}`);
+      }
+    }
+    if (externalReads.length > 0) {
+      console.log("");
+      console.log("External reads:");
+      for (const r of externalReads) {
+        console.log(`  ${r.exists ? "✓" : "✗"} ${r.entry}${r.error ? `  (${r.error})` : ""}`);
       }
     }
   } else {

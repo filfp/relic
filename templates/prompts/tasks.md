@@ -1,6 +1,6 @@
-# /relic.tasks
+# /relic:tasks
 
-Use `/relic.tasks` to create a task list for the implementation phase of your spec. This is where you break down the work into concrete, actionable items that can be checked off as you go.
+Use `/relic:tasks` to create a task list for the implementation phase of your spec. This is where you break down the work into concrete, actionable items that can be checked off as you go.
 
 ---
 
@@ -15,6 +15,8 @@ Use `/relic.tasks` to create a task list for the implementation phase of your sp
 You are generating a task list from the current implementation plan.
 
 <!-- include: relic snippet load-spec-context -->
+
+<!-- include: relic snippet external-reads -->
 
 Then check other specs' `tasks.md` files for overlap (same files being modified in parallel).
 
@@ -41,4 +43,4 @@ Fill in `specs/{{SPEC_ID}}/tasks.md`:
 ## What NOT to do
 
 - Do not write code.
-- Do not modify `plan.md` — if the plan is wrong, run `/relic.plan` again.
+- Do not modify `plan.md` — if the plan is wrong, run `/relic:plan` again.

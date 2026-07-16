@@ -1,6 +1,6 @@
-# /relic.specify
+# /relic:specify
 
-Use `/relic.specify` to write a new feature spec. This is a manual process to extract requirements from the user's input, identify relevant shared artifacts, and populate the spec's `spec.md` and `artifacts.json`.
+Use `/relic:specify` to write a new feature spec. This is a manual process to extract requirements from the user's input, identify relevant shared artifacts, and populate the spec's `spec.md` and `artifacts.json`.
 
 ---
 
@@ -22,6 +22,8 @@ You are helping create a new spec for this project.
 2. Discover relevant shared artifacts:
 
 <!-- include: relic snippet search-knowledge -->
+
+<!-- include: relic snippet external-reads -->
 
 ## Your task
 

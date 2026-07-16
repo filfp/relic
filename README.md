@@ -40,8 +40,8 @@ cd my-project
 relic init
 
 # Open your AI agent (Claude Code, Copilot, Codex) and run:
-# Existing codebase:  /relic.scan  then  /relic.constitution
-# New project:        /relic.constitution  then  /relic.specify
+# Existing codebase:  /relic:scan  then  /relic:constitution
+# New project:        /relic:constitution  then  /relic:specify
 ```
 
 ---
@@ -90,53 +90,69 @@ relic init
 | `relic context [--spec id] [--text]` | Resolve active spec; report file/artifact status and `current_fix` |
 | `relic scaffold [--title t\|--spec id]` | Ensure spec folder exists; create from templates if new |
 | `relic validate [--text]` | Check artifact integrity and ownership conflicts |
-| `relic search <keywords...>` | Search shared artifact manifests by keyword tags |
-| `relic deep-search` | Return all manifest entries consolidated (tldr-first triage) |
-| `relic upgrade [--check] [--prompts]` | Upgrade relic-cli and refresh engine hook files |
+| `relic search <keywords...> [--deep] [--knowledge\|--spec\|--fix]` | Search the knowledge, spec, and fix indexes (`--deep` returns all entries) |
+| `relic mode [md\|html]` | Get/set the artifact mode (html = fragments rendered by the viewer) |
+| `relic snippet <name>` | Print a shared prompt snippet (used by the AI workflow prompts) |
+| `relic write --changelog\|--specs\|--fixes\|--knowledge-* --payload <json>` | Structured writes — the only way manifests/changelog are mutated |
+| `relic external [init\|set\|link\|create\|list]` | External spec repo integration (fr/nfr/br/adr/us/epic docs) |
+| `relic serve [--port]` | Spec viewer: browse specs/fixes at `http://localhost:<port>` (read-only, per-project) |
+| `relic mcp` | MCP server for AI agents (view_spec / view_fix / list_views) — ships with the plugin |
+| `relic viewer-migrate` | Convert pre-viewer HTML spec files into `<relic-body>` fragments |
+| `relic upgrade [--check] [--prompts] [--clean]` | Upgrade relic-cli, refresh hooks, migrate HTML (`--clean` removes pre-plugin command copies) |
 
-### Workflow commands (direct model invocation)
+### AI workflow commands
 
-These commands require `.relic/models.json` with a `baseUrl` and `model`. They assemble spec context and call your configured model directly — no IDE required.
+The workflow steps (`scan`, `specify`, `clarify`, `plan`, `analyse`, `tasks`,
+`implement`, `fix`, `solve`, `constitution`, `ask`, `use`) are **not** CLI
+subcommands — they run inside your AI engine:
 
-| Command | Purpose |
-|---|---|
-| `relic scan [--manifest] [--no-stream]` | Run AI scan workflow (default) or output raw manifest with `--manifest` |
-| `relic specify [--title t] [--no-stream] [--reset-context]` | Create a new spec and start the specify workflow |
-| `relic clarify [--spec id] [--no-stream] [--reset-context]` | Append details or change contracts |
-| `relic plan [--spec id] [--no-stream] [--reset-context]` | Create an implementation plan |
-| `relic analyse [--spec id] [--no-stream] [--reset-context]` | Non-destructive consistency check |
-| `relic tasks [--spec id] [--no-stream] [--reset-context]` | Generate tasks from the current plan |
-| `relic implement [--spec id] [--no-stream] [--reset-context]` | Build the plan |
-| `relic fix [--spec id] [--issue desc] [--no-stream] [--reset-context]` | Fix a bug using the spec as context |
-| `relic solve [--fix id] [--no-stream]` | Apply the active fix document |
-| `relic constitution [--no-stream]` | Regenerate `.relic/constitution.md` from the codebase |
-| `relic model --reset-context [--spec id]` | Clear per-spec conversation history |
+- **Claude Code:** `/relic:specify`, `/relic:plan`, … via the Relic plugin (see below)
+- **Copilot / Codex:** prompt files written per-project by `relic init --engine <engine>`
 
-**`models.json` minimum config:**
-```json
-{ "baseUrl": "http://localhost:11434", "model": "llama3" }
-```
-Env var overrides: `RELIC_MODEL_BASE_URL`, `RELIC_MODEL_MODEL`, `RELIC_MODEL_API_KEY`.
+The prompts drive the CLI (`relic context`, `relic search`, `relic write`, …) under
+the hood; shared prompt fragments are resolved at runtime via `relic snippet <name>`.
 
 ---
 
+## Claude Code plugin
+
+For Claude Code, Relic ships as a **plugin** — commands and ambient skills in one
+versioned unit. `relic init --engine claude` writes the per-project installation into
+`.claude/settings.json` (marketplace + plugin enablement), so everyone opening the
+project gets it automatically. Manual install:
+
+```
+/plugin marketplace add filfp/relic
+/plugin install relic@relic
+```
+
+Then `/relic:setup` finishes onboarding (installs the CLI if missing, runs `relic init`).
+The plugin's ambient skills make SDD part of everyday work: Claude searches the brain
+before exploring code, opens a spec when you ask for a new capability, routes bugs
+through the fix pipeline, and keeps tasks/changelog true — governed by the `sdd` knob in
+`config.json` (`auto` announce-then-do, default; `suggest` ask-first). The bundled MCP
+tools let Claude hand you live spec views: ask "show me spec 009" and get
+`http://localhost:4747/spec/009-…` served by the embedded viewer.
+
 ## AI slash commands
 
-The workflow lives inside your AI agent. After `relic init`, these slash commands are written to your agent's hooks directory:
+The workflow lives inside your AI agent. In Claude Code the commands come from the
+plugin; for Copilot/Codex they are written to the engine's hooks directory by
+`relic init`:
 
 | Slash command | Purpose |
 |---|---|
-| `/relic.constitution` | Extract project-specific coding principles from the codebase |
-| `/relic.scan` | Bootstrap shared artifacts (domains, contracts, rules, assumptions) |
-| `/relic.specify` | Create a new spec from a PRD or user story |
-| `/relic.clarify` | Append details or change contracts (checks intersections) |
-| `/relic.plan` | Create an implementation plan (principal intersection point) |
-| `/relic.analyse` | Non-destructive consistency check |
-| `/relic.tasks` | Generate tasks from the current plan |
-| `/relic.implement` | Build the plan |
-| `/relic.fix` | Cross-spec ownership check + diagnosis → writes fix document to `.relic/fixes/` |
-| `/relic.solve` | Apply the active fix document, update knowledge layer, close the fix |
-| `/relic.use` | Switch the active spec or fix from inside the AI session |
+| `/relic:constitution` | Extract project-specific coding principles from the codebase |
+| `/relic:scan` | Bootstrap shared artifacts (domains, contracts, rules, assumptions) |
+| `/relic:specify` | Create a new spec from a PRD or user story |
+| `/relic:clarify` | Append details or change contracts (checks intersections) |
+| `/relic:plan` | Create an implementation plan (principal intersection point) |
+| `/relic:analyse` | Non-destructive consistency check |
+| `/relic:tasks` | Generate tasks from the current plan |
+| `/relic:implement` | Build the plan |
+| `/relic:fix` | Cross-spec ownership check + diagnosis → writes fix document to `.relic/fixes/` |
+| `/relic:solve` | Apply the active fix document, update knowledge layer, close the fix |
+| `/relic:use` | Switch the active spec or fix from inside the AI session |
 
 ---
 
@@ -151,7 +167,7 @@ relic add-engine copilot                # add to an existing project
 
 | Engine | Hook location | Format |
 |---|---|---|
-| Claude Code | `.claude/commands/relic.*.md` | 11 slash commands |
+| Claude Code | plugin (`relic@relic`) + `.claude/settings.json` | 13 commands + 4 ambient skills |
 | GitHub Copilot | `.github/prompts/relic.*.prompt.md` | 11 slash commands (with YAML frontmatter) |
 | Codex | `.codex/commands/relic.*.md` | 11 slash commands |
 
@@ -161,17 +177,17 @@ relic add-engine copilot                # add to an existing project
 
 **Bootstrap** (existing codebase):
 ```
-relic init → /relic.scan → /relic.constitution → /relic.specify
+relic init → /relic:scan → /relic:constitution → /relic:specify
 ```
 
 **Forward** (new feature):
 ```
-/relic.specify → /relic.clarify → /relic.plan → /relic.tasks → /relic.implement
+/relic:specify → /relic:clarify → /relic:plan → /relic:tasks → /relic:implement
 ```
 
 **Feedback** (bug fix, keeps the spec alive):
 ```
-/relic.fix → [review fix doc] → /relic.solve → [contract changed?] → /relic.clarify
+/relic:fix → [review fix doc] → /relic:solve → [contract changed?] → /relic:clarify
 ```
 
 ---

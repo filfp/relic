@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, spyOn } from "bun:test";
 import { encodeToon, decodeToon } from "../toon.ts";
 
 describe("encodeToon", () => {
@@ -81,15 +81,15 @@ describe("decodeToon", () => {
     const longTldr = "a".repeat(2000);
     const rows = [["entry", "file.md", "tag", longTldr]];
     const decoded = decodeToon(encodeToon(rows));
-    expect(decoded[0][3]).toBe(longTldr);
+    expect(decoded[0]![3]).toBe(longTldr);
   });
 
   it("malformed line (wrong field count) is skipped with console.warn", () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = spyOn(console, "warn").mockImplementation(() => {});
     const content = "# manifest\nonly-one-field\nFoo | foo.md | tag | desc\n";
     const result = decodeToon(content);
     expect(result).toEqual([["Foo", "foo.md", "tag", "desc"]]);
-    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
 

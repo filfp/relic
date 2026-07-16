@@ -21,7 +21,14 @@ export {
 export type { SessionState } from "./session.ts";
 export { readSession, writeSession } from "./session.ts";
 
-export type { ProjectConfig } from "./project-config.ts";
+export type {
+  ProjectConfig,
+  SddMode,
+  ExternalConfig,
+  ExternalType,
+  ExternalEntry,
+  ResolvedExternalRead,
+} from "./project-config.ts";
 export {
   readProjectConfig,
   writeProjectConfig,
@@ -29,6 +36,17 @@ export {
   writeEngines,
   readMode,
   writeMode,
+  readSdd,
+  readViewerPort,
+  DEFAULT_VIEWER_PORT,
+  EXTERNAL_TYPES,
+  ExternalConfigError,
+  isExternalType,
+  readExternalTypes,
+  writeExternalType,
+  resolveExternalDir,
+  parseExternalEntry,
+  resolveExternalRead,
 } from "./project-config.ts";
 
 export { fetchWithTimeout } from "./fetch.ts";

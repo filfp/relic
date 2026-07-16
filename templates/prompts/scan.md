@@ -1,4 +1,4 @@
-# /relic.scan
+# /relic:scan
 
 Bootstrap the Relic knowledge layer from an existing codebase. Run this **once** when
 adopting Relic on a project that already has code. It generates the shared artifact layer
@@ -249,10 +249,10 @@ Tell the user:
 
 ## Next: Generate the Constitution
 
-Run `/relic.constitution` to complete the bootstrap.
+Run `/relic:constitution` to complete the bootstrap.
 
-- `/relic.scan` → **WHAT** the system does (domains, contracts, rules, assumptions)
-- `/relic.constitution` → **HOW** the team works (coding standards, tech stack, architecture)
+- `/relic:scan` → **WHAT** the system does (domains, contracts, rules, assumptions)
+- `/relic:constitution` → **HOW** the team works (coding standards, tech stack, architecture)
 
-Once both are done, run `/relic.specify` to create the first feature spec — it will start
+Once both are done, run `/relic:specify` to create the first feature spec — it will start
 with a fully populated brain and a set of hard rules governing every decision.

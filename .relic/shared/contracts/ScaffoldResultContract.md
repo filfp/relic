@@ -16,7 +16,8 @@ The JSON output of `relic scaffold`. Used by AI workflow commands to learn the n
   "date": "2026-04-12",
   "was_new": true,
   "current_spec_updated": true,
-  "files_created": ["spec.md", "plan.md", "tasks.md", "artifacts.json"]
+  "files_created": ["spec.md", "plan.md", "tasks.md", "artifacts.json"],
+  "files_synced": []
 }
 ```
 
@@ -41,6 +42,14 @@ When the project `config.json` has `mode = "html"`, `files_created` additionally
 ```
 
 `"<spec-id>.html"` is always the last entry in `files_created` when present. The filename is always the spec ID with `.html` extension — never a generic `"spec.html"`. When `mode = "md"` (default), `files_created` is unchanged.
+
+### `files_synced` (vestigial since spec 012)
+
+Always `[]`. It was populated in the `relic html-sync` era, when scaffold re-based
+chrome and embedded reader sources into existing spec HTML. Spec 012 replaced chrome
+with `<relic-body>` fragments rendered by the embedded viewer — there is nothing to
+sync — and `html-sync` was retired. The field is retained so the output shape stays
+stable for existing consumers.
 
 ## Owned by
 008-html-spec-mode

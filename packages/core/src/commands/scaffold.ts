@@ -33,6 +33,7 @@ interface ScaffoldResult {
   was_new: boolean;
   current_spec_updated: boolean;
   files_created: string[];
+  files_synced: string[];
 }
 
 function resolveExistingSpec(relicDir: string, specArg?: string): string | null {
@@ -126,11 +127,14 @@ export async function runScaffold(options: ScaffoldOptions): Promise<void> {
     filesCreated.push("artifacts.json");
   }
 
-  // In html mode, create <spec-id>.html from base.html template if absent
+  // In html mode, create <spec-id>.html as a <relic-body> FRAGMENT (spec 012).
+  // Fragments carry no chrome — the viewer server renders them — so there is
+  // nothing to sync on subsequent runs.
+  const filesSynced: string[] = [];
   if (readMode(relicDir) === "html") {
     const htmlDest = join(specDir, `${specId}.html`);
     if (!fileExists(htmlDest)) {
-      const raw = TEMPLATES["base.html"] ?? "";
+      const raw = TEMPLATES["fragment.html"] ?? "<relic-body>\n</relic-body>\n";
       writeText(htmlDest, applyTemplate(raw, specId, title, date));
       filesCreated.push(`${specId}.html`);
     }
@@ -147,6 +151,7 @@ export async function runScaffold(options: ScaffoldOptions): Promise<void> {
     was_new: wasNew,
     current_spec_updated: true,
     files_created: filesCreated,
+    files_synced: filesSynced,
   };
 
   console.log(JSON.stringify(result, null, 2));

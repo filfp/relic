@@ -90,7 +90,7 @@ Resolution order (TypeScript):
 
 Three ways to set `session.spec`:
 - `relic use 001-auth` — writes `session.spec`
-- `/relic.use` — AI slash command (calls `relic scaffold --spec <id>`)
+- `/relic:use` — AI slash command (calls `relic scaffold --spec <id>`)
 - `relic scaffold` — automatically on every spec creation or resolution
 
 `session.json` is gitignored so different team members can work on different specs simultaneously.
@@ -136,7 +136,7 @@ LLM has no domains, contracts, or rules to check against.
 - File tree (depth 4, excludes node_modules/dist/build, truncated at 200 entries)
 - List of existing shared artifacts
 
-**AI prompt side (`/relic.scan`)** — 8-step workflow:
+**AI prompt side (`/relic:scan`)** — 8-step workflow:
 1. Run `relic scan --json` to get the manifest
 2. Read entry points and type files (reveal domain language fastest)
 3. Read route/service/middleware files (reveal API surface)
@@ -258,7 +258,7 @@ to all three engines on the next `bun run build:engine-templates`.
 
 **Problems solved:**
 
-1. `/relic.fix` was a context-assembly stub that assumed the user already knew which spec
+1. `/relic:fix` was a context-assembly stub that assumed the user already knew which spec
    owned the broken code.
 2. Session state lived in two files (`.relic/current-spec` for spec, proposed `current-fix`
    for fix) — inconsistent and hard to extend.
@@ -278,12 +278,12 @@ from `@relic/utility`. Read-merge semantics prevent partial writes from clobberi
 
 | Stage | Command | What it does |
 |---|---|---|
-| Diagnose | `/relic.fix <issue>` | Cross-spec ownership check; classifies root cause; writes `.relic/fixes/<fix-id>.md`; sets `session.fix` |
-| Apply | `/relic.solve` | Reads fix doc; applies code changes; updates knowledge layer; writes changelog; clears `session.fix` |
+| Diagnose | `/relic:fix <issue>` | Cross-spec ownership check; classifies root cause; writes `.relic/fixes/<fix-id>.md`; sets `session.fix` |
+| Apply | `/relic:solve` | Reads fix doc; applies code changes; updates knowledge layer; writes changelog; clears `session.fix` |
 
-**Ownership enforcement:** `/relic.fix` scans all `specs/*/artifacts.json` `touches_files`
+**Ownership enforcement:** `/relic:fix` scans all `specs/*/artifacts.json` `touches_files`
 entries using prefix matching. If no spec owns the affected code area, it stops and instructs
-the user to run `/relic.specify`. Every fix attempt either succeeds (spec exists) or produces
+the user to run `/relic:specify`. Every fix attempt either succeeds (spec exists) or produces
 a new spec — coverage grows monotonically.
 
 **`relic use` flags added:**
@@ -461,12 +461,12 @@ Original design: 8 slash commands (specify, clarify, plan, analyse, tasks, imple
 
 What shipped initially: 9 commands. `constitution` was added as a proper slash command. `use` and `scan` were added.
 
-**Updated in Phase 11:** `/relic.solve` added — now 11 commands total.
+**Updated in Phase 11:** `/relic:solve` added — now 11 commands total.
 
 ```
-/relic.specify    /relic.clarify    /relic.plan       /relic.analyse
-/relic.tasks      /relic.implement  /relic.fix        /relic.solve
-/relic.use        /relic.scan       /relic.constitution
+/relic:specify    /relic:clarify    /relic:plan       /relic:analyse
+/relic:tasks      /relic:implement  /relic:fix        /relic:solve
+/relic:use        /relic:scan       /relic:constitution
 ```
 
 ### npm distribution (changed from Bun binary)
@@ -532,7 +532,7 @@ candidates programmatically before reading any full files, using a two-step casc
 **`preamble.md`** updated with a `## Manifest Registration` section that makes manifest
 maintenance a hard invariant alongside the existing artifact placement rules.
 
-**`/relic.scan`** gets a new Step 8 to register every produced artifact in its manifest
+**`/relic:scan`** gets a new Step 8 to register every produced artifact in its manifest
 before the changelog step.
 
 ---
@@ -590,6 +590,6 @@ All commands are in the production `bin.ts`.
 
 *Document created: April 10, 2026.*
 *Updated: April 13, 2026 — Phase 10: @relic/utility, @relic/engines, permission configs.*
-*Updated: April 13, 2026 — Phase 11: session.json, two-stage fix pipeline, /relic.solve.*
+*Updated: April 13, 2026 — Phase 11: session.json, two-stage fix pipeline, /relic:solve.*
 *Updated: April 18, 2026 — Phase 12: toon manifest format. Phase 13: relic write. Phase 14: direct model invocation.*
 *Covers: Phase 1–14.*

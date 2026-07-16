@@ -1,5 +1,5 @@
 import { join } from "path";
-import { dirExists, ensureDir, writeText, writeJson, writeEngines } from "@relic/utility";
+import { dirExists, ensureDir, writeText, writeJson, writeEngines, writeExternalType, EXTERNAL_TYPES, type ExternalType } from "@relic/utility";
 import { TEMPLATES } from "../generated/templates.ts";
 import { runAddEngine, type Engine } from "@relic/engines";
 
@@ -7,6 +7,8 @@ export interface InitOptions {
   dir: string;
   force: boolean;
   engines: Engine[];
+  /** Optional per-type external spec directories (--external-<type> flags). */
+  external?: Partial<Record<ExternalType, string>>;
 }
 
 export async function runInit(options: InitOptions): Promise<void> {
@@ -43,7 +45,7 @@ export async function runInit(options: InitOptions): Promise<void> {
   }
 
   writeJson(join(relicDir, "session.json"), { spec: null, fix: null });
-  writeText(join(relicDir, ".gitignore"), "session.json\n");
+  writeText(join(relicDir, ".gitignore"), "session.json\nviewer.json\n");
   writeText(join(relicDir, "preamble.md"), TEMPLATES["preamble.md"] ?? "");
   writeText(join(relicDir, "constitution.md"), TEMPLATES["constitution.md"] ?? "");
   writeText(
@@ -76,6 +78,14 @@ export async function runInit(options: InitOptions): Promise<void> {
   }
 
   writeEngines(relicDir, options.engines.map(String));
+
+  // config.external per-type paths (FR-2)
+  if (options.external) {
+    for (const type of EXTERNAL_TYPES) {
+      const path = options.external[type];
+      if (path) writeExternalType(relicDir, type, path);
+    }
+  }
   if (options.engines.length > 0) {
     console.log(`  .relic/config.json  (registered engines: ${options.engines.join(", ")})`);
   } else {
@@ -85,6 +95,6 @@ export async function runInit(options: InitOptions): Promise<void> {
   console.log("");
   console.log("Next steps — open your AI agent and run:");
   console.log("");
-  console.log("  Existing codebase:  /relic.scan  then  /relic.constitution");
-  console.log("  New project:        /relic.constitution  then  /relic.specify");
+  console.log("  Existing codebase:  /relic:scan  then  /relic:constitution");
+  console.log("  New project:        /relic:constitution  then  /relic:specify");
 }
