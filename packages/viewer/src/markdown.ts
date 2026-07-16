@@ -11,13 +11,45 @@ function esc(s: string): string {
 function inl(s: string): string {
   return esc(s)
     .replace(/`([^`]+)`/g, (_, c: string) => `<code>${c}</code>`)
-    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*\n]+)\*/g, "<em>$1</em>")
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    .replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text: string, url: string) => {
+      const scheme = url.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/)?.[0].toLowerCase();
+      const safe = scheme && !["http:", "https:", "mailto:"].includes(scheme) ? "#" : url;
+      return `<a href="${safe.replace(/"/g, "&quot;")}">${text}</a>`;
+    });
+}
+
+const LIST_RE = /^(\s*)([-*+]|\d+\.) (.*)$/;
+
+function renderList(lines: string[]): string {
+  const stack: Array<{ indent: number; tag: "ul" | "ol" }> = [];
+  let html = "";
+  for (const raw of lines) {
+    const m = raw.match(LIST_RE)!;
+    const indent = m[1]!.length;
+    const tag: "ul" | "ol" = /^\d/.test(m[2]!) ? "ol" : "ul";
+    while (stack.length && indent < stack[stack.length - 1]!.indent) {
+      html += `</${stack.pop()!.tag}>`;
+    }
+    if (!stack.length || indent > stack[stack.length - 1]!.indent) {
+      stack.push({ indent, tag });
+      html += `<${tag}>`;
+    }
+    const tm = m[3]!.match(/^\[( |x|X)\] (.*)$/);
+    if (tm) {
+      const checked = tm[1]!.toLowerCase() === "x" ? " checked" : "";
+      html += `<li class="task"><input type="checkbox" disabled${checked}> ${inl(tm[2]!)}</li>`;
+    } else {
+      html += `<li>${inl(m[3]!)}</li>`;
+    }
+  }
+  while (stack.length) html += `</${stack.pop()!.tag}>`;
+  return html;
 }
 
 export function markdownToHtml(src: string): string {
-  const lines = src.split("\n");
+  const lines = src.split(/\r?\n/);
   const out: string[] = [];
   let i = 0;
 
@@ -78,29 +110,13 @@ export function markdownToHtml(src: string): string {
       continue;
     }
 
-    if (/^[-*+] /.test(line)) {
-      const items: string[] = [];
-      while (i < lines.length && /^[-*+] /.test(lines[i]!)) {
-        const tm = lines[i]!.match(/^[-*+] \[( |x|X)\] (.*)$/);
-        if (tm) {
-          const checked = tm[1]!.toLowerCase() === "x" ? " checked" : "";
-          items.push(`<li class="task"><input type="checkbox" disabled${checked}> ${inl(tm[2]!)}</li>`);
-        } else {
-          items.push(`<li>${inl(lines[i]!.replace(/^[-*+] /, ""))}</li>`);
-        }
+    if (LIST_RE.test(line)) {
+      const block: string[] = [];
+      while (i < lines.length && LIST_RE.test(lines[i]!)) {
+        block.push(lines[i]!);
         i++;
       }
-      out.push(`<ul>${items.join("")}</ul>`);
-      continue;
-    }
-
-    if (/^\d+\. /.test(line)) {
-      const items: string[] = [];
-      while (i < lines.length && /^\d+\. /.test(lines[i]!)) {
-        items.push(`<li>${inl(lines[i]!.replace(/^\d+\. /, ""))}</li>`);
-        i++;
-      }
-      out.push(`<ol>${items.join("")}</ol>`);
+      out.push(renderList(block));
       continue;
     }
 
@@ -114,8 +130,7 @@ export function markdownToHtml(src: string): string {
       i < lines.length &&
       lines[i]!.trim() &&
       !/^[#>|`]/.test(lines[i]!) &&
-      !/^[-*+] /.test(lines[i]!) &&
-      !/^\d+\. /.test(lines[i]!) &&
+      !LIST_RE.test(lines[i]!) &&
       !/^---+\s*$/.test(lines[i]!)
     ) {
       para.push(lines[i]!);

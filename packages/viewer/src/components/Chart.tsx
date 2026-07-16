@@ -15,7 +15,12 @@ export function Chart({ attrs }: { attrs: Record<string, string> }) {
   const type = attrs.type ?? "bar";
   const title = attrs.title ?? "";
   const labels = parseJson<string[]>(attrs.labels, []);
-  const nums = parseJson<number[]>(attrs.data, []).map(Number);
+  // charts render magnitudes: non-numeric entries and negatives would produce
+  // NaN/inverted SVG geometry, so clamp to finite non-negative values
+  const nums = parseJson<unknown[]>(attrs.data, []).map((v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  });
 
   const W = 500, H = 280;
   const PAD = { top: 40, right: 20, bottom: 64, left: 52 };
