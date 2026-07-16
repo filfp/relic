@@ -73,6 +73,15 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - **Tooling** — root `bun test` no longer fails from a process-global
   `mock.module` leak; all 16 legacy typecheck errors fixed; `tsc --noEmit`, plugin
   freshness, and viewer embed run in CI.
+- **Pre-1.0 review sweep** — `/relic:fix` html-mode step authored fragments again
+  (was still instructing a copy of the retired `base.html`); viewer markdown links
+  are scheme-filtered and quote-escaped; task parsing tolerates CRLF files (Windows
+  checkouts reported wrong counts); `relic validate`, `relic external list`,
+  `relic upgrade`, and `add-engine claude` report unreadable/malformed inputs and
+  network failures as errors instead of crashing (an unparseable
+  `.claude/settings.json` is never overwritten); viewer markdown handles nested
+  lists, nested/multi-line emphasis; charts clamp non-numeric/negative data; the
+  fragment parser drops a dangling quote from unclosed attribute values.
 
 ### Removed
 - **`relic html-sync`** — retired; there is no per-file chrome to sync. Legacy files

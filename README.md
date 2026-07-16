@@ -90,36 +90,27 @@ relic init
 | `relic context [--spec id] [--text]` | Resolve active spec; report file/artifact status and `current_fix` |
 | `relic scaffold [--title t\|--spec id]` | Ensure spec folder exists; create from templates if new |
 | `relic validate [--text]` | Check artifact integrity and ownership conflicts |
-| `relic search <keywords...>` | Search shared artifact manifests by keyword tags |
-| `relic deep-search` | Return all manifest entries consolidated (tldr-first triage) |
+| `relic search <keywords...> [--deep] [--knowledge\|--spec\|--fix]` | Search the knowledge, spec, and fix indexes (`--deep` returns all entries) |
+| `relic mode [md\|html]` | Get/set the artifact mode (html = fragments rendered by the viewer) |
+| `relic snippet <name>` | Print a shared prompt snippet (used by the AI workflow prompts) |
+| `relic write --changelog\|--specs\|--fixes\|--knowledge-* --payload <json>` | Structured writes — the only way manifests/changelog are mutated |
+| `relic external [init\|set\|link\|create\|list]` | External spec repo integration (fr/nfr/br/adr/us/epic docs) |
 | `relic serve [--port]` | Spec viewer: browse specs/fixes at `http://localhost:<port>` (read-only, per-project) |
 | `relic mcp` | MCP server for AI agents (view_spec / view_fix / list_views) — ships with the plugin |
 | `relic viewer-migrate` | Convert pre-viewer HTML spec files into `<relic-body>` fragments |
 | `relic upgrade [--check] [--prompts] [--clean]` | Upgrade relic-cli, refresh hooks, migrate HTML (`--clean` removes pre-plugin command copies) |
 
-### Workflow commands (direct model invocation)
+### AI workflow commands
 
-These commands require `.relic/models.json` with a `baseUrl` and `model`. They assemble spec context and call your configured model directly — no IDE required.
+The workflow steps (`scan`, `specify`, `clarify`, `plan`, `analyse`, `tasks`,
+`implement`, `fix`, `solve`, `constitution`, `ask`, `use`) are **not** CLI
+subcommands — they run inside your AI engine:
 
-| Command | Purpose |
-|---|---|
-| `relic scan [--manifest] [--no-stream]` | Run AI scan workflow (default) or output raw manifest with `--manifest` |
-| `relic specify [--title t] [--no-stream] [--reset-context]` | Create a new spec and start the specify workflow |
-| `relic clarify [--spec id] [--no-stream] [--reset-context]` | Append details or change contracts |
-| `relic plan [--spec id] [--no-stream] [--reset-context]` | Create an implementation plan |
-| `relic analyse [--spec id] [--no-stream] [--reset-context]` | Non-destructive consistency check |
-| `relic tasks [--spec id] [--no-stream] [--reset-context]` | Generate tasks from the current plan |
-| `relic implement [--spec id] [--no-stream] [--reset-context]` | Build the plan |
-| `relic fix [--spec id] [--issue desc] [--no-stream] [--reset-context]` | Fix a bug using the spec as context |
-| `relic solve [--fix id] [--no-stream]` | Apply the active fix document |
-| `relic constitution [--no-stream]` | Regenerate `.relic/constitution.md` from the codebase |
-| `relic model --reset-context [--spec id]` | Clear per-spec conversation history |
+- **Claude Code:** `/relic:specify`, `/relic:plan`, … via the Relic plugin (see below)
+- **Copilot / Codex:** prompt files written per-project by `relic init --engine <engine>`
 
-**`models.json` minimum config:**
-```json
-{ "baseUrl": "http://localhost:11434", "model": "llama3" }
-```
-Env var overrides: `RELIC_MODEL_BASE_URL`, `RELIC_MODEL_MODEL`, `RELIC_MODEL_API_KEY`.
+The prompts drive the CLI (`relic context`, `relic search`, `relic write`, …) under
+the hood; shared prompt fragments are resolved at runtime via `relic snippet <name>`.
 
 ---
 
