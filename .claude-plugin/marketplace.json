@@ -1,5 +1,6 @@
 {
   "name": "relic",
+  "description": "Marketplace for the Relic plugin — spec-driven development with a shared artifact layer (github.com/filfp/relic)",
   "owner": {
     "name": "Filipe Ferreira Paulo",
     "url": "https://github.com/filfp"
