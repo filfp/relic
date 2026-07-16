@@ -73,7 +73,19 @@ const TOOLS = [
 ];
 
 /** Find a healthy same-project instance, or spawn `relic serve` detached. */
-async function ensureServer(relicDir: string): Promise<number> {
+// Concurrent tools/call requests (the normal MCP pattern) must share one
+// probe-and-spawn cycle — two parallel ensureServer runs each see "no server"
+// and spawn duplicate `relic serve` processes on auto-incremented ports.
+let ensuring: Promise<number> | null = null;
+
+function ensureServer(relicDir: string): Promise<number> {
+  ensuring ??= doEnsureServer(relicDir).finally(() => {
+    ensuring = null;
+  });
+  return ensuring;
+}
+
+async function doEnsureServer(relicDir: string): Promise<number> {
   const projectDir = join(relicDir, "..");
   const basePort = readViewerPort(relicDir);
 

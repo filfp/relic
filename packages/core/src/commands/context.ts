@@ -142,17 +142,35 @@ export async function runContext(options: ContextOptions): Promise<void> {
     }
   }
 
-  // Viewer state (spec 012): configured port + liveness probe
-  const viewerPort = readViewerPort(relicDir);
-  let viewerRunning = false;
+  // Viewer state (spec 012): probe the port recorded by the running server
+  // (viewer.json — it auto-increments when the configured port is taken)
+  // before falling back to the configured port.
+  const configuredPort = readViewerPort(relicDir);
+  const candidatePorts = [configuredPort];
   try {
-    const res = await fetchWithTimeout(`http://127.0.0.1:${viewerPort}/api/health`, 300);
-    if (res.ok) {
-      const body = (await res.json()) as { relic?: boolean; project?: string };
-      viewerRunning = body.relic === true && body.project === join(relicDir, "..");
+    const lifecycle = readJson<{ port?: number }>(join(relicDir, "viewer.json"));
+    if (typeof lifecycle.port === "number" && lifecycle.port !== configuredPort) {
+      candidatePorts.unshift(lifecycle.port);
     }
   } catch {
-    // not running — fine
+    // no lifecycle file — configured port only
+  }
+  let viewerPort = configuredPort;
+  let viewerRunning = false;
+  for (const port of candidatePorts) {
+    try {
+      const res = await fetchWithTimeout(`http://127.0.0.1:${port}/api/health`, 300);
+      if (res.ok) {
+        const body = (await res.json()) as { relic?: boolean; project?: string };
+        if (body.relic === true && body.project === join(relicDir, "..")) {
+          viewerRunning = true;
+          viewerPort = port;
+          break;
+        }
+      }
+    } catch {
+      // not running on this port — try the next candidate
+    }
   }
 
   // External per-type config (ExternalConfigContract §3)

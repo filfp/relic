@@ -82,6 +82,11 @@ Versions follow [Semantic Versioning](https://semver.org/).
   `.claude/settings.json` is never overwritten); viewer markdown handles nested
   lists, nested/multi-line emphasis; charts clamp non-numeric/negative data; the
   fragment parser drops a dangling quote from unclosed attribute values.
+- **Viewer dogfooding trio** — markdown tabs no longer freeze on paragraph lines
+  starting with inline code (renderer infinite loop); concurrent MCP tool calls no
+  longer spawn duplicate viewer servers (`ensureServer` serialized); `relic context`
+  finds a viewer running on an auto-incremented port (probes the `viewer.json`
+  runtime port before the configured one).
 
 ### Removed
 - **`relic html-sync`** — retired; there is no per-file chrome to sync. Legacy files

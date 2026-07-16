@@ -22,6 +22,21 @@ function inl(s: string): string {
 
 const LIST_RE = /^(\s*)([-*+]|\d+\.) (.*)$/;
 
+// A paragraph run ends where a block construct begins. This must mirror the
+// dispatch order in markdownToHtml exactly: any line excluded here but not
+// consumed by a block branch would never advance `i` (infinite loop — e.g. a
+// wrapped prose line starting with `inline code`).
+function isBlockStart(l: string): boolean {
+  return (
+    /^```/.test(l) ||
+    /^#{1,4} /.test(l) ||
+    /^---+\s*$|^\*\*\*+\s*$/.test(l) ||
+    /^> ?/.test(l) ||
+    /^\|/.test(l) ||
+    LIST_RE.test(l)
+  );
+}
+
 function renderList(lines: string[]): string {
   const stack: Array<{ indent: number; tag: "ul" | "ol" }> = [];
   let html = "";
@@ -126,17 +141,15 @@ export function markdownToHtml(src: string): string {
     }
 
     const para: string[] = [];
-    while (
-      i < lines.length &&
-      lines[i]!.trim() &&
-      !/^[#>|`]/.test(lines[i]!) &&
-      !LIST_RE.test(lines[i]!) &&
-      !/^---+\s*$/.test(lines[i]!)
-    ) {
+    while (i < lines.length && lines[i]!.trim() && !isBlockStart(lines[i]!)) {
       para.push(lines[i]!);
       i++;
     }
-    if (para.length) out.push(`<p>${inl(para.join("\n")).replace(/\n/g, "<br>")}</p>`);
+    if (para.length) {
+      out.push(`<p>${inl(para.join("\n")).replace(/\n/g, "<br>")}</p>`);
+    } else {
+      i++; // safety: never stall on a line no branch consumed
+    }
   }
   return out.join("\n");
 }
