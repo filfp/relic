@@ -9,6 +9,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-07-16
+
 ### Added
 - **Claude Code plugin (`relic@relic`)** — the relic repo doubles as a plugin
   marketplace. Ships the 12 workflow commands (as `/relic:<name>`), the `/relic:setup`
