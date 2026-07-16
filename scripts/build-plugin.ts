@@ -45,6 +45,10 @@ function generateCommand(name: string, body: string): string {
     console.error(`build-plugin: no description registered for command "${name}" — add it to DESCRIPTIONS`);
     process.exit(1);
   }
+  if (body.trimStart().startsWith("---")) {
+    console.error(`build-plugin: prompt "${name}" starts with '---', which would corrupt the generated frontmatter`);
+    process.exit(1);
+  }
   return `---
 description: ${JSON.stringify(description)}
 allowed-tools: "Bash(relic *)"

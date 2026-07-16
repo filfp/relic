@@ -49,7 +49,7 @@ function bumpRegex(path: string, pattern: RegExp, replacement: string) {
   console.log(`  bumped ${path}`);
 }
 
-// --- bump all 6 files ---
+// --- bump all 7 version sites ---
 bumpJson("package.json");
 bumpJson("packages/cli-node/package.json");
 bumpRegex("packages/cli-node/src/bin.ts", /const VERSION = "[^"]+"/, `const VERSION = "${version}"`);
