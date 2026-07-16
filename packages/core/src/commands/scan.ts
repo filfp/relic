@@ -269,5 +269,5 @@ export async function runScan(options: ScanOptions): Promise<void> {
   console.log(`File tree (${totalFiles} files):`);
   console.log(tree);
   console.log("");
-  console.log("Next step: run /relic.scan inside your AI agent to generate shared artifacts.");
+  console.log("Next step: run /relic:scan inside your AI agent to generate shared artifacts.");
 }
