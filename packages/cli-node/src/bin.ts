@@ -220,7 +220,7 @@ program
 
 program
   .command("mode [value]")
-  .description("Get or set the project mode (md|html). When switching to html, writes .relic/base.html from the current template.")
+  .description("Get or set the project mode (md|html). In html mode, specs carry a <spec-id>.html fragment rendered by the embedded viewer (relic serve).")
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (value: string | undefined, opts: { text: boolean }) => {
     await runMode({ value, text: opts.text });
