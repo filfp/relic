@@ -1,0 +1,4 @@
+interface:
+  display_name: "Requirement Records"
+  short_description: "Create indexed FR, NFR, ADR, and epics"
+  default_prompt: "Use $requirement-records to create a numbered requirement record."
