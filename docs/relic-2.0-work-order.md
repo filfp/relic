@@ -92,7 +92,9 @@ that their behavior is independent from 1.x modes, manifests, sessions, and fix 
 
 ## 4. Build the Relic Skill Workflow
 
-Turn the successful architecture-roast practice into the central Relic skill:
+Turn the successful architecture-roast practice documented in the
+[`architecture-roast` evaluation](evidence/architecture-roast-evaluation.md) into the
+central Relic skill:
 
 - add explicit discovery, readiness, compliance, operational, and decomposition modes;
 - distinguish contradictions, blocking forks, derivable solutions, accepted risks,
