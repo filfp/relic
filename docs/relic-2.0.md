@@ -68,6 +68,25 @@ a structural choice may justify one ADR, and a larger delivery may justify an EP
 several requirements. No artifact type is required merely because development reached a
 particular phase.
 
+## Shared Knowledge and Relationships
+
+`.relic/shared/` remains a first-class part of Relic. It contains knowledge that exists
+independently from any one delivery artifact: domains, contracts, rules, assumptions,
+and other project-defined knowledge that several specifications or records may need.
+Relic does not require every project to use one universal internal taxonomy, but shared
+knowledge must remain independently addressable and discoverable.
+
+Specifications, FRs, NFRs, ADRs, and EPICs may reference shared knowledge and one
+another. These relations are a first-class part of the product because they turn a
+collection of documents into a navigable knowledge web. Search and the frontend may use
+them to expose backlinks, related knowledge, and affected records.
+
+Relations do not restore exclusive ownership or the Relic 1.x `owns`, `reads`, and
+`touches_files` workflow. A document may be referenced by many other documents without
+one specification controlling it, and incomplete relation metadata does not block
+development. The exact reference and backlink representation belongs to the Relic 2.0
+implementation contract.
+
 ## Specifications and Canonical HTML
 
 Each specification has its own folder, but Relic imposes no fixed internal set of
@@ -86,11 +105,19 @@ presentation system for every document.
 HTML is the only Relic specification mode. Relic 2.0 has no Markdown/HTML mode selector
 and no dual-format synchronization lifecycle.
 
+The HTML is canonical for the specification's narrative and synthesis. FR, NFR, ADR,
+and EPIC records remain canonical for the knowledge represented by their record type.
+A specification may reference and summarize those records, but it must not create a
+second normative definition that competes with them. A divergence is knowledge drift to
+surface and resolve.
+
 ## Context Discovery and Project Governance
 
-`.relic/RELIC.md` is the Relic-owned entry point for project knowledge. It gives agents
-the map needed to find the project's current documentation without duplicating that
-documentation or prescribing how the rest of the repository must be organized.
+`.relic/RELIC.md` is the Relic-owned entry point for project knowledge. Relic owns its
+path and format contract; the project owns the paths, roles, and sources declared in it.
+The file gives agents the map needed to find the project's current documentation without
+duplicating that documentation or prescribing how the rest of the repository must be
+organized. The skill changes project-owned values only with developer authorization.
 
 The project's `AGENTS.md` remains entirely project-owned. Relic never creates, rewrites,
 or maintains a managed section in it. A project may choose to reference
@@ -152,6 +179,7 @@ The following decisions are intentionally outside this conceptual baseline:
 - the final repository and configurable directory layout;
 - the exact content and format contract of `.relic/RELIC.md`;
 - record metadata and identifier contracts;
+- relation references and derived backlink contracts;
 - the semantic HTML component contract;
 - search indexing and freshness behavior;
 - the boundary and modes of the central Relic skill;
@@ -162,3 +190,6 @@ The following decisions are intentionally outside this conceptual baseline:
 
 These decisions must be derived from the product model above. They may not restore a
 mandatory workflow merely to preserve an existing implementation.
+
+The ordered design and implementation sequence is recorded in
+[`relic-2.0-work-order.md`](relic-2.0-work-order.md).
