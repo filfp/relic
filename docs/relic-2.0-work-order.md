@@ -38,6 +38,10 @@ Define the smallest deterministic contracts needed by skills, CLI, search, and f
 - the minimal CLI capabilities required by those contracts;
 - the frontend's read model and its authority boundaries.
 
+The `RELIC.md` topology and `config.yaml` contracts are accepted in
+[`relic-2.0.md`](relic-2.0.md#project-file-contract). Their schemas and failure behavior
+are inputs to the remaining Stage 1 contracts rather than open topology decisions.
+
 For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
 **remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,
 templates, MCP surface, packaging, and tests.

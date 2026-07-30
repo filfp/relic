@@ -1,7 +1,7 @@
 # Relic 2.0 — Conceptual Baseline
 
 > **Status:** accepted product direction, 2026-07-29
-> **Implementation status:** not designed
+> **Implementation status:** contract design in progress
 
 This document records the approved product model for Relic 2.0. It defines what the
 product is and which Relic 1.x assumptions no longer apply. It is intentionally not an
@@ -132,6 +132,62 @@ state; they do not replace the project's declared engine set. The configuration 
 no corpus paths, governance mappings, presentation mode, SDD mode, viewer settings, or
 cognitive workflow rules.
 
+### Project file contract
+
+`RELIC.md` has YAML frontmatter with one required `topology` mapping. All paths use `/`,
+are relative to the repository root, and must resolve without escaping that root through
+`..`. Its Markdown body has no prescribed structure. The minimum topology is:
+
+```yaml
+---
+topology:
+  specs: .relic/specs
+  shared: .relic/shared
+  records:
+    fr: docs/requirements/functional
+    nfr: docs/requirements/non-functional
+    adr: docs/decisions
+    epic: docs/epics
+  governance:
+    project:
+      - PROJECT.md
+    architecture:
+      - TEMPLATE.md
+    principles:
+      - PRINCIPLES.md
+---
+```
+
+The record roots and governance source lists are project-owned values. The `specs` and
+`shared` roots remain the Relic-owned `.relic/specs/` and `.relic/shared/` locations.
+
+`config.yaml` has exactly two top-level fields:
+
+```yaml
+engines:
+  - codex
+  - claude
+high_water:
+  spec: 0
+  fr: 0
+  nfr: 0
+  adr: 0
+  epic: 0
+```
+
+Every high-water value is a non-negative integer and begins at zero while its document
+type is unused. Allocation uses the greater of the persisted mark and the identifiers
+currently found in the corpus, then advances the mark. Duplicate identifiers remain a
+validation error because counters alone cannot prevent two branches from allocating the
+same identifier.
+
+A missing or malformed `RELIC.md` prevents automated topology discovery and produces a
+focused diagnostic. A missing or malformed `config.yaml` does not block knowledge reads,
+search, or the frontend; it blocks engine installation and upgrade operations and new
+numbered-ID allocation until corrected. A difference between configured engines and
+observed engine-native installation files is a warning rather than a knowledge-read
+failure.
+
 The project's `AGENTS.md` remains entirely project-owned. Relic never creates, rewrites,
 or maintains a managed section in it. A project may choose to reference
 `.relic/RELIC.md` from `AGENTS.md`, but that reference is not the mechanism by which the
@@ -190,7 +246,6 @@ mandatory development methodology.
 The following decisions are intentionally outside this conceptual baseline:
 
 - the final repository and configurable directory layout;
-- the remaining field-level schema of `.relic/RELIC.md` and `.relic/config.yaml`;
 - record metadata and identifier contracts;
 - relation references and derived backlink contracts;
 - the semantic HTML component contract;
