@@ -1,6 +1,8 @@
 # Relic — Full Conversation Context
 
-> This document captures the full ideation conversation that led to the Relic architecture. It serves as the design history and rationale document. Read CLAUDE.md for the distilled decisions.
+> **Historical Relic 1.x context.** This document preserves the original ideation and
+> rationale behind the implemented architecture. It is not the accepted product direction
+> for Relic 2.0. See [`relic-2.0.md`](relic-2.0.md) for the current conceptual baseline.
 
 ---
 
