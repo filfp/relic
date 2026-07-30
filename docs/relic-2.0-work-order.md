@@ -29,7 +29,7 @@ Define the smallest deterministic contracts needed by skills, CLI, search, and f
   corpus roots, and free-form agent guidance;
 - `.relic/config.yaml`: managed engines and high-water marks only, without duplicated
   topology or workflow preferences;
-- document identity, status, type, and living-record mutation rules;
+- document identity, optional project metadata, and living-record mutation freedom;
 - references, backlinks, and relationship resolution without exclusive ownership;
 - canonical spec HTML and the supported semantic component vocabulary;
 - search corpus, indexing, freshness, and behavior when metadata is incomplete;
@@ -41,6 +41,13 @@ Define the smallest deterministic contracts needed by skills, CLI, search, and f
 The `RELIC.md` topology and `config.yaml` contracts are accepted in
 [`relic-2.0.md`](relic-2.0.md#project-file-contract). Their schemas and failure behavior
 are inputs to the remaining Stage 1 contracts rather than open topology decisions.
+
+Document identity, native metadata scope, opaque project fields, and mutation freedom are
+accepted in [`relic-2.0.md`](relic-2.0.md#document-identity-and-mutation-contract). The
+current `requirement-records` skill is classified **adapt**: retain focused generation
+and testable content, replace global `docs/` scanning with topology and high-water state,
+and remove its fixed status vocabulary, mandatory `origin`, historical-supersession rule,
+and fixed output roots.
 
 For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
 **remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,

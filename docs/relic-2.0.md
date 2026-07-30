@@ -69,6 +69,57 @@ a structural choice may justify one ADR, and a larger delivery may justify an EP
 several requirements. No artifact type is required merely because development reached a
 particular phase.
 
+### Document identity and mutation contract
+
+Relic metadata is required only for Relic-native knowledge: canonical specification
+HTML, FRs, NFRs, ADRs, EPICs, and addressable documents under `.relic/shared/`.
+Governance sources, specification support material, code, tests, and ordinary project
+documentation remain readable and searchable without adopting Relic metadata. Such a
+document is addressed by repository-relative path until the developer deliberately
+adopts it as Relic-native knowledge.
+
+The only required metadata field for native knowledge is its stable `id`. Every other
+field is optional, project-defined, and opaque to the Relic core:
+
+```yaml
+---
+id: FR-016
+status: needs-review
+owner: platform
+confidence: low
+---
+```
+
+Relic derives kind from the corpus root declared by the project topology and can derive a
+display title from document content. Projects may still declare `kind`, `title`,
+`status`, `category`, or any other useful metadata. Relic preserves and may present those
+values but does not define their vocabulary, lifecycle, transitions, or validity.
+
+The supported native kinds and canonical identifier forms are:
+
+- specification: `001-auth`;
+- functional requirement: `FR-001`;
+- non-functional requirement: `NFR-001`;
+- architecture decision: `ADR-001`;
+- implementation epic: `EPIC-001`;
+- shared knowledge: `SHARED-auth-api`.
+
+Canonical prefixes retain their displayed case and identity comparisons are
+case-insensitive so the same corpus behaves consistently across filesystems. The ID is a
+stable address rather than an enforcement boundary: changing it makes the previous
+identity disappear and introduces a new one, so old references become unresolved.
+Generated record filenames include the ID and a readable slug, but metadata remains
+authoritative. A specification starts in a folder named by its ID; the same identity is
+carried by its canonical HTML. The exact HTML metadata representation belongs to the
+semantic HTML contract.
+
+Relic imposes no status progression, revalidation rule, promotion rule, reclassification
+procedure, or mutation lifecycle. Records may be rewritten, moved, split, merged, or
+removed as the project's current knowledge changes. The skill may explain the effects of
+a mutation and unresolved or ambiguous identities remain discoverable diagnostics, but
+the project owns the change and its consequences. Removal creates no tombstone or
+required superseded copy; Git retains history.
+
 ## Shared Knowledge and Relationships
 
 `.relic/shared/` remains a first-class part of Relic. It contains knowledge that exists
@@ -160,6 +211,10 @@ topology:
 
 The record roots and governance source lists are project-owned values. The `specs` and
 `shared` roots remain the Relic-owned `.relic/specs/` and `.relic/shared/` locations.
+Relic follows the declared topology without rejecting overlapping roots or inventing a
+precedence between them. If a project maps the same content into several corpora, repeated
+or ambiguous discoveries are visible consequences of that map rather than a blocked
+configuration.
 
 `config.yaml` has exactly two top-level fields:
 
@@ -176,17 +231,19 @@ high_water:
 ```
 
 Every high-water value is a non-negative integer and begins at zero while its document
-type is unused. Allocation uses the greater of the persisted mark and the identifiers
-currently found in the corpus, then advances the mark. Duplicate identifiers remain a
-validation error because counters alone cannot prevent two branches from allocating the
-same identifier.
+type is unused. A Relic generator uses the greater of the persisted mark and the
+identifiers currently found in the corpus, then advances the mark. The mark is a
+cooperative convenience, not a lock or distributed reservation system. Concurrent
+branches or worktrees may allocate the same identifier; merge resolution owns that
+conflict. Duplicate or ambiguous identities remain focused diagnostics and do not make
+unrelated knowledge unreadable.
 
 A missing or malformed `RELIC.md` prevents automated topology discovery and produces a
 focused diagnostic. A missing or malformed `config.yaml` does not block knowledge reads,
-search, or the frontend; it blocks engine installation and upgrade operations and new
-numbered-ID allocation until corrected. A difference between configured engines and
-observed engine-native installation files is a warning rather than a knowledge-read
-failure.
+search, the frontend, or manual document creation; it blocks engine installation and
+upgrade operations and Relic-managed automatic ID allocation until corrected. A
+difference between configured engines and observed engine-native installation files is a
+warning rather than a knowledge-read failure.
 
 The project's `AGENTS.md` remains entirely project-owned. Relic never creates, rewrites,
 or maintains a managed section in it. A project may choose to reference
@@ -246,7 +303,6 @@ mandatory development methodology.
 The following decisions are intentionally outside this conceptual baseline:
 
 - the final repository and configurable directory layout;
-- record metadata and identifier contracts;
 - relation references and derived backlink contracts;
 - the semantic HTML component contract;
 - search indexing and freshness behavior;
