@@ -25,8 +25,10 @@ from dictating unresolved product contracts.
 
 Define the smallest deterministic contracts needed by skills, CLI, search, and frontend:
 
-- `.relic/RELIC.md`: format, project-owned mappings, governance roles, and corpus roots;
-- configuration: locations for shared knowledge, specs, FRs, NFRs, ADRs, and EPICs;
+- `.relic/RELIC.md`: structured topology, project-owned mappings, governance roles,
+  corpus roots, and free-form agent guidance;
+- `.relic/config.yaml`: managed engines and high-water marks only, without duplicated
+  topology or workflow preferences;
 - document identity, status, type, and living-record mutation rules;
 - references, backlinks, and relationship resolution without exclusive ownership;
 - canonical spec HTML and the supported semantic component vocabulary;
@@ -50,7 +52,7 @@ templates, MCP surface, packaging, and tests.
 
 Implement the pure core that reads the accepted contracts:
 
-- load `.relic/RELIC.md` and configured corpus roots;
+- load `.relic/RELIC.md` and the corpus roots declared by its topology;
 - discover governance documents, shared knowledge, specs, and typed records;
 - normalize identities and current statuses;
 - resolve forward references and derive backlinks;
@@ -64,7 +66,7 @@ frontend, plugin, or a particular coding agent.
 ### Gate
 
 - The fixture from Stage 1 loads deterministically.
-- Moving a configured corpus root does not change semantic identities unexpectedly.
+- Moving a declared corpus root does not change semantic identities unexpectedly.
 - Broken references produce focused diagnostics while unrelated knowledge remains
   readable.
 - Backlinks are derived without a manually synchronized reverse index.
@@ -129,7 +131,8 @@ not orchestrate how the agent thinks.
 
 At this stage:
 
-- initialize the Relic-owned files and configured roots without modifying `AGENTS.md`;
+- initialize the Relic-owned files and roots declared by `RELIC.md` without modifying
+  `AGENTS.md`;
 - expose the accepted search and read-only validation behavior;
 - serve the frontend and its knowledge API;
 - provide only deterministic scaffolding or numbering justified by the record and spec

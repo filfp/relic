@@ -57,7 +57,8 @@ historical recovery mechanism.
 ## Living Records
 
 FR, NFR, ADR, and EPIC records live independently from specification folders. Their root
-location may be the Relic knowledge tree or a path selected by project configuration.
+location may be the Relic knowledge tree or another path declared by the project map in
+`.relic/RELIC.md`.
 
 These records are living descriptions of the current project. They may be corrected,
 rewritten, moved, or removed as knowledge changes. Relic does not require superseded
@@ -119,6 +120,18 @@ The file gives agents the map needed to find the project's current documentation
 duplicating that documentation or prescribing how the rest of the repository must be
 organized. The skill changes project-owned values only with developer authorization.
 
+`RELIC.md` is the single authority for knowledge topology. A small structured frontmatter
+declares corpus roots, typed-record locations, and governance sources so the CLI, search,
+and frontend can discover them deterministically. Its Markdown body remains a free-form
+guide for agents and developers. Topology is not copied into another configuration file.
+
+`.relic/config.yaml` is deliberately narrower. It contains only the engines the project
+expects Relic to manage and the high-water marks used to allocate stable sequential
+identifiers. Engine-native files and directories are evidence of observed installation
+state; they do not replace the project's declared engine set. The configuration contains
+no corpus paths, governance mappings, presentation mode, SDD mode, viewer settings, or
+cognitive workflow rules.
+
 The project's `AGENTS.md` remains entirely project-owned. Relic never creates, rewrites,
 or maintains a managed section in it. A project may choose to reference
 `.relic/RELIC.md` from `AGENTS.md`, but that reference is not the mechanism by which the
@@ -177,7 +190,7 @@ mandatory development methodology.
 The following decisions are intentionally outside this conceptual baseline:
 
 - the final repository and configurable directory layout;
-- the exact content and format contract of `.relic/RELIC.md`;
+- the remaining field-level schema of `.relic/RELIC.md` and `.relic/config.yaml`;
 - record metadata and identifier contracts;
 - relation references and derived backlink contracts;
 - the semantic HTML component contract;
