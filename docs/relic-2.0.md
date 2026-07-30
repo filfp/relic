@@ -90,10 +90,12 @@ confidence: low
 ---
 ```
 
-Relic derives kind from the corpus root declared by the project topology and can derive a
-display title from document content. Projects may still declare `kind`, `title`,
-`status`, `category`, or any other useful metadata. Relic preserves and may present those
-values but does not define their vocabulary, lifecycle, transitions, or validity.
+Relic derives one or more corpus memberships from the roots declared by project topology
+and can derive a display title from document content. An overlapping topology may place
+the same physical document in several memberships without creating several document
+nodes. Projects may still declare `kind`, `title`, `status`, `category`, or any other
+useful metadata. Relic preserves and may present those values but does not define their
+vocabulary, lifecycle, transitions, or validity.
 
 The supported native kinds and canonical identifier forms are:
 
@@ -106,12 +108,13 @@ The supported native kinds and canonical identifier forms are:
 
 Canonical prefixes retain their displayed case and identity comparisons are
 case-insensitive so the same corpus behaves consistently across filesystems. The ID is a
-stable address rather than an enforcement boundary: changing it makes the previous
-identity disappear and introduces a new one, so old references become unresolved.
-Generated record filenames include the ID and a readable slug, but metadata remains
-authoritative. A specification starts in a folder named by its ID; the same identity is
-carried by its canonical HTML. The exact HTML metadata representation belongs to the
-semantic HTML contract.
+stable catalog identity rather than an enforcement boundary: changing it makes the
+previous identity disappear from ID lookup and introduces a new one. Path links remain
+valid unless the file is also renamed or moved. Generated record filenames include the
+ID and a readable slug, but document metadata carries the catalog identity. A
+specification starts in a folder named by its ID; the same identity is carried by its
+canonical HTML. The exact HTML metadata representation belongs to the semantic HTML
+contract.
 
 Relic imposes no status progression, revalidation rule, promotion rule, reclassification
 procedure, or mutation lifecycle. Records may be rewritten, moved, split, merged, or
@@ -135,9 +138,63 @@ them to expose backlinks, related knowledge, and affected records.
 
 Relations do not restore exclusive ownership or the Relic 1.x `owns`, `reads`, and
 `touches_files` workflow. A document may be referenced by many other documents without
-one specification controlling it, and incomplete relation metadata does not block
-development. The exact reference and backlink representation belongs to the Relic 2.0
-implementation contract.
+one specification controlling it, and incomplete or broken links do not block
+development.
+
+### Relationship and backlink contract
+
+Links are edges in the knowledge web, not declarations of authority, ownership, or
+hierarchy. The web spans the `RELIC.md` guide, `.relic/specs/`, `.relic/shared/`, and
+every governance or record root declared by topology; operational state elsewhere under
+`.relic/` is not included automatically. A project may enter the web through any
+document. Specifications and EPICs are common navigation entry points because they
+aggregate delivery knowledge, not because other documents are subordinate to them.
+`RELIC.md` remains the bootstrap map for discovery.
+
+Only explicit, ordinary file links create graph edges. Authors derive their relative
+paths from the current topology:
+
+```markdown
+[Idempotent command](../../requirements/functional/FR-016-idempotent-command.md)
+```
+
+```html
+<a href="../../requirements/functional/FR-016-idempotent-command.md">
+  Idempotent command
+</a>
+```
+
+Relic defines no custom link protocol and performs no ID-to-path resolution for authors.
+Standard links work in Git hosts, editors, browsers, and coding agents without a Relic
+integration. A relative link contributes an edge and backlink when its target belongs to
+the discovered knowledge corpus. External URLs remain ordinary outbound navigation.
+Plain ID mentions, code blocks, comments, search similarity, arbitrary JSON or
+JavaScript, and visual labels without an actual link do not create edges. Semantic
+visualizations that intend a relation must expose an ordinary link through their
+component contract.
+
+The read model resolves relative links from their source documents in order to derive
+the graph; this generic read-side parsing is not a responsibility imposed on the central
+skill. Missing local targets produce focused diagnostics without blocking unrelated
+knowledge. The frontend presents a broken-link error at the source as evidence that the
+document or topology needs maintenance. Fragments are preserved for navigation, but the
+core does not govern or validate anchor names.
+
+Backlinks are derived from discovered links and are never written into target documents
+or maintained in a separate reverse index. Repeated links between the same source and
+target express one graph connection, while the read model retains their link text,
+fragment, and source context so the reason for that connection remains inspectable.
+Self-links and same-document fragments remain local navigation rather than backlinks.
+Search may suggest possible connections, but a suggestion becomes an edge only when the
+project adds an explicit link.
+
+Duplicate IDs do not make path links ambiguous, but they do make catalog and ID search
+results ambiguous. The central Relic skill may offer a reconciliation: keep the ID on one
+document and move another to the next cooperative high-water value, or merge or remove
+overlapping knowledge. If reconciliation renames or moves a file, the skill may search
+for the previous relative path and propose link repairs. It never renumbers a document,
+advances the high-water mark, moves a file, or rewrites links silently; declining the
+reconciliation leaves the ambiguity visible and otherwise usable.
 
 ## Specifications and Canonical HTML
 
@@ -145,23 +202,30 @@ Each specification has its own folder, but Relic imposes no fixed internal set o
 Markdown documents. Supporting discussions, investigations, reports, references, and
 other useful material may be organized according to the needs of that specification.
 
-The one required specification artifact is its canonical HTML document. The HTML is the
-agent-authored synthesis of the specification's current knowledge, not a rendered copy
-that must be synchronized with a mandatory Markdown source.
+The one required specification artifact is its canonical HTML landing document. The HTML
+is the agent-authored synthesis of the specification's current knowledge, not a rendered
+copy that must be synchronized with a mandatory Markdown source. Supporting documents
+remain independently discoverable and searchable; information does not disappear merely
+because it has not been repeated in the landing document.
 
 Agents choose semantic structures such as flows, charts, tables, callouts, progress, and
 other reusable visual components. The frontend owns their styling, colors, layout, and
 interactive behavior. This gives the agent expressive tools without making it design the
 presentation system for every document.
 
+All knowledge-bearing components must expose indexable text and ordinary links in the
+document structure. Essential knowledge may not exist only in JavaScript, canvas,
+private component attributes, or a visual shape without textual content. Scripts,
+styling, and progressive interaction belong to the frontend, keeping canonical HTML
+readable to agents, search, accessibility tools, and code review.
+
 HTML is the only Relic specification mode. Relic 2.0 has no Markdown/HTML mode selector
 and no dual-format synchronization lifecycle.
 
-The HTML is canonical for the specification's narrative and synthesis. FR, NFR, ADR,
-and EPIC records remain canonical for the knowledge represented by their record type.
-A specification may reference and summarize those records, but it must not create a
-second normative definition that competes with them. A divergence is knowledge drift to
-surface and resolve.
+The HTML is the canonical landing representation for its specification, not a higher
+authority over connected knowledge. FRs, NFRs, ADRs, EPICs, shared documents, and specs
+are peer nodes in the web. When documents disagree, their kinds do not select a winner;
+the divergence is knowledge drift for the developer and skill to surface and resolve.
 
 ## Context Discovery and Project Governance
 
@@ -187,7 +251,10 @@ cognitive workflow rules.
 
 `RELIC.md` has YAML frontmatter with one required `topology` mapping. All paths use `/`,
 are relative to the repository root, and must resolve without escaping that root through
-`..`. Its Markdown body has no prescribed structure. The minimum topology is:
+`..`. Its Markdown body is otherwise free-form but carries the small authoring rule for
+numbered records: read the current high-water value from `config.yaml`, follow the
+current topology, write directly, and advance the cooperative mark. The minimum topology
+is:
 
 ```yaml
 ---
@@ -212,9 +279,11 @@ topology:
 The record roots and governance source lists are project-owned values. The `specs` and
 `shared` roots remain the Relic-owned `.relic/specs/` and `.relic/shared/` locations.
 Relic follows the declared topology without rejecting overlapping roots or inventing a
-precedence between them. If a project maps the same content into several corpora, repeated
-or ambiguous discoveries are visible consequences of that map rather than a blocked
-configuration.
+precedence between them. If a project maps the same physical file into several corpora,
+the read model exposes one document node with several memberships. Changing topology is
+an infrequent project decision and may orphan relative links. Relic does not migrate them
+automatically; broken-link diagnostics and ordinary text search provide the evidence for
+an agent-assisted maintenance session.
 
 `config.yaml` has exactly two top-level fields:
 
@@ -231,12 +300,14 @@ high_water:
 ```
 
 Every high-water value is a non-negative integer and begins at zero while its document
-type is unused. A Relic generator uses the greater of the persisted mark and the
-identifiers currently found in the corpus, then advances the mark. The mark is a
-cooperative convenience, not a lock or distributed reservation system. Concurrent
-branches or worktrees may allocate the same identifier; merge resolution owns that
-conflict. Duplicate or ambiguous identities remain focused diagnostics and do not make
-unrelated knowledge unreadable.
+type is unused. When the developer requests a numbered document, the central skill reads
+the current topology and high-water value, writes the document directly to the declared
+root, and advances the mark. `RELIC.md` carries this small authoring instruction; Relic
+does not require a separate record skill, JSON input, generator script, or CLI command.
+The mark is a cooperative convenience, not a lock or distributed reservation system.
+Concurrent branches or worktrees may allocate the same identifier; merge resolution owns
+that conflict. Duplicate identities remain focused diagnostics and do not make unrelated
+knowledge unreadable.
 
 A missing or malformed `RELIC.md` prevents automated topology discovery and produces a
 focused diagnostic. A missing or malformed `config.yaml` does not block knowledge reads,
@@ -276,6 +347,34 @@ exploration capabilities of each coding agent; it is not a mandatory gateway and
 not prohibit filesystem traversal, grep, ripgrep, symbol search, or other engine-native
 techniques.
 
+## Consultability Contract
+
+Freedom of authorship is paired with deterministic reading. The corpus contains the
+`RELIC.md` guide, declared governance sources, and files discovered under the specs,
+shared, and typed-record roots. Operational configuration, generated caches, and other
+Relic machinery are not knowledge merely because they live under `.relic/`. Supported
+text documents are indexed by content; other discovered files remain visible as
+attachments rather than silently disappearing.
+
+Every discovered physical file has one read-model node even when it has no Relic ID or
+links. Overlapping roots add memberships to that node instead of duplicating it. Every
+node is available through an exhaustive catalog organized by membership and path,
+including orphaned documents with no incoming or outgoing edges. Specs and EPICs are
+useful entry points, but no node depends on them for discovery.
+
+The read model derives a display label from optional metadata, document title or first
+heading, ID, and finally filename. It preserves arbitrary metadata without interpreting
+its vocabulary. Search is a core, full-text capability across the declared corpus and
+can filter or display raw memberships, paths, IDs, and metadata. Agents are never forced
+to use it as their only exploration mechanism.
+
+Catalogs, graph edges, backlinks, snippets, diagnostics, and search indexes are derived
+projections. Source files remain authoritative for their own content. A cache may improve
+performance but may never become the only copy of knowledge or silently return an
+incomplete corpus when stale. Broken links, duplicate IDs, unsupported content, and
+orphaned nodes remain visible, non-blocking maintenance evidence in both the read model
+and frontend.
+
 ## Relic 1.x Constraints Removed
 
 Relic 2.0 does not preserve the following requirements:
@@ -303,7 +402,6 @@ mandatory development methodology.
 The following decisions are intentionally outside this conceptual baseline:
 
 - the final repository and configurable directory layout;
-- relation references and derived backlink contracts;
 - the semantic HTML component contract;
 - search indexing and freshness behavior;
 - the boundary and modes of the central Relic skill;

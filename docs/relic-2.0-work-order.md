@@ -44,10 +44,24 @@ are inputs to the remaining Stage 1 contracts rather than open topology decision
 
 Document identity, native metadata scope, opaque project fields, and mutation freedom are
 accepted in [`relic-2.0.md`](relic-2.0.md#document-identity-and-mutation-contract). The
-current `requirement-records` skill is classified **adapt**: retain focused generation
-and testable content, replace global `docs/` scanning with topology and high-water state,
-and remove its fixed status vocabulary, mandatory `origin`, historical-supersession rule,
-and fixed output roots.
+current `requirement-records` skill and generator script are classified **remove/absorb**:
+they remain design evidence, while the central skill follows the topology and cooperative
+high-water instruction carried by `RELIC.md` and writes requested records directly.
+
+Ordinary relative-path web edges, derived backlinks, broken-link maintenance evidence,
+and optional ID reconciliation are accepted in
+[`relic-2.0.md`](relic-2.0.md#relationship-and-backlink-contract). The current
+`artifacts.json`, `owns`, `reads`, `touches_files`, ownership intersection, and manually
+maintained relation-index machinery are classified **remove**. Existing Markdown and HTML
+link parsing and frontend navigation are classified **adapt**; custom link protocols and
+ID-to-path resolution are excluded.
+
+Exhaustive catalog, full-text discovery, multiple corpus memberships, orphan visibility,
+deterministic display fallbacks, and derived-cache authority boundaries are accepted in
+[`relic-2.0.md`](relic-2.0.md#consultability-contract). The current manifest-based search
+and spec/session-oriented `view-data` read model are classified **replace**. Reusable
+presentation components may still be classified **adapt** after satisfying the semantic
+HTML contract.
 
 For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
 **remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,
@@ -64,11 +78,15 @@ templates, MCP surface, packaging, and tests.
 Implement the pure core that reads the accepted contracts:
 
 - load `.relic/RELIC.md` and the corpus roots declared by its topology;
-- discover governance documents, shared knowledge, specs, and typed records;
-- normalize identities and current statuses;
-- resolve forward references and derive backlinks;
-- report broken or ambiguous references without blocking unrelated discovery;
-- expose one read model consumed by search, validation, and frontend code;
+- discover every physical file across governance, shared knowledge, specs, and typed
+  records, deduplicating it while preserving all corpus memberships;
+- normalize identities and preserve optional project metadata without interpreting its
+  status vocabulary;
+- parse ordinary relative links, derive backlinks, and retain link context;
+- derive deterministic labels, catalog entries, and full-text content where supported;
+- report broken links, duplicate identities, orphan nodes, and unsupported content
+  without blocking unrelated discovery;
+- expose one exhaustive read model consumed by search, diagnostics, and frontend code;
 - exclude active-spec, active-fix, changelog, and exclusive-owner semantics.
 
 Start with fixture-driven unit tests. The core must not depend on the HTTP server,
@@ -77,18 +95,21 @@ frontend, plugin, or a particular coding agent.
 ### Gate
 
 - The fixture from Stage 1 loads deterministically.
-- Moving a declared corpus root does not change semantic identities unexpectedly.
-- Broken references produce focused diagnostics while unrelated knowledge remains
-  readable.
+- An overlapping topology produces one node with multiple memberships.
+- Moving a declared corpus root exposes affected path links as repairable diagnostics.
+- Broken links produce focused diagnostics while unrelated knowledge remains readable.
 - Backlinks are derived without a manually synchronized reverse index.
+- Every fixture document remains cataloged and searchable even without graph edges.
 
 ## 3. Prove a Read-Only Vertical Slice
 
 Connect the knowledge read model to the two retained product surfaces:
 
 - search across governance, shared knowledge, specs, and typed records;
-- the local frontend for canonical spec HTML and current project documentation;
+- an exhaustive catalog and local frontend for canonical spec HTML, supporting files,
+  records, governance, shared knowledge, and attachments;
 - navigation between forward references, backlinks, and related records;
+- visible orphan, duplicate-ID, unsupported-content, and broken-link diagnostics;
 - semantic rendering for flows, charts, tables, callouts, and existing reusable
   components that still satisfy the 2.0 HTML contract;
 - read-only validation and useful diagnostics for malformed content.
@@ -100,6 +121,8 @@ that their behavior is independent from 1.x modes, manifests, sessions, and fix 
 
 - One command or development entry point opens the fixture in the frontend.
 - The same fixture is searchable without requiring agents to use search exclusively.
+- Every fixture document is browsable, including one intentionally orphaned document.
+- A broken relative link is visible at its source without breaking other pages.
 - A spec page reaches its FR, ADR, and shared contract in both directions.
 - No Relic 1.x workflow command is required by the vertical slice.
 
@@ -109,7 +132,8 @@ Turn the successful architecture-roast practice documented in the
 [`architecture-roast` evaluation](evidence/architecture-roast-evaluation.md) into the
 central Relic skill:
 
-- add explicit discovery, readiness, compliance, operational, and decomposition modes;
+- use discovery, readiness, compliance, operational, and decomposition as internal
+  reasoning modes rather than user-facing commands or required selectors;
 - distinguish contradictions, blocking forks, derivable solutions, accepted risks,
   implementation details, future improvements, and non-problems;
 - require evidence and recommendation before asking the developer to decide;
@@ -121,8 +145,11 @@ central Relic skill:
 - suggest specs and typed records without silently creating them;
 - update current knowledge only after developer authorization.
 
-Align the record-creation skill and generator with living records. Remove the current
-requirement to retain superseded files in active documentation.
+Absorb the minimal record-writing behavior into the central skill and `RELIC.md`: read
+topology and high-water state, write the developer-requested document directly, and
+advance the cooperative counter. Remove the separate record skill, JSON handoff,
+generator script, fixed status vocabulary, fixed templates, and requirement to retain
+superseded files in active documentation.
 
 ### Gate
 
@@ -146,8 +173,7 @@ At this stage:
   `AGENTS.md`;
 - expose the accepted search and read-only validation behavior;
 - serve the frontend and its knowledge API;
-- provide only deterministic scaffolding or numbering justified by the record and spec
-  contracts;
+- do not require a CLI command for record creation or numbering;
 - remove any new dependency on session selection, model conversation history, workflow
   prompts, mode switching, or structured changelog writes.
 
