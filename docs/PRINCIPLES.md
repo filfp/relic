@@ -1,8 +1,8 @@
 # Relic 2 development principles
 
-This is project-owned governance for contributors to the Relic repository. It
-lives outside the topology in `relic.yaml`; it is not a canonical Relic document
-or a rule imposed on projects that use Relic.
+This is conventional, project-owned governance for contributors to the Relic
+repository. It lives outside the topology in `relic.yaml`; it is not a canonical
+Relic document or a rule imposed on projects that use Relic.
 
 ## Product principles
 

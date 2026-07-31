@@ -110,9 +110,12 @@ shapes tested locally.
 current canonical product knowledge: specs, shared documents, requirements,
 decisions, and epics.
 
-This `PROJECT.md` and `PRINCIPLES.md` are deliberately outside that topology.
-They govern contributors to this repository without teaching the Relic product
-to special-case self-hosting.
+### `docs`
+
+Owns conventional contributor guidance for this repository. `PROJECT.md`,
+`PRINCIPLES.md`, and `PUBLISHING.md` are deliberately outside the Relic topology.
+They govern contributors without teaching the product to special-case
+self-hosting or treating project operations as canonical product knowledge.
 
 ## Dependency direction
 
@@ -146,4 +149,3 @@ source behavior.
 When a proposal appears to belong everywhere, first look for a missing stable
 contract at the lowest shared layer. Do not copy logic across packages to avoid
 making that boundary explicit.
-

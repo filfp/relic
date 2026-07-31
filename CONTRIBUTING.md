@@ -65,7 +65,10 @@ bun run publish <version> --repository npm
 bun run publish <version> --repository pypi
 ```
 
-The preparation script requires a clean main branch, matching current versions, and a
-CHANGELOG release entry. It creates and pushes a release branch. After its pull request
-is merged, the pinned release workflow validates versions, creates the target-specific
-tag, and dispatches npm and/or trusted PyPI publication.
+Run preparation from an updated and fully validated `main`. The script enforces strict
+semver, a clean worktree, and a matching CHANGELOG release entry; it does not verify the
+current branch or run the validation gates. It creates and pushes a release branch.
+After its pull request is merged, the pinned release workflow validates versions,
+creates the target-specific tag, and dispatches npm and/or trusted PyPI publication.
+See [`docs/PUBLISHING.md`](docs/PUBLISHING.md) for channel selection, exact version
+sites, tag behavior, failure recovery, and local distribution helpers.

@@ -8,11 +8,13 @@ the durable contracts in the Relic corpus.
 
 Use the smallest route that covers the work:
 
-- Read [`.relic/PROJECT.md`](.relic/PROJECT.md) to locate ownership, package
+- Read [`docs/PROJECT.md`](docs/PROJECT.md) to locate ownership, package
   boundaries, generated files, and the correct home for a change.
-- Read [`.relic/PRINCIPLES.md`](.relic/PRINCIPLES.md) before changing product
+- Read [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md) before changing product
   behavior or architecture. Its regression alarms protect the Relic 2 design
   from growing back into Relic 1.x.
+- Read [`docs/PUBLISHING.md`](docs/PUBLISHING.md) before preparing a release
+  or changing versioning, tags, registry publication, or release workflows.
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for repository commands, validation,
   knowledge changes, and release preparation.
 - Read [`SECURITY.md`](SECURITY.md) when work touches paths, parsing, served
@@ -34,7 +36,7 @@ instead of copying them here.
 | Browser behavior and presentation | `packages/viewer` | Viewer tests and `NFR-002` |
 | PyPI distribution | `packages/cli-python` | Native-binary build and wheel verification scripts |
 | Skill behavior or authoring guidance | `skills/relic` | Its references and `FR-001` |
-| CI or publishing | `.github/workflows`, `scripts` | `CONTRIBUTING.md`, changelog, release epic |
+| CI or publishing | `docs/PUBLISHING.md`, `.github/workflows`, `scripts` | `CONTRIBUTING.md`, changelog, release epic |
 
 ## Working rules
 
@@ -62,4 +64,3 @@ instead of copying them here.
 A change is complete when its behavior, tests, generated outputs, documentation,
 and durable contracts agree at the affected boundary. Report exactly which
 checks ran and distinguish source validation from distribution validation.
-
