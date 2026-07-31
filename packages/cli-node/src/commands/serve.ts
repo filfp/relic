@@ -5,6 +5,7 @@ import {
   realpathSync,
 } from "node:fs";
 import {
+  basename,
   dirname,
   extname,
   relative,
@@ -33,26 +34,36 @@ export interface ViewerResponse {
   status: number;
   contentType: string;
   body: string | Buffer;
+  headers?: Record<string, string>;
 }
 
 const FIRST_AVAILABLE_PORT = 4747;
 const AVAILABLE_PORT_ATTEMPTS = 100;
 
-const CONTENT_TYPES: Record<string, string> = {
-  ".css": "text/css; charset=utf-8",
-  ".csv": "text/csv; charset=utf-8",
+const INLINE_ARTIFACT_TYPES: Record<string, string> = {
   ".gif": "image/gif",
-  ".html": "text/html; charset=utf-8",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",
-  ".json": "application/json; charset=utf-8",
-  ".md": "text/markdown; charset=utf-8",
-  ".pdf": "application/pdf",
   ".png": "image/png",
-  ".svg": "image/svg+xml",
-  ".txt": "text/plain; charset=utf-8",
   ".webp": "image/webp",
 };
+
+const VIEWER_CSP = [
+  "default-src 'self'",
+  "base-uri 'none'",
+  "connect-src 'self'",
+  "font-src 'self'",
+  "frame-ancestors 'none'",
+  "img-src 'self' data:",
+  "object-src 'none'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+].join("; ");
+
+function attachmentName(path: string): string {
+  const fallback = basename(path).replace(/[^\x20-\x7e]|["\\]/g, "_");
+  return fallback || "artifact";
+}
 
 function jsonResponse(status: number, body: unknown): ViewerResponse {
   return {
@@ -66,7 +77,11 @@ function isInside(root: string, target: string): boolean {
   return target === root || target.startsWith(`${root}${sep}`);
 }
 
-function artifactContent(projectDir: string, path: string): ViewerResponse {
+function artifactContent(
+  projectDir: string,
+  path: string,
+  forceDownload: boolean,
+): ViewerResponse {
   const project = loadKnowledgeProject(projectDir);
   if (!project.artifacts.some((artifact) => artifact.path === path)) {
     return jsonResponse(404, { error: `artifact "${path}" not found` });
@@ -78,10 +93,18 @@ function artifactContent(projectDir: string, path: string): ViewerResponse {
     if (!isInside(root, target) || relative(root, target).split(sep).join("/") !== path) {
       return jsonResponse(404, { error: `artifact "${path}" not found` });
     }
+    const inlineType = INLINE_ARTIFACT_TYPES[extname(target).toLowerCase()];
+    const downloadable = forceDownload || inlineType === undefined;
     return {
       status: 200,
-      contentType: CONTENT_TYPES[extname(target).toLowerCase()] ?? "application/octet-stream",
+      contentType: downloadable ? "application/octet-stream" : inlineType,
       body: readFileSync(target),
+      headers: {
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+        ...(downloadable && {
+          "Content-Disposition": `attachment; filename="${attachmentName(path)}"`,
+        }),
+      },
     };
   } catch {
     return jsonResponse(404, { error: `artifact "${path}" not found` });
@@ -134,7 +157,11 @@ export function resolveViewerRequest(
     });
   }
   if (url.pathname === "/api/content") {
-    return artifactContent(projectDir, url.searchParams.get("path") ?? "");
+    return artifactContent(
+      projectDir,
+      url.searchParams.get("path") ?? "",
+      url.searchParams.get("download") === "1",
+    );
   }
   return jsonResponse(404, { error: "unknown API route" });
 }
@@ -147,6 +174,9 @@ function send(
   res.writeHead(response.status, {
     "Content-Type": response.contentType,
     "Cache-Control": "no-store",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+    ...response.headers,
   });
   res.end(headOnly ? undefined : response.body);
 }
@@ -159,6 +189,9 @@ function serveAsset(res: ServerResponse, key: string, headOnly: boolean): boolea
     "Cache-Control": key === "index.html"
       ? "no-cache"
       : "public, max-age=31536000, immutable",
+    "Content-Security-Policy": VIEWER_CSP,
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
   });
   res.end(headOnly ? undefined : Buffer.from(asset.b64, "base64"));
   return true;

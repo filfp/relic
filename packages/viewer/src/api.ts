@@ -172,8 +172,10 @@ export const searchProject = (value: string) =>
     `/api/search?${new URLSearchParams({ q: value }).toString()}`,
   );
 
-export function artifactContentUrl(path: string): string {
-  return `/api/content?${query(path)}`;
+export function artifactContentUrl(path: string, download = false): string {
+  const parameters = new URLSearchParams({ path });
+  if (download) parameters.set("download", "1");
+  return `/api/content?${parameters.toString()}`;
 }
 
 export function resolveRelativePath(sourcePath: string, reference: string): string {

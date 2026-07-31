@@ -1,8 +1,20 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import {
+  cpSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
-import { resolveViewerRequest } from "../commands/serve.ts";
+import {
+  createViewerServer,
+  resolveViewerRequest,
+} from "../commands/serve.ts";
 
 const fixture = join(
   import.meta.dir,
@@ -125,10 +137,102 @@ describe("Relic 2.0 read-only viewer API", () => {
     );
     expect(known.status).toBe(200);
     expect(String(known.body)).toContain("legacy session cookie");
+    expect(known.contentType).toBe("application/octet-stream");
+    expect(known.headers).toMatchObject({
+      "Content-Disposition": 'attachment; filename="notes.md"',
+      "Content-Security-Policy": "default-src 'none'; sandbox",
+    });
 
     expect(
       request(`/api/content?path=${encodeURIComponent("package.json")}`).status,
     ).toBe(404);
+  });
+
+  test("only serves passive raster artifacts inline", () => {
+    const project = mkdtempSync(join(tmpdir(), "relic-artifacts-"));
+    try {
+      cpSync(fixture, project, { recursive: true });
+      const spec = join(project, "knowledge/specs/001-auth");
+      writeFileSync(join(spec, "diagram.svg"), '<svg onload="alert(1)"/>');
+      writeFileSync(join(spec, "prototype.html"), "<script>alert(1)</script>");
+      writeFileSync(join(spec, "pixel.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+
+      const svg = resolveViewerRequest(
+        project,
+        "test-2.0",
+        "GET",
+        `/api/content?path=${encodeURIComponent("knowledge/specs/001-auth/diagram.svg")}`,
+      )!;
+      const html = resolveViewerRequest(
+        project,
+        "test-2.0",
+        "GET",
+        `/api/content?path=${encodeURIComponent("knowledge/specs/001-auth/prototype.html")}`,
+      )!;
+      const png = resolveViewerRequest(
+        project,
+        "test-2.0",
+        "GET",
+        `/api/content?path=${encodeURIComponent("knowledge/specs/001-auth/pixel.png")}`,
+      )!;
+      const pngDownload = resolveViewerRequest(
+        project,
+        "test-2.0",
+        "GET",
+        `/api/content?path=${encodeURIComponent("knowledge/specs/001-auth/pixel.png")}&download=1`,
+      )!;
+
+      for (const active of [svg, html]) {
+        expect(active.contentType).toBe("application/octet-stream");
+        expect(active.headers?.["Content-Disposition"]).toStartWith("attachment;");
+      }
+      expect(png.contentType).toBe("image/png");
+      expect(png.headers?.["Content-Disposition"]).toBeUndefined();
+      expect(pngDownload.contentType).toBe("application/octet-stream");
+      expect(pngDownload.headers?.["Content-Disposition"]).toStartWith("attachment;");
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
+  test("sends artifact protections through the HTTP boundary", async () => {
+    const server = createViewerServer(fixture, "test-2.0");
+    await new Promise<void>((resolveListen, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", resolveListen);
+    });
+
+    try {
+      const address = server.address();
+      if (address === null || typeof address === "string") {
+        throw new Error("viewer test server did not bind a TCP port");
+      }
+      const artifact = await fetch(
+        `http://127.0.0.1:${address.port}/api/content?path=${
+          encodeURIComponent("knowledge/specs/001-auth/notes.md")
+        }`,
+      );
+      expect(artifact.status).toBe(200);
+      expect(artifact.headers.get("content-type")).toBe("application/octet-stream");
+      expect(artifact.headers.get("content-disposition")).toBe(
+        'attachment; filename="notes.md"',
+      );
+      expect(artifact.headers.get("content-security-policy")).toBe(
+        "default-src 'none'; sandbox",
+      );
+      expect(artifact.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(artifact.headers.get("referrer-policy")).toBe("no-referrer");
+
+      const shell = await fetch(`http://127.0.0.1:${address.port}/`);
+      expect(shell.headers.get("content-security-policy")).toContain(
+        "script-src 'self'",
+      );
+      expect(shell.headers.get("x-content-type-options")).toBe("nosniff");
+    } finally {
+      await new Promise<void>((resolveClose, reject) => {
+        server.close((error) => error ? reject(error) : resolveClose());
+      });
+    }
   });
 
   test("rejects writes and unknown API resources", () => {

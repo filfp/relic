@@ -51,7 +51,13 @@ export function ArtifactPage() {
       {view.artifact.searchableText !== undefined ? (
         <pre className="rl-artifact-source">{view.artifact.searchableText}</pre>
       ) : (
-        <a className="rl-btn" href={artifactContentUrl(path)}>download binary artifact</a>
+        <a
+          className="rl-btn"
+          href={artifactContentUrl(path, true)}
+          download={path.split("/").at(-1)}
+        >
+          download artifact
+        </a>
       )}
     </>
   );
