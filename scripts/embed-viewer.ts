@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Builds the viewer (vite build) and embeds dist/ into
- * packages/core/src/generated/viewer-assets.ts so `relic serve` can ship the
+ * packages/cli-node/src/generated/viewer-assets.ts so `relic serve` can ship the
  * app from a single self-contained artifact (both distribution channels).
  *
  * Assets are stored base64-encoded (safe for any content type).
@@ -17,7 +17,7 @@ import { join, relative, extname } from "path";
 const ROOT = join(import.meta.dir, "..");
 const VIEWER_DIR = join(ROOT, "packages", "viewer");
 const DIST = join(VIEWER_DIR, "dist");
-const OUT_FILE = join(ROOT, "packages/core/src/generated/viewer-assets.ts");
+const OUT_FILE = join(ROOT, "packages/cli-node/src/generated/viewer-assets.ts");
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -71,6 +71,6 @@ ${entries.join(",\n")},
 };
 `;
 
-mkdirSync(join(ROOT, "packages/core/src/generated"), { recursive: true });
+mkdirSync(join(ROOT, "packages/cli-node/src/generated"), { recursive: true });
 writeFileSync(OUT_FILE, output, "utf8");
-console.log(`Embedded ${entries.length} viewer assets → packages/core/src/generated/viewer-assets.ts`);
+console.log(`Embedded ${entries.length} viewer assets → packages/cli-node/src/generated/viewer-assets.ts`);

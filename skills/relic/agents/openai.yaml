@@ -1,0 +1,4 @@
+interface:
+  display_name: "Relic"
+  short_description: "Reason over and preserve shared project knowledge"
+  default_prompt: "Use $relic to challenge this task against the project knowledge, resolve derivable decisions, and continue through the requested work."

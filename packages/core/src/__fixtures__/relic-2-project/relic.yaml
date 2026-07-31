@@ -1,0 +1,8 @@
+topology:
+  specs: knowledge/specs
+  shared: knowledge/shared
+  records:
+    fr: knowledge/records/requirements
+    nfr: knowledge/records/requirements/non-functional
+    adr: knowledge/records/decisions
+    epic: knowledge/records/epics

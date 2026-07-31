@@ -1,12 +1,29 @@
 #!/usr/bin/env bun
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 
 // --- arg parsing ---
 const args = process.argv.slice(2);
-const version = args.find((a) => !a.startsWith("--"));
-const repoIdx = args.indexOf("--repository");
-const repository = repoIdx !== -1 ? args[repoIdx + 1] : null;
+const positional: string[] = [];
+let repository: string | null = null;
+for (let index = 0; index < args.length; index += 1) {
+  const argument = args[index]!;
+  if (argument === "--repository") {
+    const value = args[index + 1];
+    if (!value || value.startsWith("--")) {
+      console.error("Error: --repository requires npm or pypi");
+      process.exit(1);
+    }
+    repository = value;
+    index += 1;
+  } else if (argument.startsWith("--")) {
+    console.error(`Error: unknown option '${argument}'`);
+    process.exit(1);
+  } else {
+    positional.push(argument);
+  }
+}
+const version = positional.length === 1 ? positional[0] : undefined;
 
 if (!version) {
   console.error("Error: version is required");
@@ -29,11 +46,24 @@ if (repository && !["npm", "pypi"].includes(repository)) {
 }
 
 const tag = repository ? `v${version}-${repository}` : `v${version}`;
+const releaseBranch = `release/${tag}`;
+
+if (!readFileSync("CHANGELOG.md", "utf8").includes(`## [${version}]`)) {
+  console.error(`Error: CHANGELOG.md requires a ## [${version}] release entry`);
+  process.exit(1);
+}
+
+if (execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim()) {
+  console.error("Error: release preparation requires a clean worktree");
+  process.exit(1);
+}
 
 console.log(`Version : ${version}`);
 console.log(`Tag     : ${tag}`);
 console.log(`Target  : ${repository ?? "npm + pypi"}`);
 console.log("");
+
+execFileSync("git", ["checkout", "-b", releaseBranch], { stdio: "inherit" });
 
 // --- version bump helpers ---
 function bumpJson(path: string) {
@@ -45,36 +75,41 @@ function bumpJson(path: string) {
 
 function bumpRegex(path: string, pattern: RegExp, replacement: string) {
   const src = readFileSync(path, "utf8");
+  if (!pattern.test(src)) throw new Error(`Version marker not found in ${path}`);
   writeFileSync(path, src.replace(pattern, replacement));
   console.log(`  bumped ${path}`);
 }
 
-// --- bump all 7 version sites ---
+// --- bump all distribution version sites ---
 bumpJson("package.json");
 bumpJson("packages/cli-node/package.json");
 bumpRegex("packages/cli-node/src/bin.ts", /const VERSION = "[^"]+"/, `const VERSION = "${version}"`);
-bumpRegex("packages/cli-node/src/bin.debug.ts", /const VERSION = "[^"]+"/, `const VERSION = "${version}"`);
 bumpRegex("packages/cli-python/pyproject.toml", /^version = "[^"]+"/m, `version = "${version}"`);
 bumpRegex("packages/cli-python/relic/__init__.py", /__version__ = "[^"]+"/, `__version__ = "${version}"`);
-bumpJson("plugin/.claude-plugin/plugin.json");
 
 console.log("");
 
-// --- commit and push branch (tag is created automatically after PR merges to main) ---
-const releaseBranch = `release/v${version}`;
-execSync(`git checkout -b ${releaseBranch}`, { stdio: "inherit" });
-execSync(
-  `git add package.json packages/cli-node/package.json packages/cli-node/src/bin.ts packages/cli-node/src/bin.debug.ts packages/cli-python/pyproject.toml packages/cli-python/relic/__init__.py plugin/.claude-plugin/plugin.json`,
-  { stdio: "inherit" }
-);
-execSync(`git commit -m "chore: bump version to ${version}"`, { stdio: "inherit" });
-execSync(`git push -u origin ${releaseBranch}`, { stdio: "inherit" });
+// --- commit and push branch (the merged release branch determines the tag target) ---
+execFileSync("git", [
+  "add",
+  "package.json",
+  "packages/cli-node/package.json",
+  "packages/cli-node/src/bin.ts",
+  "packages/cli-python/pyproject.toml",
+  "packages/cli-python/relic/__init__.py",
+], { stdio: "inherit" });
+execFileSync("git", ["commit", "-m", `chore: bump version to ${version}`], {
+  stdio: "inherit",
+});
+execFileSync("git", ["push", "-u", "origin", releaseBranch], {
+  stdio: "inherit",
+});
 
 console.log("");
 console.log(`Branch pushed: ${releaseBranch}`);
 console.log("");
 console.log(`Next:`);
-console.log(`  1. Open a PR and ensure doc-guard passes (CHANGELOG.md must have a ## [${version}] entry)`);
+console.log(`  1. Open a PR for the prepared release branch`);
 console.log(`  2. Merge the PR — the ${tag} tag is created automatically on merge to main`);
-console.log(`  3. The tag push triggers CI to publish to: ${repository ?? "npm + pypi"}`);
+console.log(`  3. The tag workflow dispatches publication to: ${repository ?? "npm + pypi"}`);
 console.log(`  https://github.com/filfp/relic/pull/new/${releaseBranch}`);

@@ -7,18 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "test": "bun test",
+    "typecheck": "tsc -p tsconfig.json",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router-dom": "^7.1.0"
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-    "oxlint": "^1.71.0",
-    "vite": "^8.1.1"
+    "@relic/core": "workspace:*",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "oxlint": "1.71.0",
+    "vite": "8.1.1"
   }
 }

@@ -9,9 +9,14 @@ on:
 permissions: {}
 
 jobs:
-  build-binaries:
+  build-wheels:
     if: "!endsWith(github.ref_name, '-npm')"
     runs-on: ${{ matrix.runs_on }}
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
     strategy:
       matrix:
         include:
@@ -22,31 +27,39 @@ jobs:
           - script_target: linux-arm64
             platform_tag: manylinux_2_17_aarch64
             binary: relic
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04-arm
           - script_target: macos-x64
-            platform_tag: macosx_10_9_x86_64
+            platform_tag: macosx_13_0_x86_64
             binary: relic
-            runs_on: macos-latest
+            runs_on: macos-15-intel
           - script_target: macos-arm64
-            platform_tag: macosx_11_0_arm64
+            platform_tag: macosx_13_0_arm64
             binary: relic
             runs_on: macos-latest
           - script_target: windows-x64
             platform_tag: win_amd64
             binary: relic.exe
-            runs_on: ubuntu-latest
+            runs_on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: latest
+          bun-version: "1.3.14"
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Compile binary (${{ matrix.script_target }})
         run: bun run build:pypi:${{ matrix.script_target }}
+
+      - name: Prepare Unix binary
+        if: matrix.binary != 'relic.exe'
+        run: chmod +x packages/cli-python/relic/${{ matrix.binary }}
 
       - name: Ad-hoc sign binary (macOS only)
         if: startsWith(matrix.script_target, 'macos-')
@@ -54,58 +67,26 @@ jobs:
           codesign --remove-signature packages/cli-python/relic/relic || true
           codesign --force --sign - --timestamp=none packages/cli-python/relic/relic
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: binary-${{ matrix.platform_tag }}
-          path: packages/cli-python/relic/${{ matrix.binary }}
+      - name: Smoke-test native binary
+        run: packages/cli-python/relic/${{ matrix.binary }} --version
 
-  build-wheels:
-    needs: build-binaries
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - platform_tag: manylinux_2_17_x86_64
-            binary: relic
-          - platform_tag: manylinux_2_17_aarch64
-            binary: relic
-          - platform_tag: macosx_10_9_x86_64
-            binary: relic
-          - platform_tag: macosx_11_0_arm64
-            binary: relic
-          - platform_tag: win_amd64
-            binary: relic.exe
-    steps:
-      - uses: actions/checkout@v4
+      - name: Install pinned wheel builder
+        run: python -m pip install build==1.3.0
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Download binary (${{ matrix.platform_tag }})
-        uses: actions/download-artifact@v4
-        with:
-          name: binary-${{ matrix.platform_tag }}
-          path: packages/cli-python/relic/
-
-      - name: Make binary executable
-        if: matrix.binary != 'relic.exe'
-        run: chmod +x packages/cli-python/relic/${{ matrix.binary }}
-
-      - name: Install build
-        run: pip install build
-
-      - name: Build wheel
+      - name: Build native wheel
+        env:
+          RELIC_WHEEL_PLATFORM: ${{ matrix.platform_tag }}
         run: python -m build --wheel packages/cli-python/ --outdir dist/
 
-      - name: Rename wheel with platform tag
-        run: |
-          wheel=$(ls dist/relic_cli-*.whl)
-          renamed="${wheel/py3-none-any/py3-none-${{ matrix.platform_tag }}}"
-          mv "$wheel" "$renamed"
-          echo "Built: $renamed"
+      - name: Verify wheel metadata and contents
+        run: python scripts/verify-wheel.py dist/*.whl ${{ matrix.platform_tag }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Install and smoke-test wheel
+        run: |
+          python -m pip install --force-reinstall dist/*.whl
+          python -m relic --version
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: wheel-${{ matrix.platform_tag }}
           path: dist/*.whl
@@ -116,7 +97,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: wheel-*
           merge-multiple: true
@@ -125,6 +106,4 @@ jobs:
       - name: List wheels
         run: ls -lh dist/
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_TOKEN }}
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1

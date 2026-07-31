@@ -9,6 +9,46 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Relic 2.0 knowledge model with root `relic.yaml` as topology-only authority,
+  living Markdown records, typed specification HTML, shared knowledge,
+  repository-relative links, repository-contained submodule roots, derived
+  diagnostics, and searchable specification artifacts.
+- One central, portable Relic skill installed into the native project-local
+  skill directories of Claude, Codex, and GitHub Copilot.
+- Embedded read-only React viewer with an exhaustive catalog, document and
+  artifact views, maintenance evidence, semantic charts and flows, safe
+  artifact downloads, and a derived in-memory read cache.
+- Native Python wheels for Linux x64/arm64, macOS x64/arm64, and Windows x64,
+  with platform metadata and native smoke tests for every published target.
+- A self-hosted Relic 2.0 corpus with one canonical product specification,
+  linked shared knowledge, FRs, NFRs, ADRs, and a release EPIC.
+- Product-specific contribution and security guidance.
+
+### Changed
+- Reduced the public CLI to `init`, `install`, `search`, and `serve`.
+- Made `relic init` create only `relic.yaml`; `.relic/` is now an optional
+  topology convention rather than product-owned structure.
+- Replaced configuration, counters, locks, modes, prescribed search behavior,
+  and the rigid `specify → clarify → plan → tasks` workflow with current
+  repository evidence and agent-owned exploration.
+- Made code authoritative for implemented behavior while keeping Relic records
+  focused on the current requirements, decisions, boundaries, and intent.
+- Made release targets explicit in release branch and tag names, pinned build
+  dependencies and GitHub Actions, and adopted tokenless PyPI publishing.
+- Made public typecheck and test scripts regenerate ignored distribution assets
+  so clean checkouts do not depend on a prior manual build.
+- Made engine-skill refresh preserve or recover the previous installation and
+  hardened distribution-test cleanup and viewer shutdown.
+
+### Removed
+- Relic 1.x lifecycle commands, templates, session machinery, validation
+  command, plugin/MCP orchestration, HTML mode selection, and persistent
+  configuration state.
+- The self-hosted Relic 1.x corpus, transitional architecture/work-order
+  documents, and the separate architecture-roast and requirement-record skills
+  after their behavior was absorbed into the central Relic skill.
+
 ## [0.9.0] — 2026-07-16
 
 ### Added

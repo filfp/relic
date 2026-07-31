@@ -22,10 +22,10 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    // Additional code-health checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false
-  }
-  ,"exclude": ["packages/viewer", "node_modules"]
+  },
+  "exclude": ["packages/viewer", "node_modules"]
 }

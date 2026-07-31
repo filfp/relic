@@ -1,0 +1,102 @@
+# Knowledge Authoring
+
+Read this reference only when the developer has authorized a knowledge write or when a
+proposed write needs a concrete destination.
+
+## Follow the Project Topology
+
+Read the root `relic.yaml`. It is the sole topology authority:
+
+```yaml
+topology:
+  specs: .relic/specs
+  shared: .relic/shared
+  records:
+    fr: docs/requirements/functional
+    nfr: docs/requirements/non-functional
+    adr: docs/decisions
+    epic: docs/epics
+```
+
+The configuration contains topology only and is not a knowledge document. Every root is
+project-owned. Do not assume the example paths, reject overlapping roots, or copy
+topology into another file. Derive authored relative links from the current locations.
+
+## Choose the Smallest Useful Identity
+
+- A specification synthesizes a feature or system surface in canonical `index.html`.
+- Shared knowledge stands independently and is reusable across specifications or
+  records.
+- An FR captures durable functional behavior.
+- An NFR captures a durable quality or operational constraint.
+- An ADR captures a structural decision whose rationale matters to current work.
+- An EPIC captures coordinated delivery scope large enough to benefit from an independent
+  implementation boundary.
+
+These are peer nodes in a knowledge web, not a hierarchy. Specifications and EPICs are
+common entry points because they aggregate context. No kind owns another document.
+
+Only `id` is required metadata. Preserve optional project fields without imposing their
+vocabulary:
+
+```yaml
+---
+id: FR-016
+status: needs-review
+owner: platform
+---
+```
+
+Canonical identities are case-insensitive:
+
+- specification: `001-auth`;
+- functional requirement: `FR-001`;
+- non-functional requirement: `NFR-001`;
+- architecture decision: `ADR-001`;
+- implementation epic: `EPIC-001`;
+- shared knowledge: `SHARED-auth-api`.
+
+Record filenames contain the ID and a readable slug. A specification folder is named by
+its ID and contains canonical `index.html`. Other files inside a specification folder
+are searchable artifacts, not canonical Relic documents.
+
+## Allocate a Number Without State
+
+For a requested numbered document:
+
+1. Read the applicable root from current topology.
+2. Inspect current canonical identities of that kind.
+3. Find the greatest valid numeric identity and propose the next value.
+4. Check the proposed identity and destination case-insensitively immediately before
+   writing.
+5. Write directly to the current topology.
+
+There is no persisted counter, lock, reservation, tombstone, or generator. Removing the
+greatest current identity permits reuse of that number. Concurrent branches may allocate
+the same ID; merge resolution owns that conflict.
+
+If duplicate IDs already exist, offer reconciliation only when relevant: keep one ID and
+move another to the next current value, merge overlapping knowledge, or remove obsolete
+knowledge. Renames and moves may require link repair. Never reconcile without developer
+authorization.
+
+## Author the Web
+
+Use ordinary relative Markdown or HTML links. Links express navigable relationships, not
+authority:
+
+```markdown
+[Idempotent command](../../requirements/functional/FR-016-idempotent-command.md)
+```
+
+Do not invent custom protocols, write backlink lists, maintain a reverse index, or rely
+on plain ID mentions as graph edges. If a file moves, search for its previous relative
+path and propose repairs. Broken links remain focused maintenance evidence and do not
+invalidate unrelated knowledge.
+
+## Keep Current Knowledge Current
+
+Living records may be corrected, rewritten, split, merged, moved, or removed. Explain
+material effects and update related current documents when authorized. Do not retain
+discarded paths or superseded copies by default; Git is the historical recovery
+mechanism.

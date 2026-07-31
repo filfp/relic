@@ -1,26 +1,32 @@
 {
   "name": "relic-cli",
   "version": "0.9.0",
-  "description": "Spec-driven development with a shared artifact layer",
+  "description": "Shared project knowledge for coding agents",
   "type": "module",
   "bin": {
     "relic": "./dist/relic.js"
   },
   "files": [
     "dist/relic.js",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
   ],
+  "scripts": {
+    "test": "bun test src/__tests__"
+  },
   "devDependencies": {
     "@relic/core": "workspace:*",
-    "@relic/utility": "workspace:*",
-    "commander": "^14.0.3"
+    "@relic/engines": "workspace:*",
+    "commander": "14.0.3"
   },
   "engines": {
     "node": ">=18"
   },
   "license": "MIT",
   "keywords": [
-    "spec-driven",
+    "project-knowledge",
+    "coding-agents",
     "ai",
     "relic",
     "cli",

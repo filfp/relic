@@ -1,0 +1,34 @@
+<relic-body id="001-auth" data-status="current">
+  <h1>Authentication</h1>
+  <p>
+    Authentication follows the
+    <a href="../../shared/auth-contract.md">shared authentication contract</a>.
+  </p>
+  <relic-callout kind="decision">
+    Login must satisfy
+    <a href="../../records/requirements/FR-001-login.md">FR-001</a>.
+  </relic-callout>
+  <relic-flow>
+    graph LR
+    Request --> Credentials
+    Credentials --> Session
+  </relic-flow>
+  <relic-chart type="bar" title="Authentication evidence">
+    <table>
+      <thead><tr><th>Kind</th><th>Count</th></tr></thead>
+      <tbody>
+        <tr><td>Requirements</td><td>2</td></tr>
+        <tr><td>Decisions</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </relic-chart>
+  <p>Knowledge state: <relic-chip>current</relic-chip></p>
+  <p>
+    Token storage follows
+    <a href="../../records/decisions/ADR-001-token-storage.md">ADR-001</a>.
+  </p>
+  <p><a href="notes.md">Supporting investigation</a></p>
+  <p><a href="../../shared/missing.md">Intentionally broken contract</a></p>
+  <script>globalThis.compromised = true</script>
+  <img src="https://example.com/tracker.png" alt="remote tracker">
+</relic-body>

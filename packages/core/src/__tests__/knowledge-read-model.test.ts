@@ -1,0 +1,373 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import {
+  cpSync,
+  mkdtempSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import {
+  loadKnowledgeProject,
+  parseFrontmatter,
+  parseMarkdown,
+  parseSpecHtml,
+  searchKnowledge,
+} from "../knowledge/index.ts";
+
+const fixture = fileURLToPath(
+  new URL("../__fixtures__/relic-2-project", import.meta.url),
+);
+const temporaryDirectories: string[] = [];
+
+function copyFixture(): string {
+  const temporary = mkdtempSync(join(tmpdir(), "relic-2-core-"));
+  temporaryDirectories.push(temporary);
+  cpSync(fixture, temporary, { recursive: true });
+  return temporary;
+}
+
+afterEach(() => {
+  while (temporaryDirectories.length > 0) {
+    rmSync(temporaryDirectories.pop()!, { recursive: true, force: true });
+  }
+});
+
+describe("Relic 2.0 knowledge read model", () => {
+  test("loads the complete canonical corpus and keeps spec artifacts separate", () => {
+    const project = loadKnowledgeProject(fixture);
+
+    expect(project.topology).toEqual({
+      specs: "knowledge/specs",
+      shared: "knowledge/shared",
+      records: {
+        fr: "knowledge/records/requirements",
+        nfr: "knowledge/records/requirements/non-functional",
+        adr: "knowledge/records/decisions",
+        epic: "knowledge/records/epics",
+      },
+    });
+    expect(project.documents).toHaveLength(8);
+    expect(project.documents.map((document) => document.path)).not.toContain(
+      "relic.yaml",
+    );
+    expect(project.documents.map((document) => document.path)).toContain(
+      "knowledge/specs/001-auth/index.html",
+    );
+    expect(project.artifacts).toEqual([
+      expect.objectContaining({
+        path: "knowledge/specs/001-auth/notes.md",
+        specificationPaths: ["knowledge/specs/001-auth/index.html"],
+        mediaType: "text",
+      }),
+    ]);
+    expect(project.artifacts[0]!.searchableText).toContain("legacy session cookie");
+  });
+
+  test("deduplicates overlapping canonical roots into memberships", () => {
+    const project = loadKnowledgeProject(fixture);
+    const nfr = project.documents.find((document) => document.id === "NFR-001");
+
+    expect(nfr).toBeDefined();
+    expect(nfr!.memberships).toEqual(["fr", "nfr"]);
+    expect(
+      project.documents.filter((document) => document.path === nfr!.path),
+    ).toHaveLength(1);
+  });
+
+  test("derives links, backlinks, artifacts, broken links, and orphans independently", () => {
+    const project = loadKnowledgeProject(fixture);
+    const spec = project.documents.find((document) => document.id === "001-auth")!;
+    const fr = project.documents.find((document) => document.id === "FR-001")!;
+    const orphan = project.documents.find((document) => document.id === "002-orphan")!;
+
+    expect(spec.links.filter((link) => link.status === "canonical")).toHaveLength(3);
+    expect(spec.links.find((link) => link.href === "notes.md")?.status).toBe("artifact");
+    expect(
+      spec.links.find((link) => link.href.endsWith("missing.md"))?.status,
+    ).toBe("missing");
+    expect(fr.backlinks.map((backlink) => backlink.sourcePath)).toEqual([
+      "knowledge/specs/001-auth/index.html",
+    ]);
+    expect(
+      fr.backlinks.some((backlink) => backlink.sourcePath.endsWith("notes.md")),
+    ).toBe(false);
+    expect(orphan.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "orphan-document",
+    );
+  });
+
+  test("keeps moved topology readable and exposes authored links that need repair", () => {
+    const copied = copyFixture();
+    renameSync(
+      join(copied, "knowledge/shared"),
+      join(copied, "knowledge/contracts"),
+    );
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      readFileSync(relicPath, "utf8").replace(
+        "shared: knowledge/shared",
+        "shared: knowledge/contracts",
+      ),
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.documents.map((document) => document.path)).toContain(
+      "knowledge/contracts/auth-contract.md",
+    );
+    const spec = project.documents.find((document) => document.id === "001-auth")!;
+    expect(
+      spec.links.find((link) => link.href === "../../shared/auth-contract.md")?.status,
+    ).toBe("missing");
+    expect(spec.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "broken-link",
+    );
+  });
+
+  test("loads a corpus from a repository-contained submodule directory", () => {
+    const copied = copyFixture();
+    renameSync(join(copied, "knowledge"), join(copied, "specs-repository"));
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      readFileSync(relicPath, "utf8").replaceAll(
+        "knowledge/",
+        "specs-repository/",
+      ),
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology?.specs).toBe("specs-repository/specs");
+    expect(project.documents.map((document) => document.path)).toContain(
+      "specs-repository/specs/001-auth/index.html",
+    );
+    expect(project.diagnostics.some((item) => item.code === "path-escape"))
+      .toBe(false);
+  });
+
+  test("preserves readable HTML while rejecting active and remote content", () => {
+    const project = loadKnowledgeProject(fixture);
+    const spec = project.documents.find((document) => document.id === "001-auth")!;
+    const codes = spec.diagnostics.map((diagnostic) => diagnostic.code);
+
+    expect(spec.searchableText).toContain("Authentication");
+    expect(spec.searchableText).not.toContain("compromised");
+    expect(codes).toContain("unsafe-html");
+    expect(codes).toContain("unsafe-media-url");
+    expect(spec.source).toContain("<script>");
+  });
+
+  test("keeps unknown Relic components readable and diagnosed", () => {
+    const project = loadKnowledgeProject(fixture);
+    const orphan = project.documents.find((document) => document.id === "002-orphan")!;
+
+    expect(orphan.searchableText).toContain(
+      "Its readable content survives an unknown component",
+    );
+    expect(orphan.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "unknown-relic-component",
+    );
+  });
+
+  test("reports case-insensitive duplicate identities without hiding documents", () => {
+    const project = loadKnowledgeProject(fixture);
+    const duplicates = project.documents.filter(
+      (document) => document.id?.toLowerCase() === "shared-auth-contract",
+    );
+
+    expect(duplicates).toHaveLength(2);
+    for (const document of duplicates) {
+      expect(document.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+        "duplicate-document-id",
+      );
+    }
+  });
+
+  test("searches every canonical document and textual artifact with parent context", () => {
+    const project = loadKnowledgeProject(fixture);
+    const artifactResults = searchKnowledge(project, "legacy session cookie");
+    const orphanResults = searchKnowledge(project, "orphaned experiment");
+
+    expect(artifactResults).toEqual([
+      expect.objectContaining({
+        type: "artifact",
+        path: "knowledge/specs/001-auth/notes.md",
+        specificationPaths: ["knowledge/specs/001-auth/index.html"],
+      }),
+    ]);
+    expect(orphanResults).toEqual([
+      expect.objectContaining({
+        type: "document",
+        id: "002-orphan",
+      }),
+    ]);
+    expect(searchKnowledge(project, "   ")).toEqual([]);
+  });
+
+  test("keeps relic.yaml out of the catalog when malformed topology blocks discovery", () => {
+    const copied = copyFixture();
+    writeFileSync(
+      join(copied, "relic.yaml"),
+      "topology:\n  specs: ../../outside\n",
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology).toBeUndefined();
+    expect(project.documents).toEqual([]);
+    expect(project.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "invalid-topology",
+    );
+  });
+
+  test("rejects non-topology state in relic.yaml", () => {
+    const copied = copyFixture();
+    writeFileSync(
+      join(copied, "relic.yaml"),
+      `${readFileSync(join(copied, "relic.yaml"), "utf8")}engines:\n  - codex\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology).toBeUndefined();
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-relic-config",
+        path: "relic.yaml",
+      }),
+    );
+  });
+
+  test("rejects a symlinked relic.yaml authority", () => {
+    if (process.platform === "win32") return;
+    const copied = copyFixture();
+    const outside = mkdtempSync(join(tmpdir(), "relic-config-outside-"));
+    temporaryDirectories.push(outside);
+    const externalConfig = join(outside, "relic.yaml");
+    writeFileSync(
+      externalConfig,
+      readFileSync(join(copied, "relic.yaml"), "utf8"),
+      "utf8",
+    );
+    rmSync(join(copied, "relic.yaml"));
+    symlinkSync(externalConfig, join(copied, "relic.yaml"));
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.documents).toEqual([]);
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-relic-config",
+        path: "relic.yaml",
+      }),
+    );
+  });
+
+  test("rejects symlink escapes during artifact discovery", () => {
+    if (process.platform === "win32") return;
+    const copied = copyFixture();
+    const outside = mkdtempSync(join(tmpdir(), "relic-2-outside-"));
+    temporaryDirectories.push(outside);
+    const secret = join(outside, "secret.txt");
+    writeFileSync(secret, "must not be indexed", "utf8");
+    symlinkSync(
+      secret,
+      join(copied, "knowledge/specs/001-auth/escaped.txt"),
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(
+      project.artifacts.some((artifact) => artifact.searchableText?.includes("must not")),
+    ).toBe(false);
+    expect(project.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "path-escape",
+    );
+  });
+});
+
+describe("Relic 2.0 typed HTML parser", () => {
+  test("does not expose unsafe link schemes as graph candidates", () => {
+    const parsed = parseSpecHtml(
+      '<relic-body id="001-safe"><a href="javascript:alert(1)">bad</a><p>ok</p></relic-body>',
+      "specs/001-safe/index.html",
+    );
+
+    expect(parsed.links).toEqual([]);
+    expect(parsed.searchableText).toContain("bad ok");
+    expect(parsed.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "unsafe-url",
+    );
+  });
+
+  test("keeps semantic chart source in the renderable AST", () => {
+    const parsed = parseSpecHtml(
+      '<relic-body id="001-chart"><relic-chart type="bar"><table><tr><th>Kind</th><th>Count</th></tr><tr><td>FR</td><td>2</td></tr></table></relic-chart></relic-body>',
+      "specs/001-chart/index.html",
+    );
+    const chart = parsed.ast.find(
+      (node) => node.type === "element" && node.tag === "relic-chart",
+    );
+
+    expect(chart).toBeDefined();
+    expect(chart?.type === "element" && chart.children[0]).toMatchObject({
+      type: "element",
+      tag: "table",
+    });
+    expect(parsed.searchableText).toContain("Kind Count FR 2");
+  });
+});
+
+describe("Relic 2.0 Markdown parser", () => {
+  test("keeps lists and tables structurally renderable", () => {
+    const parsed = parseMarkdown(
+      "# Record\n\n4. first\n5. second\n\n| Kind | Count |\n| :--- | ---: |\n| FR | 2 |\n",
+      "records/FR-001.md",
+    );
+    const list = parsed.ast.find((node) => node.type === "list");
+    const table = parsed.ast.find((node) => node.type === "table");
+
+    expect(list?.children?.map((node) => node.type)).toEqual([
+      "list_item",
+      "list_item",
+    ]);
+    expect(list).toMatchObject({ ordered: true, start: 4 });
+    expect(table?.children?.map((node) => node.type)).toEqual([
+      "table_header",
+      "table_row",
+    ]);
+    expect(table?.children?.[0]?.children?.map((cell) => cell.align)).toEqual([
+      "left",
+      "right",
+    ]);
+  });
+});
+
+describe("Relic 2.0 frontmatter parser", () => {
+  test("turns aliases into diagnostics instead of throwing", () => {
+    const parsed = parseFrontmatter(
+      "---\nvalue: &shared current\ncopy: *shared\n---\nbody\n",
+      "shared/aliased.md",
+    );
+
+    expect(parsed.metadata).toEqual({});
+    expect(parsed.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "unsafe-frontmatter-alias",
+    );
+  });
+
+  test("accepts empty frontmatter as an empty mapping", () => {
+    expect(parseFrontmatter("---\n---\n# Empty\n", "empty.md")).toMatchObject({
+      present: true,
+      metadata: {},
+      body: "# Empty\n",
+      diagnostics: [],
+    });
+  });
+});

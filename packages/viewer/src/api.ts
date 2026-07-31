@@ -1,75 +1,95 @@
-/** API types — mirror ViewerContract §JSON API (served by `relic serve`). */
+import type {
+  CanonicalDocument,
+  CorpusMembership,
+  HtmlAstNode,
+  KnowledgeArtifactSummary as ArtifactSummary,
+  KnowledgeArtifactView as ArtifactView,
+  KnowledgeBacklink,
+  KnowledgeDiagnostic as Diagnostic,
+  KnowledgeDocumentSummary as DocumentSummary,
+  KnowledgeDocumentView as DocumentView,
+  KnowledgeLink,
+  KnowledgeProjectView as ProjectView,
+  KnowledgeSearchResult as SearchResult,
+  MarkdownAstNode,
+} from "@relic/core";
 
-export type FragmentNode =
-  | { kind: "text"; text: string }
-  | { kind: "element"; tag: string; attrs: Record<string, string>; children: FragmentNode[]; warnings?: string[] }
-  | { kind: "warning"; message: string; raw: string };
-
-export interface FragmentLint {
-  level: "error" | "warning";
-  message: string;
-}
-
-export interface SpecSummary {
-  id: string;
-  title: string;
-  status: string;
-  tasks: { done: number; total: number };
-  has_html: boolean;
-}
-
-export interface FixSummary {
-  id: string;
-  format: "html" | "md";
-}
-
-export interface ProjectInfo {
-  project: { name: string; path: string };
-  mode: string;
-  specs: SpecSummary[];
-  fixes: FixSummary[];
-  validate: { valid: boolean; errors: number; warnings: number };
-}
-
-export interface TaskPhase {
-  title: string;
-  done: number;
-  total: number;
-  items: Array<{ text: string; done: boolean }>;
-}
-
-export interface DerivedData {
-  meta: { id: string; title: string; status: string; created: string | null };
-  tasks: { done: number; total: number; phases: TaskPhase[] };
-  artifacts: Array<{ path: string; role: string; exists: boolean }>;
-  external_reads: Array<{ entry: string; exists: boolean }>;
-  changelog: Array<{ heading: string; body: string }>;
-}
-
-export interface SpecDetail {
-  id: string;
-  title: string;
-  status: string;
-  fragment: FragmentNode[];
-  lints: FragmentLint[];
-  files: { spec: string | null; plan: string | null; tasks: string | null };
-  derived: DerivedData;
-}
-
-export interface FixDetail {
-  id: string;
-  format: "html" | "md";
-  fragment: FragmentNode[] | null;
-  lints: FragmentLint[];
-  markdown: string | null;
-}
+export type {
+  ArtifactSummary,
+  ArtifactView,
+  CanonicalDocument,
+  CorpusMembership,
+  Diagnostic,
+  DocumentSummary,
+  DocumentView,
+  HtmlAstNode,
+  KnowledgeBacklink,
+  KnowledgeLink,
+  MarkdownAstNode,
+  ProjectView,
+  SearchResult,
+};
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(`${path}: ${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
+  const response = await fetch(path);
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(body?.error ?? `${response.status} ${response.statusText}`);
+  }
+  return response.json() as Promise<T>;
 }
 
-export const fetchProject = () => get<ProjectInfo>("/api/project");
-export const fetchSpec = (id: string) => get<SpecDetail>(`/api/spec/${encodeURIComponent(id)}`);
-export const fetchFix = (id: string) => get<FixDetail>(`/api/fix/${encodeURIComponent(id)}`);
+function query(path: string): string {
+  return new URLSearchParams({ path }).toString();
+}
+
+export function documentRoute(path: string): string {
+  return `/document/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+export function artifactRoute(path: string): string {
+  return `/artifact/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+export function pathFromRoute(
+  pathname: string,
+  prefix: "/document/" | "/artifact/",
+): string | undefined {
+  if (!pathname.startsWith(prefix)) return undefined;
+  const encoded = pathname.slice(prefix.length);
+  if (encoded === "") return undefined;
+  try {
+    return encoded.split("/").map(decodeURIComponent).join("/");
+  } catch {
+    return undefined;
+  }
+}
+
+export const fetchProject = () => get<ProjectView>("/api/project");
+export const fetchDocument = (path: string) =>
+  get<DocumentView>(`/api/document?${query(path)}`);
+export const fetchArtifact = (path: string) =>
+  get<ArtifactView>(`/api/artifact?${query(path)}`);
+export const searchProject = (value: string) =>
+  get<{ query: string; results: SearchResult[] }>(
+    `/api/search?${new URLSearchParams({ q: value }).toString()}`,
+  );
+
+export function artifactContentUrl(path: string, download = false): string {
+  const parameters = new URLSearchParams({ path });
+  if (download) parameters.set("download", "1");
+  return `/api/content?${parameters.toString()}`;
+}
+
+export function resolveRelativePath(
+  sourcePath: string,
+  reference: string,
+): string | undefined {
+  try {
+    const base = new URL(`/project/${sourcePath}`, "https://relic.invalid");
+    const resolved = new URL(reference, base);
+    return decodeURIComponent(resolved.pathname.replace(/^\/project\//, ""));
+  } catch {
+    return undefined;
+  }
+}
