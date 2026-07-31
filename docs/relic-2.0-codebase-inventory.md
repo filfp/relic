@@ -52,7 +52,7 @@ boundaries.
 ### Replace or adapt
 
 - Replace `init` with initialization of only `.relic/RELIC.md` and
-  `.relic/config.yaml`, without changing `AGENTS.md`.
+  `.relic/config.yaml`, without changing `AGENTS.md` or defining project governance.
 - Replace `search` against the exhaustive 2.0 knowledge read model.
 - Replace the command registration in `bin.ts` with exactly `init`, `install`,
   `search`, and `serve`.
@@ -156,7 +156,7 @@ system.
 
 - Adapt the `@relic/engines` package into thin native-installation adapters.
 - Replace the Claude, Codex, Copilot, and future adapters with one responsibility:
-  copy the central Relic skill into the engine's native skill directory.
+  copy the central Relic skill into the engine's project-local native skill directory.
 - Absorb the proven generic reasoning behavior of `architecture-roast` into the central
   Relic skill.
 - Absorb the minimal direct record-writing behavior of `requirement-records` into the
@@ -164,7 +164,8 @@ system.
 
 The canonical central skill source belongs to a distribution-owned directory.
 `.codex/skills/` and `.claude/skills/` are observed installations or development
-evidence, not the product source of truth.
+evidence, not the product source of truth. Relic does not install or maintain a global
+user skill.
 
 ### Remove
 
@@ -185,8 +186,12 @@ snippets, and fragment boilerplate.
 
 The only initialization templates are:
 
-- `.relic/RELIC.md`, containing the structured topology and stable project guidance;
+- `.relic/RELIC.md`, containing the structured Relic corpus topology and minimal
+  numbered-record authoring instruction;
 - `.relic/config.yaml`, containing managed engines and cooperative high-water marks.
+
+The topology defines only Relic corpus roots. It contains no canonical project-governance
+roles, filenames, or responsibility taxonomy.
 
 The semantic component reference belongs to the central skill and frontend distribution.
 It is not copied into every specification and does not impose fixed document sections.
@@ -237,12 +242,14 @@ distribution evidence shows that a channel no longer earns its maintenance cost.
 ### Required 2.0 fixture coverage
 
 - structured topology and cooperative high-water state;
-- canonical governance/shared/FR/NFR/ADR/EPIC Markdown and typed spec HTML;
+- canonical `RELIC.md`, shared/FR/NFR/ADR/EPIC Markdown, and spec `index.html`;
 - searchable but non-canonical specification artifacts;
 - overlapping-root deduplication with multiple memberships;
 - ordinary relative links, derived backlinks, orphans, duplicates, and broken-link
   diagnostics;
 - tolerant HTML and Markdown rendering;
+- real-path containment, symlink escape rejection, safe URL handling, and active-content
+  removal;
 - central-skill installation for supported engines;
 - read-only search and frontend behavior.
 

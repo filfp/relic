@@ -33,22 +33,25 @@ from dictating unresolved product contracts.
 
 Define the smallest deterministic contracts needed by skills, CLI, search, and frontend:
 
-- `.relic/RELIC.md`: structured topology, project-owned mappings, governance roles,
-  corpus roots, and free-form agent guidance;
+- `.relic/RELIC.md`: structured topology, project-owned Relic corpus roots, and
+  free-form agent guidance without a project-governance schema;
 - `.relic/config.yaml`: managed engines and high-water marks only, without duplicated
   topology or workflow preferences;
 - document identity, optional project metadata, and living-record mutation freedom;
 - references, backlinks, and relationship resolution without exclusive ownership;
 - canonical spec HTML and the supported semantic component vocabulary;
 - search corpus, indexing, freshness, and behavior when metadata is incomplete;
-- central Relic skill modes, recommendation behavior, authorization boundary, and
-  completion criteria;
+- central Relic skill reasoning behavior, authorization boundary, and completion
+  criteria;
 - the minimal CLI capabilities required by those contracts;
 - the frontend's read model and its authority boundaries.
 
 The `RELIC.md` topology and `config.yaml` contracts are accepted in
-[`relic-2.0.md`](relic-2.0.md#project-file-contract). Their schemas and failure behavior
-are inputs to the remaining Stage 1 contracts rather than open topology decisions.
+[`relic-2.0.md`](relic-2.0.md#project-file-contract). Every declared corpus root is
+project-owned and configurable; `.relic/specs/` and `.relic/shared/` are defaults. Relic
+defines no canonical project-governance roles or filenames. Their schemas and failure
+behavior are inputs to the remaining Stage 1 contracts rather than open topology
+decisions.
 
 Document identity, native metadata scope, opaque project fields, and mutation freedom are
 accepted in [`relic-2.0.md`](relic-2.0.md#document-identity-and-mutation-contract). The
@@ -71,14 +74,15 @@ and spec/session-oriented `view-data` read model are classified **replace**. Reu
 presentation components may still be classified **adapt** after satisfying the accepted
 [`semantic HTML contract`](relic-2.0.md#semantic-html-contract).
 
-The canonical specification fragment, native-first authoring vocabulary, minimal
-progressive component set, tolerant rendering, and frontend authority boundary are
-accepted in the semantic HTML contract. The single `relic-body` root, tolerant
-diagnostics, callouts, textual flows, and presentation components whose knowledge
-remains in child content are classified **adapt**. JSON-attribute tables and charts,
-derived spec metadata, tasks, artifacts, changelog components, interpreted status
-vocabulary, fixed specification sections, embedded chrome, and dual-format
-synchronization are classified **remove/replace**.
+The canonical `index.html` specification fragment, native-first authoring vocabulary,
+minimal progressive component set, tolerant allowlisted rendering, real-path containment,
+and frontend authority boundary are accepted in the semantic HTML contract. The single
+`relic-body` root, tolerant diagnostics, callouts, textual flows, and presentation
+components whose knowledge remains in child content are classified **adapt**.
+JSON-attribute tables and charts, derived spec metadata, tasks, artifacts, changelog
+components, interpreted status vocabulary, fixed specification sections, embedded
+chrome, raw browser HTML injection, and dual-format synchronization are classified
+**remove/replace**.
 
 The central skill's generic reasoning protocol, proportional depth, progressive context
 discovery, recommendation-first behavior, persistence boundary, temporary decision
@@ -103,12 +107,13 @@ is excluded from the minimal surface pending distribution evidence.
 The path-addressed, read-only frontend, generic document page, catalog-first navigation,
 local graph neighborhood, artifact boundary, internal API, and localized diagnostics are
 accepted in [`relic-2.0.md`](relic-2.0.md#frontend-and-local-read-surface). Typed spec
-HTML and canonical Markdown are the only semantic document grammars. Additional spec
-files remain searchable artifacts but do not become catalog or graph nodes. The current
-embedded localhost server and safe presentation components are classified **adapt**;
-the spec/fix API, ID-only routes, spec-only dashboard, fixed spec/plan/tasks tabs,
-interpreted validation summary, derived workflow data, `viewer.json`, and MCP viewer
-bridge are classified **replace/remove**.
+HTML and canonical Markdown are the only semantic document grammars. Additional regular
+files recursively inside spec folders remain searchable artifacts but do not become
+catalog or graph nodes; unexpected files in shared and typed-record roots are not
+promoted to artifacts. The current embedded localhost server and safe presentation
+components are classified **adapt**; the spec/fix API, ID-only routes, spec-only
+dashboard, fixed spec/plan/tasks tabs, interpreted validation summary, derived workflow
+data, `viewer.json`, and MCP viewer bridge are classified **replace/remove**.
 
 The accepted [`Relic 2.0 codebase inventory`](relic-2.0-codebase-inventory.md) records a
 **keep**, **adapt**, **replace**, or **remove** disposition for the current workspace,
@@ -129,10 +134,13 @@ retained capability does not by itself justify adapting its 1.x implementation.
 Implement the pure core that reads the accepted contracts:
 
 - load `.relic/RELIC.md` and the corpus roots declared by its topology;
-- discover `RELIC.md` and canonical Markdown across governance, shared knowledge, and
-  typed records, plus one canonical typed HTML document per specification;
-- discover other files as artifacts, deduplicating them for listing and supported
-  full-text search without promoting them to document nodes;
+- discover `RELIC.md` and canonical Markdown across shared knowledge and typed records,
+  plus `index.html` as the canonical typed HTML document in each specification folder;
+- discover other regular files recursively inside specification folders as artifacts,
+  deduplicating them for listing and supported full-text search without promoting them
+  to document nodes;
+- when topology overlaps, classify a physical file discovered through any canonical
+  Markdown root as one canonical node rather than also treating it as a spec artifact;
 - normalize identities and preserve optional project metadata without interpreting its
   status vocabulary;
 - parse ordinary relative links only from canonical documents, derive backlinks, and
@@ -140,6 +148,8 @@ Implement the pure core that reads the accepted contracts:
 - derive deterministic labels, catalog entries, and full-text content where supported;
 - report broken links, duplicate identities, orphan nodes, and unsupported content
   without blocking unrelated discovery;
+- enforce resolved-real-path repository containment for corpus roots, canonical files,
+  artifacts, images, and attachments;
 - expose one exhaustive read model consumed by search, diagnostics, and frontend code;
 - exclude active-spec, active-fix, changelog, and exclusive-owner semantics.
 
@@ -162,9 +172,9 @@ frontend, plugin, or a particular coding agent.
 
 Connect the knowledge read model to the two retained product surfaces:
 
-- search across governance, shared knowledge, specs, and typed records;
-- an exhaustive catalog and local frontend for canonical spec HTML, records, governance,
-  and shared knowledge, with spec artifacts listed separately;
+- search across shared knowledge, specs, and typed records;
+- an exhaustive catalog and local frontend for canonical spec HTML, records, and shared
+  knowledge, with spec artifacts listed separately;
 - navigation between forward references, backlinks, and related records;
 - visible orphan, duplicate-ID, unsupported-content, and broken-link diagnostics;
 - semantic rendering for flows, charts, tables, callouts, and existing reusable
@@ -218,10 +228,12 @@ central Relic skill:
 - update current knowledge only after developer authorization.
 
 Absorb the minimal record-writing behavior into the central skill and `RELIC.md`: read
-topology and high-water state, write the developer-requested document directly, and
-advance the cooperative counter. Remove the separate record skill, JSON handoff,
-generator script, fixed status vocabulary, fixed templates, and requirement to retain
-superseded files in active documentation.
+topology and high-water state, check the proposed identity case-insensitively against the
+current corpus, write the developer-requested document at the next free value, and
+advance the cooperative counter. This is a local collision check, not a lock or
+reservation. Remove the separate record skill, JSON handoff, generator script, fixed
+status vocabulary, fixed templates, and requirement to retain superseded files in active
+documentation.
 
 ### Gate
 
@@ -244,10 +256,13 @@ workflow.
 
 At this stage:
 
-- implement `relic init` without modifying `AGENTS.md`, creating governance documents,
-  or overwriting an existing `RELIC.md` or `config.yaml`;
+- implement `relic init` without modifying `AGENTS.md`, defining or creating project
+  governance structure, or overwriting an existing `RELIC.md` or `config.yaml`;
 - implement `relic install` to reconcile configured engines, and
-  `relic install --engine <engine>` to add one desired engine and install its skill;
+  `relic install --engine <engine>` to add one desired engine and install its skill in
+  the engine's project-local native directory;
+- implement the thin project-local engine adapters required by `install`; defer
+  cross-engine packaging and distribution proof to Stage 6;
 - expose exhaustive current-corpus search with human and JSON projections;
 - serve the frontend and its knowledge API;
 - do not require a CLI command for record creation or numbering;
@@ -261,6 +276,7 @@ available through the new surface.
 
 - A clean fixture can be initialized, searched, and viewed.
 - Initialization leaves an existing `AGENTS.md` byte-for-byte unchanged.
+- Initialization creates no project-governance schema, roles, or documentation.
 - Initialization refuses to overwrite existing Relic project files.
 - Installation without `--engine` reconciles the declared engine list, while
   `--engine` updates `config.yaml` without duplicates and installs the selected skill.
@@ -274,9 +290,9 @@ available through the new surface.
 ## 6. Rebuild Distribution Around Skills
 
 Package the central Relic skill, living-record support, CLI, and viewer for the supported
-agents:
+agents, building on the project-local adapters required by Stage 5:
 
-- use each engine's native skill discovery where available;
+- use each engine's project-local native skill discovery where available;
 - keep engine-specific installation separate from project knowledge;
 - make `.relic/RELIC.md` the stable project entry across engines;
 - retain MCP only for frontend or knowledge access that materially improves the user
@@ -291,7 +307,7 @@ agents:
   project.
 - Another supported engine can consume the same repository knowledge without a different
   document layout.
-- Installation does not inject or own project governance files.
+- Installation does not inject or own `AGENTS.md` or project documentation.
 
 ## 7. Retire Relic 1.x Machinery
 
@@ -314,8 +330,7 @@ removed workflows.
 ### Gate
 
 - Repository search finds no user-facing instruction that requires a removed workflow.
-- The full test, typecheck, build, plugin, and packaging checks pass against the reduced
-  surface.
+- The full test, typecheck, build, and packaging checks pass against the reduced surface.
 - Removal does not regress search, relationships, canonical HTML, or the frontend.
 
 ## 8. Use Operational Relic 2.0 to Self-Host and Release

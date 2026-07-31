@@ -137,13 +137,13 @@ particular phase.
 ### Document identity and mutation contract
 
 Relic metadata is required only for Relic-native knowledge: canonical specification
-HTML, FRs, NFRs, ADRs, EPICs, and addressable documents under `.relic/shared/`.
-Declared governance Markdown remains canonical by topology without adopting Relic
-metadata. Specification support material remains a searchable artifact addressed by
+HTML, FRs, NFRs, ADRs, EPICs, and addressable documents under the declared shared root.
+Specification support material remains a searchable artifact addressed by
 repository-relative path rather than a canonical document node until the developer
-deliberately synthesizes or moves its knowledge into a Relic document. Code, tests, and
-ordinary project documentation outside declared topology remain available to agent-native
-exploration rather than entering the Relic corpus implicitly.
+deliberately synthesizes or moves its knowledge into a Relic document. Project
+governance, code, tests, and ordinary documentation outside declared Relic corpus roots
+remain available through `AGENTS.md` and agent-native exploration rather than entering
+the Relic corpus implicitly.
 
 The only required metadata field for native knowledge is its stable `id`. Every other
 field is optional, project-defined, and opaque to the Relic core:
@@ -192,11 +192,12 @@ required superseded copy; Git retains history.
 
 ## Shared Knowledge and Relationships
 
-`.relic/shared/` remains a first-class part of Relic. It contains knowledge that exists
-independently from any one delivery artifact: domains, contracts, rules, assumptions,
-and other project-defined knowledge that several specifications or records may need.
-Relic does not require every project to use one universal internal taxonomy, but shared
-knowledge must remain independently addressable and discoverable.
+Shared knowledge remains a first-class part of Relic, with `.relic/shared/` as its
+initial default root. It contains knowledge that exists independently from any one
+delivery artifact: domains, contracts, rules, assumptions, and other project-defined
+knowledge that several specifications or records may need. Relic does not require every
+project to use one universal internal taxonomy, but shared knowledge must remain
+independently addressable and discoverable.
 
 Specifications, FRs, NFRs, ADRs, and EPICs may reference shared knowledge and one
 another. These relations are a first-class part of the product because they turn a
@@ -212,12 +213,12 @@ development.
 
 Links are edges in the knowledge web, not declarations of authority, ownership, or
 hierarchy. The web spans the `RELIC.md` guide, each canonical specification HTML, and
-canonical Markdown discovered through `.relic/shared/` and every governance or record
-root declared by topology; spec artifacts and operational state elsewhere under
-`.relic/` are not included automatically. A project may enter the web through any
-canonical document. Specifications and EPICs are common navigation entry points because
-they aggregate delivery knowledge, not because other documents are subordinate to them.
-`RELIC.md` remains the bootstrap map for discovery.
+canonical Markdown discovered through the shared and record roots declared by topology;
+spec artifacts and operational state elsewhere under `.relic/` are not included
+automatically. A project may enter the web through any canonical document.
+Specifications and EPICs are common navigation entry points because they aggregate
+delivery knowledge, not because other documents are subordinate to them. `RELIC.md`
+remains the bootstrap map for discovery.
 
 Only explicit, ordinary file links create graph edges. Authors derive their relative
 paths from the current topology:
@@ -271,14 +272,14 @@ Each specification has its own folder, but Relic imposes no fixed internal set o
 Markdown documents. Supporting discussions, investigations, reports, references, and
 other useful material may be organized according to the needs of that specification.
 
-The one required specification document is its canonical HTML landing document. The
-HTML is the agent-authored synthesis of the specification's current knowledge, not a
-rendered copy that must be synchronized with a mandatory Markdown source. It is the
-specification folder's only canonical Relic document. Other files in the folder are
-artifacts: their supported textual content remains discoverable by search, but they do
-not become catalog nodes, graph participants, backlinks, or additional rendered
-specification documents. The canonical HTML does not need to repeat artifact content
-merely to make it searchable.
+The one required specification document is `index.html` at the root of its specification
+folder. The HTML is the agent-authored synthesis of the specification's current
+knowledge, not a rendered copy that must be synchronized with a mandatory Markdown
+source. It is the specification folder's only canonical Relic document. Other regular
+files recursively contained by that folder are artifacts: their supported textual
+content remains discoverable by search, but they do not become catalog nodes, graph
+participants, backlinks, or additional rendered specification documents. The canonical
+HTML does not need to repeat artifact content merely to make it searchable.
 
 Agents choose semantic structures such as flows, charts, tables, callouts, progress, and
 other reusable visual components. The frontend owns their styling, colors, layout, and
@@ -293,8 +294,8 @@ readable to agents, search, accessibility tools, and code review.
 
 ### Semantic HTML contract
 
-The canonical specification file is an HTML fragment with one required root whose `id`
-matches the specification identity:
+The canonical `index.html` is an HTML fragment with one required root whose `id` carries
+the specification identity:
 
 ```html
 <relic-body id="012-spec-viewer">
@@ -308,6 +309,12 @@ does not contain document chrome, navigation, scripts, styles, event handlers, i
 inline SVG, or canvas behavior. Those concerns belong to the frontend. A canonical
 fragment is not required to render as a styled standalone web page when opened outside
 Relic.
+
+The specification folder is named by its ID. A mismatch between the folder name and the
+`relic-body` ID produces a focused diagnostic; the document remains path-addressable and
+the `relic-body` ID remains its catalog identity. A missing or malformed root leaves the
+file visible by path with a diagnostic rather than promoting another HTML file to
+canonical status.
 
 Standard semantic HTML is the default authoring vocabulary. Sections, headings, tables,
 lists, links, figures, captions, details, definitions, blockquotes, images with
@@ -334,9 +341,14 @@ Rendering is tolerant and security-bounded. Safe semantic HTML renders normally.
 Relic components receive enhanced presentation. An unknown or malformed `relic-*`
 component preserves readable child content and produces a focused diagnostic instead of
 breaking the page. Unsafe executable or presentation-owned content is not executed and
-also produces a diagnostic. The same fragment interpretation feeds indexing,
-validation, and frontend rendering so a component cannot silently expose different
-knowledge to each surface.
+also produces a diagnostic. Source HTML is converted into an allowlisted semantic AST
+and is never passed raw to the browser. Scripts, event handlers, embedded documents,
+inline styles, executable URL schemes, and other active content are discarded with
+focused diagnostics. External HTTP(S) links remain explicit navigation, while external
+media is not loaded automatically. Raw HTML inside canonical Markdown follows the same
+policy or remains readable text. The same interpretation feeds indexing, diagnostics,
+and frontend rendering so content cannot silently expose different knowledge to each
+surface.
 
 The frontend derives catalog metadata, backlinks, diagnostics, related documents, and
 supporting-file navigation outside the authored fragment. Canonical HTML therefore has
@@ -352,25 +364,25 @@ authority over connected knowledge. FRs, NFRs, ADRs, EPICs, shared documents, an
 are peer nodes in the web. When documents disagree, their kinds do not select a winner;
 the divergence is knowledge drift for the developer and skill to surface and resolve.
 
-## Context Discovery and Project Governance
+## Context Discovery and Project Topology
 
 `.relic/RELIC.md` is the Relic-owned entry point for project knowledge. Relic owns its
-path and format contract; the project owns the paths, roles, and sources declared in it.
-The file gives agents the map needed to find the project's current documentation without
-duplicating that documentation or prescribing how the rest of the repository must be
-organized. The skill changes project-owned values only with developer authorization.
+path and format contract; the project owns every corpus path declared in it. The file
+gives agents the map needed to find Relic knowledge without prescribing how the rest of
+the repository must be organized. The skill changes project-owned values only with
+developer authorization.
 
 `RELIC.md` is the single authority for knowledge topology. A small structured frontmatter
-declares corpus roots, typed-record locations, and governance sources so the CLI, search,
-and frontend can discover them deterministically. Its Markdown body remains a free-form
-guide for agents and developers. Topology is not copied into another configuration file.
+declares specification, shared-knowledge, and typed-record roots so the CLI, search, and
+frontend can discover them deterministically. Its Markdown body remains a free-form guide
+for agents and developers. Topology is not copied into another configuration file.
 
 `.relic/config.yaml` is deliberately narrower. It contains only the engines the project
 expects Relic to manage and the high-water marks used to allocate stable sequential
 identifiers. Engine-native files and directories are evidence of observed installation
 state; they do not replace the project's declared engine set. The configuration contains
-no corpus paths, governance mappings, presentation mode, SDD mode, viewer settings, or
-cognitive workflow rules.
+no corpus paths, project-governance mappings, presentation mode, SDD mode, viewer
+settings, or cognitive workflow rules.
 
 ### Project file contract
 
@@ -391,24 +403,17 @@ topology:
     nfr: docs/requirements/non-functional
     adr: docs/decisions
     epic: docs/epics
-  governance:
-    project:
-      - PROJECT.md
-    architecture:
-      - TEMPLATE.md
-    principles:
-      - PRINCIPLES.md
 ---
 ```
 
-The record roots and governance source lists are project-owned values. The `specs` and
-`shared` roots remain the Relic-owned `.relic/specs/` and `.relic/shared/` locations.
-Relic follows the declared topology without rejecting overlapping roots or inventing a
-precedence between them. If a project maps the same physical file into several corpora,
-the read model exposes one document node with several memberships. Changing topology is
-an infrequent project decision and may orphan relative links. Relic does not migrate them
-automatically; broken-link diagnostics and ordinary text search provide the evidence for
-an agent-assisted maintenance session.
+Every declared root is a project-owned value. `.relic/specs/` and `.relic/shared/` are
+initial defaults, not fixed locations. Relic follows the declared topology without
+rejecting overlapping roots or inventing a precedence between them. If a project maps
+the same physical file into several corpora, the read model exposes one document node
+with several memberships. Changing topology is an infrequent project decision and may
+orphan relative links. Relic does not migrate them automatically; broken-link
+diagnostics and ordinary text search provide the evidence for an agent-assisted
+maintenance session.
 
 `config.yaml` has exactly two top-level fields:
 
@@ -427,11 +432,14 @@ high_water:
 Every high-water value is a non-negative integer and begins at zero while its document
 type is unused. When the developer requests a numbered document, the central skill reads
 the current topology and high-water value, writes the document directly to the declared
-root, and advances the mark. `RELIC.md` carries this small authoring instruction; Relic
-does not require a separate record skill, JSON input, generator script, or CLI command.
-The mark is a cooperative convenience, not a lock or distributed reservation system.
-Concurrent branches or worktrees may allocate the same identifier; merge resolution owns
-that conflict. Duplicate identities remain focused diagnostics and do not make unrelated
+root, and advances the mark. Before creating new knowledge, it checks the proposed ID
+case-insensitively against the current corpus and advances to the next free value rather
+than knowingly creating a local duplicate. This check neither locks nor renumbers
+existing records. `RELIC.md` carries this small authoring instruction; Relic does not
+require a separate record skill, JSON input, generator script, or CLI command. The mark
+is a cooperative convenience, not a lock or distributed reservation system. Concurrent
+branches or worktrees may still allocate the same identifier; merge resolution owns that
+conflict. Duplicate identities remain focused diagnostics and do not make unrelated
 knowledge unreadable.
 
 A missing or malformed `RELIC.md` prevents automated topology discovery and produces a
@@ -451,21 +459,11 @@ it first checks whether the project's `AGENTS.md` already routes the agent throu
 `.relic/RELIC.md`. If it does not, the skill reads `.relic/RELIC.md` as its first Relic
 context step.
 
-Relic recognizes three governance responsibilities without requiring three specific
-files:
-
-1. **Project and domain** — product identity, purpose, domain language, and business
-   rules.
-2. **Architecture and structure** — system boundaries, responsibility placement,
-   composition, and code organization.
-3. **Execution principles** — implementation practice, testing, verification, quality,
-   and delivery rules.
-
-A project may satisfy each responsibility with one document, several focused documents,
-or an existing documentation hierarchy. Names such as `PROJECT.md`, `TEMPLATE.md`, and
-`PRINCIPLES.md` are useful conventions, not required filenames. A missing responsibility
-is a knowledge gap the skill may surface and offer to document; it is not a Relic
-validation failure.
+Relic defines no canonical project-governance structure, responsibility taxonomy, or
+required governance filenames. `AGENTS.md`, repository conventions, and the developer
+own that structure. During ordinary reasoning an agent may observe that a repository is
+weakly governed or missing useful guidance, but this is an evidence-based project
+observation rather than a Relic schema, checklist, skill rule, or diagnostic.
 
 Relic retains specialized search for large projects. Search supplements the native
 exploration capabilities of each coding agent; it is not a mandatory gateway and does
@@ -478,16 +476,20 @@ Freedom of authorship is paired with deterministic reading. Relic has two semant
 document parsers:
 
 - the typed HTML parser for each specification's canonical landing document;
-- the Markdown parser for `RELIC.md`, declared governance, shared knowledge, and FR,
-  NFR, ADR, and EPIC roots.
+- the Markdown parser for `RELIC.md`, shared knowledge, and FR, NFR, ADR, and EPIC
+  roots.
 
-These parsed files are canonical document nodes. Other discovered files are artifacts,
-including additional Markdown or text files inside a specification folder. Supported
-text artifacts participate in query-time full-text discovery and may have snippets, but
-they are not semantically parsed into metadata, links, backlinks, or graph nodes. This
-text extraction is not a third document grammar. Binary or otherwise non-textual
-artifacts remain visible from their containing specification or corpus location without
-silently becoming knowledge documents.
+These parsed files are canonical document nodes. Other regular files recursively
+contained by a specification folder are artifacts. Supported text artifacts participate
+in query-time full-text discovery and may have snippets, but they are not semantically
+parsed into metadata, links, backlinks, or graph nodes. This text extraction is not a
+third document grammar. Binary or otherwise non-textual spec artifacts remain visible
+from their containing specification without silently becoming knowledge documents.
+Unexpected files in shared or typed-record roots are not promoted to searchable
+artifacts. When overlapping topology places a spec support file inside a canonical
+Markdown root, canonical discovery wins: the physical file becomes one canonical node
+with the applicable memberships and is not also listed as a spec artifact. This
+classification rule does not create precedence between canonical corpus memberships.
 
 Operational configuration, generated caches, and other Relic machinery are not
 knowledge or searchable artifacts merely because they live under `.relic/`. Overlapping
@@ -578,7 +580,9 @@ The server accepts read-only requests, binds locally by default, stores no lifec
 file, and reflects filesystem changes without requiring a process restart. It does not
 execute corpus scripts or automatically fetch external images, embeds, or other remote
 content. Relative images and attachments inside the discovered project boundary may be
-served safely; external URLs remain explicit user navigation.
+served safely; external URLs remain explicit user navigation. Every topology root,
+canonical file, artifact, image, and attachment is checked by resolved real path so a
+symlink cannot escape the repository boundary.
 
 ## Minimal CLI Contract
 
@@ -598,18 +602,20 @@ write changelogs, migrate Relic 1.x, or determine how an agent reasons.
 
 `relic init` creates the smallest project foundation: `.relic/RELIC.md`,
 `.relic/config.yaml`, `.relic/specs/`, and `.relic/shared/`. The initial engine list is
-empty and the generated `RELIC.md` uses the documented default topology. Initialization
-does not create project governance documents, write `AGENTS.md`, or overwrite an
-existing `RELIC.md` or `config.yaml`. There is no force-reinitialization path.
+empty and the generated `RELIC.md` uses the documented default Relic corpus topology.
+Initialization defines no project-governance roles, discovers no preferred governance
+files, creates no project documentation, writes no `AGENTS.md`, and does not overwrite
+an existing `RELIC.md` or `config.yaml`. There is no force-reinitialization path.
 
 `relic install` reconciles the engine integrations already declared in `config.yaml`.
 With `--engine <engine>`, it first validates the engine and existing configuration,
 adds the engine to the declared list without duplication, and installs or refreshes that
-engine's Relic skill. The configuration is desired project state; engine-native skill
-directories are observed installation state. If installation fails after the desired
-engine is recorded, the declaration remains and the mismatch is reported so the same
-command can repair it later. An engine removed from the configuration is not
-automatically deleted from its native directory. The command never modifies `AGENTS.md`
+engine's Relic skill in that engine's project-local native skill directory. The packaged
+Relic distribution owns the canonical skill source; the project-local copy is managed
+installation state. If installation fails after the desired engine is recorded, the
+declaration remains and the mismatch is reported so the same command can repair it
+later. An engine removed from the configuration is not automatically deleted from its
+native directory. The command never installs a global user skill, modifies `AGENTS.md`,
 or updates the Relic binary itself.
 
 `relic search` queries the complete currently discovered corpus rather than the Relic
@@ -668,8 +674,9 @@ mandatory development methodology.
 
 The following decisions are intentionally outside this conceptual baseline:
 
-- plugin and multi-engine distribution;
-- migration or removal of the Relic 1.x codebase.
+- multi-engine packaging and any future optional integration surface justified after the
+  minimal product;
+- the execution timing of the already classified Relic 1.x codebase retirement;
 - self-hosting this repository before the Relic 2.0 capabilities are operational on an
   isolated fixture or pilot.
 
