@@ -10,6 +10,7 @@ Deliver the clean skill-first Relic replacement without a 1.x compatibility laye
 Completed scope:
 
 - pure topology-driven knowledge read model and semantic parsers;
+- root relic.yaml as configuration-only topology with repository-contained submodule roots;
 - exhaustive search, graph, backlinks, artifacts, and localized diagnostics;
 - read-only bundled viewer and localhost API;
 - central skill plus native Claude, Copilot, Codex, and portable agents installers;
@@ -21,10 +22,10 @@ Completed scope:
 - installation of the same portable contract in the repository's Claude, Codex, and
   agents roots, with OpenAI metadata confined to Codex, followed by removal of the
   construction-only architecture-roast and requirement-record skills;
-- clean lint and type checks, 76 passing tests, zero dependency vulnerabilities, and a
+- clean lint and type checks, 79 passing tests, zero dependency vulnerabilities, and a
   passing Node bundle, compiled Bun binary, native-engine, viewer, and npm package trial;
-- live self-hosted viewer evidence: 12 canonical documents, zero diagnostics, zero
-  orphans, 10 outgoing spec links, four spec backlinks, and all 11 peer nodes related.
+- live self-hosted viewer evidence: 11 canonical documents, zero diagnostics, zero
+  orphans, 10 outgoing spec links, three spec backlinks, and all 10 peer nodes related.
 
 Remaining release gate:
 

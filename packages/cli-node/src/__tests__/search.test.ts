@@ -7,7 +7,6 @@ import {
 } from "bun:test";
 import {
   mkdtempSync,
-  mkdirSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -107,8 +106,7 @@ describe("Relic 2.0 search command", () => {
 
     const malformed = mkdtempSync(join(tmpdir(), "relic-search-malformed-"));
     try {
-      mkdirSync(join(malformed, ".relic"), { recursive: true });
-      writeFileSync(join(malformed, ".relic", "RELIC.md"), "# no topology\n");
+      writeFileSync(join(malformed, "relic.yaml"), "project: no topology\n");
       await expect(
         runSearch({ query: "anything", projectDir: malformed }),
       ).rejects.toThrow(/topology is unavailable/);

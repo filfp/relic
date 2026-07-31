@@ -5,10 +5,9 @@ proposed write needs a concrete destination.
 
 ## Follow the Project Topology
 
-Read `.relic/RELIC.md`. Its YAML frontmatter is the sole topology authority:
+Read the root `relic.yaml`. It is the sole topology authority:
 
 ```yaml
----
 topology:
   specs: .relic/specs
   shared: .relic/shared
@@ -17,12 +16,11 @@ topology:
     nfr: docs/requirements/non-functional
     adr: docs/decisions
     epic: docs/epics
----
 ```
 
-Every root is project-owned. Do not assume the example paths, reject overlapping roots,
-or copy topology into another file. Derive authored relative links from the current
-locations.
+The configuration contains topology only and is not a knowledge document. Every root is
+project-owned. Do not assume the example paths, reject overlapping roots, or copy
+topology into another file. Derive authored relative links from the current locations.
 
 ## Choose the Smallest Useful Identity
 

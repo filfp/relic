@@ -10,10 +10,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Relic 2.0 knowledge model with `.relic/RELIC.md` as the sole topology
-  authority, living Markdown records, typed specification HTML, shared
-  knowledge, repository-relative links, derived diagnostics, and searchable
-  specification artifacts.
+- Relic 2.0 knowledge model with root `relic.yaml` as topology-only authority,
+  living Markdown records, typed specification HTML, shared knowledge,
+  repository-relative links, repository-contained submodule roots, derived
+  diagnostics, and searchable specification artifacts.
 - One central, portable Relic skill installed into the native project-local
   skill directories of Claude, Codex, and GitHub Copilot.
 - Embedded read-only React viewer with an exhaustive catalog, document and
@@ -27,6 +27,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Reduced the public CLI to `init`, `install`, `search`, and `serve`.
+- Made `relic init` create only `relic.yaml`; `.relic/` is now an optional
+  topology convention rather than product-owned structure.
 - Replaced configuration, counters, locks, modes, prescribed search behavior,
   and the rigid `specify → clarify → plan → tasks` workflow with current
   repository evidence and agent-owned exploration.

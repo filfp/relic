@@ -1,7 +1,7 @@
 # Contributing to Relic
 
 Relic self-hosts its current product knowledge. Read
-[.relic/RELIC.md](.relic/RELIC.md) before changing behavior, then follow only the
+[relic.yaml](relic.yaml) before changing behavior, then follow only the
 canonical links relevant to the work. Historical migration documents are not product
 authority; Git retains the removed Relic 1.x implementation and superseded decisions.
 

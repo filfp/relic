@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
-  findRelicDir,
+  findRelicProjectRoot,
   isRelicProjectRoot,
   resolveRelicProjectDir,
 } from "../project.ts";
@@ -30,32 +30,31 @@ afterEach(() => {
 });
 
 describe("Relic 2.0 project boundary", () => {
-  test("requires the canonical project entry", () => {
+  test("requires the root relic.yaml entry", () => {
     const root = temporaryRoot();
-    mkdirSync(join(root, ".relic"));
     expect(isRelicProjectRoot(root)).toBe(false);
-    expect(() => resolveRelicProjectDir(root)).toThrow(/Missing \.relic\/RELIC\.md/);
+    expect(() => resolveRelicProjectDir(root)).toThrow(/Missing relic\.yaml/);
 
-    writeFileSync(join(root, ".relic", "RELIC.md"), "# Relic\n");
+    writeFileSync(join(root, "relic.yaml"), "topology: {}\n");
     expect(isRelicProjectRoot(root)).toBe(true);
     expect(resolveRelicProjectDir(root)).toBe(root);
   });
 
-  test("skips a nested legacy directory while searching for a valid parent", () => {
+  test("ignores a nested legacy directory while finding the valid parent", () => {
     const root = temporaryRoot();
-    mkdirSync(join(root, ".relic"));
-    writeFileSync(join(root, ".relic", "RELIC.md"), "# Relic\n");
+    writeFileSync(join(root, "relic.yaml"), "topology: {}\n");
     const nested = join(root, "packages", "feature");
     mkdirSync(join(nested, ".relic"), { recursive: true });
 
-    expect(findRelicDir(nested)).toBe(join(root, ".relic"));
+    expect(findRelicProjectRoot(nested)).toBe(root);
   });
 
-  test("does not trust symlinked project authority", () => {
+  test("does not trust a symlinked project authority", () => {
     const root = temporaryRoot();
     const external = temporaryRoot();
-    writeFileSync(join(external, "RELIC.md"), "# external\n");
-    symlinkSync(external, join(root, ".relic"));
+    const externalConfig = join(external, "relic.yaml");
+    writeFileSync(externalConfig, "topology: {}\n");
+    symlinkSync(externalConfig, join(root, "relic.yaml"));
 
     expect(isRelicProjectRoot(root)).toBe(false);
   });

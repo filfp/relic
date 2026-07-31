@@ -54,14 +54,17 @@ the skill ambiently.
 
 ## Knowledge model
 
-`.relic/RELIC.md` is the stable entry point and the sole topology authority.
-The default project starts with:
+The root `relic.yaml` is the stable entry point and sole topology authority. The
+`relic init` command creates only this file. Its default paths use `.relic/` as a
+convention, but no
+directory is structurally owned or required by Relic:
 
 ```text
-.relic/
-  RELIC.md
+relic.yaml
+.relic/                  # created only when knowledge is written here
   specs/
   shared/
+  records/
 ```
 
 The topology may point functional requirements, non-functional requirements,
@@ -78,7 +81,7 @@ knowledge changes and use Git when historical recovery is needed.
 
 | Command | Purpose |
 |---|---|
-| `relic init [--dir path]` | Create the minimal `.relic/` foundation |
+| `relic init [--dir path]` | Create the root `relic.yaml` topology |
 | `relic install [--engine claude\|copilot\|codex\|agents]` | Install or refresh the central skill |
 | `relic search <query...> [--json]` | Search the complete current corpus |
 | `relic serve [--port number]` | Serve the read-only interactive knowledge viewer |
@@ -100,7 +103,7 @@ bun audit
 ```
 
 The repository self-hosts its current product knowledge. Start from
-[.relic/RELIC.md](.relic/RELIC.md) and the
+[relic.yaml](relic.yaml) and the
 [Relic 2.0 specification](.relic/specs/001-relic-2/index.html). See
 [CONTRIBUTING.md](CONTRIBUTING.md) for package boundaries, validation, and
 release preparation.

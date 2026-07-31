@@ -66,8 +66,7 @@ describe("Relic 2.0 CLI surface", () => {
       "--dir",
       dir,
     ]);
-    expect(existsSync(join(dir, ".relic", "RELIC.md"))).toBe(true);
-    expect(existsSync(join(dir, ".relic", "specs"))).toBe(true);
-    expect(existsSync(join(dir, ".relic", "shared"))).toBe(true);
+    expect(existsSync(join(dir, "relic.yaml"))).toBe(true);
+    expect(existsSync(join(dir, ".relic"))).toBe(false);
   });
 });

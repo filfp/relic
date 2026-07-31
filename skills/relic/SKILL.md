@@ -1,6 +1,6 @@
 ---
 name: relic
-description: Use Relic's shared project knowledge to challenge ideas, remove ambiguity, review specifications and implementation, diagnose or fix behavior, implement changes, and preserve developer-approved current knowledge. Use when a repository contains .relic/RELIC.md, the developer asks to use Relic or requests a roast, or work may create or change durable requirements, architecture, delivery scope, or reusable project knowledge.
+description: Use Relic's shared project knowledge to challenge ideas, remove ambiguity, review specifications and implementation, diagnose or fix behavior, implement changes, and preserve developer-approved current knowledge. Use when a repository contains relic.yaml, the developer asks to use Relic or requests a roast, or work may create or change durable requirements, architecture, delivery scope, or reusable project knowledge.
 ---
 
 # Relic
@@ -13,7 +13,7 @@ workflow the developer must complete before work can continue.
 
 1. Honor the repository's `AGENTS.md` and other project instructions.
 2. If those instructions have not already routed the task through Relic, read
-   `.relic/RELIC.md` as the first Relic context step.
+   `relic.yaml` as the first Relic context step and use its topology to locate knowledge.
 3. Start from the target named by the developer. Follow only relevant links and expand
    context with the frontend, Relic search, filesystem search, symbol search, or other
    native tools as the task requires.
@@ -23,7 +23,7 @@ workflow the developer must complete before work can continue.
 
 Do not load the whole corpus by default or require `relic search` as a gateway.
 
-If `.relic/RELIC.md` is missing or malformed, report that focused discovery problem.
+If `relic.yaml` is missing or malformed, report that focused discovery problem.
 Continue with repository-native evidence when the requested work can still proceed; do
 not invent topology.
 

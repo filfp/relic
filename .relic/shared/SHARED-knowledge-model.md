@@ -4,14 +4,13 @@ id: SHARED-knowledge-model
 
 # Relic knowledge model
 
-.relic/RELIC.md is the single topology authority. Its structured frontmatter declares
-specification, shared, FR, NFR, ADR, and EPIC roots; its body is free project guidance.
-No config file, engine registry, ID counter, manifest, or session file participates in
-knowledge discovery.
+The root relic.yaml is the single topology authority. It contains only the
+specification, shared, FR, NFR, ADR, and EPIC roots. It is configuration, not a
+canonical document. No engine registry, ID counter, manifest, session file, or hidden
+state participates in knowledge discovery.
 
 Canonical nodes are:
 
-- RELIC.md;
 - one semantic index.html inside each numbered specification folder;
 - Markdown documents recursively found under declared shared and record roots.
 
@@ -29,6 +28,11 @@ Ordinary relative links form a peer-to-peer web. Links convey navigation, not ow
 or hierarchy. The read model derives backlinks and related documents without writing a
 reverse index. Missing paths, unsafe content, duplicates, and unsupported markup produce
 localized diagnostics while unrelated knowledge remains readable.
+
+Topology roots may live in `.relic/`, `docs/`, a repository-contained submodule, or any
+other project-chosen location. The project that contains the code owns relic.yaml and
+declares how it consumes the corpus; a storage repository needs no Relic configuration
+of its own.
 
 The frontend and CLI consume the same exhaustive read model. Search is supplementary:
 agents remain free to use filesystem traversal, grep, ripgrep, symbol search, and other

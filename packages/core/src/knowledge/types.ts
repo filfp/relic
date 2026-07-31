@@ -1,5 +1,4 @@
 export type CorpusMembership =
-  | "relic"
   | "spec"
   | "shared"
   | "fr"

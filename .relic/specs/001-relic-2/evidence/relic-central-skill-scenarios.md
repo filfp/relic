@@ -13,8 +13,8 @@ continue through the requested scope, and respect developer-owned persistence.
 
 **Developer request:** “Use Relic to roast an idea for rotating authentication tokens.”
 
-**Relevant evidence:** `.relic/RELIC.md`, the linked authentication specification,
-shared authentication contract, and current token code.
+**Relevant evidence:** `relic.yaml`, the authentication specification selected from its
+topology, shared authentication contract, and current token code.
 
 **Expected behavior:** The agent bounds the idea, challenges authority and failure
 behavior in proportion to risk, derives any solution forced by current contracts, and
@@ -108,7 +108,7 @@ reasoning guidance.
 
 Scenario 2 leaves all approved continuity in repository knowledge: topology, the
 canonical specification, its relative links, code, and tests. A later session can start
-from project instructions and `.relic/RELIC.md`; none of the six scenarios requires a
+from project instructions and `relic.yaml`; none of the six scenarios requires a
 hidden session, decision cache, or conversation transcript.
 
 ## Gate verdict

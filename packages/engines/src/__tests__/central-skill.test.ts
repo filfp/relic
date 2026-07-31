@@ -39,7 +39,7 @@ function files(root: string): Record<string, string> {
 describe("central Relic skill distribution source", () => {
   test("is one portable skill without executable workflow machinery", () => {
     expect(skill).toMatch(/^---\nname: relic\n/);
-    expect(skill).toContain("repository contains .relic/RELIC.md");
+    expect(skill).toContain("repository contains relic.yaml");
     expect(readdirSync(skillRoot).sort()).toEqual([
       "SKILL.md",
       "agents",
@@ -51,7 +51,7 @@ describe("central Relic skill distribution source", () => {
   test("enters through project-owned instructions and progressive knowledge", () => {
     expect(skill).toContain("Honor the repository's `AGENTS.md`");
     expect(normalizedSkill).toContain(
-      "read `.relic/RELIC.md` as the first Relic context step",
+      "read `relic.yaml` as the first Relic context step",
     );
     expect(skill).toContain("Do not load the whole corpus by default");
     expect(normalizedSkill).toContain("or require `relic search` as a gateway");
@@ -104,7 +104,10 @@ describe("central Relic skill distribution source", () => {
 
   test("authors living knowledge from topology without hidden state", () => {
     expect(authoring).toContain(
-      "Its YAML frontmatter is the sole topology authority",
+      "It is the sole topology authority",
+    );
+    expect(authoring).toContain(
+      "The configuration contains topology only and is not a knowledge document",
     );
     expect(authoring).toContain("Only `id` is required metadata");
     expect(authoring).toContain(

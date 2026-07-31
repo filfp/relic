@@ -86,7 +86,7 @@ describe("Relic 2.0 read-only viewer API", () => {
       "knowledge/specs/001-auth/notes.md",
     ]);
     expect(body.counts).toMatchObject({
-      documents: 9,
+      documents: 8,
       artifacts: 1,
       orphans: 3,
     });
@@ -106,8 +106,8 @@ describe("Relic 2.0 read-only viewer API", () => {
 
     expect(body.document.path).toBe("knowledge/specs/001-auth/index.html");
     expect(body.document.links.some((link) => link.status === "missing")).toBe(true);
-    expect(body.document.backlinks.map((link) => link.sourcePath)).toContain(
-      ".relic/RELIC.md",
+    expect(body.document.backlinks.map((link) => link.sourcePath)).not.toContain(
+      "relic.yaml",
     );
     expect(body.artifacts.map((artifact) => artifact.path)).toEqual([
       "knowledge/specs/001-auth/notes.md",
@@ -267,12 +267,12 @@ describe("Relic 2.0 read-only viewer API", () => {
     expect(reads).toBe(1);
   });
 
-  test("refuses to start for a legacy directory without RELIC.md", () => {
+  test("refuses to start for a directory without relic.yaml", () => {
     const legacy = mkdtempSync(join(tmpdir(), "relic-serve-legacy-"));
     try {
       mkdirSync(join(legacy, ".relic"));
       expect(() => createViewerServer(legacy, "test-2.0")).toThrow(
-        /Missing \.relic\/RELIC\.md/,
+        /Missing relic\.yaml/,
       );
     } finally {
       rmSync(legacy, { recursive: true, force: true });

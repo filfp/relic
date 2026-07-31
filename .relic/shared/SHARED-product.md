@@ -12,7 +12,7 @@ The product combines:
 
 - one central skill that reduces ambiguity and continues through the developer's
   requested analysis, implementation, review, or fix;
-- a living, linked knowledge corpus entered through .relic/RELIC.md;
+- a living, linked knowledge corpus discovered through the topology in root relic.yaml;
 - specialized full-text search for large repositories;
 - a read-only local frontend that makes the knowledge web consultable;
 - a four-command CLI limited to init, install, search, and serve.

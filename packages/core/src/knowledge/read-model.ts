@@ -1,5 +1,6 @@
 import {
   existsSync,
+  lstatSync,
   readFileSync,
   readdirSync,
   realpathSync,
@@ -14,8 +15,8 @@ import {
   resolve,
   sep,
 } from "node:path";
+import { parseDocument } from "yaml";
 
-import { parseFrontmatter } from "./frontmatter.ts";
 import { parseSpecHtml } from "./html.ts";
 import { parseMarkdown } from "./markdown.ts";
 import type {
@@ -30,7 +31,6 @@ import type {
 } from "./types.ts";
 
 const MEMBERSHIP_ORDER: CorpusMembership[] = [
-  "relic",
   "spec",
   "shared",
   "fr",
@@ -126,7 +126,7 @@ function validateTopologyPath(
       code: "invalid-topology",
       severity: "error",
       message: `topology.${key} must be a non-empty repository-relative path`,
-      path: ".relic/RELIC.md",
+      path: "relic.yaml",
     });
     return null;
   }
@@ -135,7 +135,7 @@ function validateTopologyPath(
       code: "invalid-topology-path",
       severity: "error",
       message: `topology.${key} must use "/" and be repository-relative`,
-      path: ".relic/RELIC.md",
+      path: "relic.yaml",
     });
     return null;
   }
@@ -145,7 +145,7 @@ function validateTopologyPath(
       code: "invalid-topology-path",
       severity: "error",
       message: `topology.${key} escapes the repository boundary`,
-      path: ".relic/RELIC.md",
+      path: "relic.yaml",
     });
     return null;
   }
@@ -162,8 +162,8 @@ function readTopology(
     diagnostics.push({
       code: "invalid-topology",
       severity: "error",
-      message: "RELIC.md frontmatter requires topology with specs, shared, and records",
-      path: ".relic/RELIC.md",
+      message: "relic.yaml requires topology with specs, shared, and records",
+      path: "relic.yaml",
     });
     return undefined;
   }
@@ -176,6 +176,65 @@ function readTopology(
   const epic = validateTopologyPath(raw.records.epic, "records.epic", projectRoot, diagnostics);
   if (!specs || !shared || !fr || !nfr || !adr || !epic) return undefined;
   return { specs, shared, records: { fr, nfr, adr, epic } };
+}
+
+function parseTopologyFile(
+  source: string,
+  projectRoot: string,
+  diagnostics: KnowledgeDiagnostic[],
+): KnowledgeTopology | undefined {
+  const document = parseDocument(source.replace(/^\uFEFF/, ""), {
+    prettyErrors: true,
+    strict: true,
+    version: "1.2",
+  });
+  diagnostics.push(
+    ...document.errors.map((error) => ({
+      code: "invalid-relic-yaml",
+      severity: "error" as const,
+      message: error.message,
+      path: "relic.yaml",
+    })),
+    ...document.warnings.map((warning) => ({
+      code: "relic-yaml-warning",
+      severity: "warning" as const,
+      message: warning.message,
+      path: "relic.yaml",
+    })),
+  );
+  if (document.errors.length > 0) return undefined;
+
+  try {
+    const value = document.toJS({ maxAliasCount: 0 });
+    if (!isRecord(value)) {
+      diagnostics.push({
+        code: "invalid-relic-config",
+        severity: "error",
+        message: "relic.yaml must contain a YAML mapping with topology",
+        path: "relic.yaml",
+      });
+      return undefined;
+    }
+    const unknownKeys = Object.keys(value).filter((key) => key !== "topology");
+    if (unknownKeys.length > 0) {
+      diagnostics.push({
+        code: "invalid-relic-config",
+        severity: "error",
+        message: `relic.yaml supports only topology; remove: ${unknownKeys.join(", ")}`,
+        path: "relic.yaml",
+      });
+      return undefined;
+    }
+    return readTopology(value, projectRoot, diagnostics);
+  } catch (error) {
+    diagnostics.push({
+      code: "unsafe-relic-yaml-alias",
+      severity: "error",
+      message: error instanceof Error ? error.message : "YAML aliases are not supported",
+      path: "relic.yaml",
+    });
+    return undefined;
+  }
 }
 
 function walkFiles(
@@ -524,16 +583,30 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
     };
   }
 
-  const relicPath = resolve(projectRoot, ".relic/RELIC.md");
+  const relicPath = resolve(projectRoot, "relic.yaml");
   if (!existsSync(relicPath)) {
     return {
       documents: [],
       artifacts: [],
       diagnostics: [{
-        code: "missing-relic-file",
+        code: "missing-relic-config",
         severity: "error",
-        message: "Missing .relic/RELIC.md",
-        path: ".relic/RELIC.md",
+        message: "Missing relic.yaml",
+        path: "relic.yaml",
+      }],
+    };
+  }
+
+  const relicStat = lstatSync(relicPath);
+  if (!relicStat.isFile() || relicStat.isSymbolicLink()) {
+    return {
+      documents: [],
+      artifacts: [],
+      diagnostics: [{
+        code: "invalid-relic-config",
+        severity: "error",
+        message: "relic.yaml must be a project-local regular file",
+        path: "relic.yaml",
       }],
     };
   }
@@ -542,30 +615,17 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
     projectRoot,
     relicPath,
     diagnostics,
-    ".relic/RELIC.md",
+    "relic.yaml",
   );
   if (!relicRealPath) {
     return { documents: [], artifacts: [], diagnostics };
   }
 
   const relicSource = readFileSync(relicRealPath, "utf8");
-  const relicFrontmatter = parseFrontmatter(relicSource, ".relic/RELIC.md");
-  diagnostics.push(...relicFrontmatter.diagnostics);
-  const topology = relicFrontmatter.present
-    ? readTopology(relicFrontmatter.metadata, projectRoot, diagnostics)
-    : undefined;
-  if (!relicFrontmatter.present) {
-    diagnostics.push({
-      code: "missing-relic-frontmatter",
-      severity: "error",
-      message: "RELIC.md requires YAML frontmatter with topology",
-      path: ".relic/RELIC.md",
-    });
-  }
+  const topology = parseTopologyFile(relicSource, projectRoot, diagnostics);
 
   const candidates = new Map<string, Candidate>();
   const artifactCandidates = new Map<string, ArtifactCandidate>();
-  addCandidate(candidates, relicRealPath, projectRoot, "markdown", "relic");
 
   if (topology) {
     discoverSpecs(topology.specs, projectRoot, candidates, artifactCandidates, diagnostics);
@@ -635,17 +695,16 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
 
       const parsed = parseMarkdown(source, candidate.path);
       documentDiagnostics.push(...parsed.diagnostics);
-      const isRelic = memberships.includes("relic");
       const rawId = parsed.metadata.id;
       const id = typeof rawId === "string" && rawId.trim() !== "" ? rawId.trim() : undefined;
-      if (!isRelic && !id) {
+      if (!id) {
         documentDiagnostics.push({
           code: "missing-document-id",
           severity: "error",
           message: "Canonical Relic Markdown requires a non-empty frontmatter id",
           path: candidate.path,
         });
-      } else if (id && !isRelic && !expectedId(memberships, id)) {
+      } else if (!expectedId(memberships, id)) {
         documentDiagnostics.push({
           code: "invalid-document-id",
           severity: "warning",
@@ -754,7 +813,6 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
   }
 
   for (const document of documents) {
-    if (document.memberships.includes("relic")) continue;
     const hasCanonicalLink = document.links.some((link) => link.status === "canonical");
     if (!hasCanonicalLink && document.backlinks.length === 0) {
       document.diagnostics.push({

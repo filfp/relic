@@ -1,0 +1,8 @@
+topology:
+  specs: .relic/specs
+  shared: .relic/shared
+  records:
+    fr: .relic/records/requirements/functional
+    nfr: .relic/records/requirements/non-functional
+    adr: .relic/records/decisions
+    epic: .relic/records/epics

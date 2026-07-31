@@ -4,10 +4,14 @@ id: ADR-002
 
 # Topology-owned, relative-link knowledge web
 
-.relic/RELIC.md is the only machine-readable project authority. YAML frontmatter owns
-corpus topology and the Markdown body owns free project guidance. Engines and numeric
-high-water values are derived from native directories and current canonical identities,
-so no second config file is maintained.
+The root relic.yaml is the only machine-readable project authority. It contains corpus
+topology only and is not part of the knowledge graph. Engines and numeric high-water
+values are derived from native directories and current canonical identities, so no
+second config file is maintained.
+
+Topology belongs to the code-bearing project that uses Relic. Its roots may point into
+a repository-contained submodule used as durable shared storage; Relic does not import,
+delegate to, or auto-discover another topology file inside that corpus.
 
 Canonical documents are peer nodes. Ordinary repository-relative links create graph
 edges and derived backlinks; IDs are catalog identities, not a custom link protocol.

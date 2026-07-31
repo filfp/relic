@@ -46,7 +46,7 @@ above is the portable fallback across supported agents.
 
 | Command | Purpose |
 |---|---|
-| `relic init [--dir path]` | Create the minimal `.relic/` knowledge foundation |
+| `relic init [--dir path]` | Create the root `relic.yaml` topology |
 | `relic install [--engine claude\|copilot\|codex\|agents]` | Install or refresh the central skill |
 | `relic search <query...> [--json]` | Search the complete current Relic corpus |
 | `relic serve [--port number]` | Open the read-only interactive knowledge viewer |

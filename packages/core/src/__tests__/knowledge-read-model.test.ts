@@ -52,7 +52,10 @@ describe("Relic 2.0 knowledge read model", () => {
         epic: "knowledge/records/epics",
       },
     });
-    expect(project.documents).toHaveLength(9);
+    expect(project.documents).toHaveLength(8);
+    expect(project.documents.map((document) => document.path)).not.toContain(
+      "relic.yaml",
+    );
     expect(project.documents.map((document) => document.path)).toContain(
       "knowledge/specs/001-auth/index.html",
     );
@@ -105,7 +108,7 @@ describe("Relic 2.0 knowledge read model", () => {
       join(copied, "knowledge/shared"),
       join(copied, "knowledge/contracts"),
     );
-    const relicPath = join(copied, ".relic/RELIC.md");
+    const relicPath = join(copied, "relic.yaml");
     writeFileSync(
       relicPath,
       readFileSync(relicPath, "utf8").replace(
@@ -126,6 +129,28 @@ describe("Relic 2.0 knowledge read model", () => {
     expect(spec.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
       "broken-link",
     );
+  });
+
+  test("loads a corpus from a repository-contained submodule directory", () => {
+    const copied = copyFixture();
+    renameSync(join(copied, "knowledge"), join(copied, "specs-repository"));
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      readFileSync(relicPath, "utf8").replaceAll(
+        "knowledge/",
+        "specs-repository/",
+      ),
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology?.specs).toBe("specs-repository/specs");
+    expect(project.documents.map((document) => document.path)).toContain(
+      "specs-repository/specs/001-auth/index.html",
+    );
+    expect(project.diagnostics.some((item) => item.code === "path-escape"))
+      .toBe(false);
   });
 
   test("preserves readable HTML while rejecting active and remote content", () => {
@@ -187,21 +212,61 @@ describe("Relic 2.0 knowledge read model", () => {
     expect(searchKnowledge(project, "   ")).toEqual([]);
   });
 
-  test("keeps RELIC.md visible when malformed topology blocks discovery", () => {
+  test("keeps relic.yaml out of the catalog when malformed topology blocks discovery", () => {
     const copied = copyFixture();
     writeFileSync(
-      join(copied, ".relic/RELIC.md"),
-      "---\ntopology:\n  specs: ../../outside\n---\n\n# Broken map\n",
+      join(copied, "relic.yaml"),
+      "topology:\n  specs: ../../outside\n",
       "utf8",
     );
 
     const project = loadKnowledgeProject(copied);
     expect(project.topology).toBeUndefined();
-    expect(project.documents.map((document) => document.path)).toEqual([
-      ".relic/RELIC.md",
-    ]);
+    expect(project.documents).toEqual([]);
     expect(project.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
       "invalid-topology",
+    );
+  });
+
+  test("rejects non-topology state in relic.yaml", () => {
+    const copied = copyFixture();
+    writeFileSync(
+      join(copied, "relic.yaml"),
+      `${readFileSync(join(copied, "relic.yaml"), "utf8")}engines:\n  - codex\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology).toBeUndefined();
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-relic-config",
+        path: "relic.yaml",
+      }),
+    );
+  });
+
+  test("rejects a symlinked relic.yaml authority", () => {
+    if (process.platform === "win32") return;
+    const copied = copyFixture();
+    const outside = mkdtempSync(join(tmpdir(), "relic-config-outside-"));
+    temporaryDirectories.push(outside);
+    const externalConfig = join(outside, "relic.yaml");
+    writeFileSync(
+      externalConfig,
+      readFileSync(join(copied, "relic.yaml"), "utf8"),
+      "utf8",
+    );
+    rmSync(join(copied, "relic.yaml"));
+    symlinkSync(externalConfig, join(copied, "relic.yaml"));
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.documents).toEqual([]);
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-relic-config",
+        path: "relic.yaml",
+      }),
     );
   });
 

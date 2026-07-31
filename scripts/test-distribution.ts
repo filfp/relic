@@ -140,7 +140,7 @@ function verifyInstalledSkill(
   writeFileSync(join(projectDir, "AGENTS.md"), agents);
 
   run(executable, [...prefix, "init", "--dir", projectDir]);
-  const relicEntry = readFileSync(join(projectDir, ".relic", "RELIC.md"), "utf8");
+  const relicEntry = readFileSync(join(projectDir, "relic.yaml"), "utf8");
   const canonical = files(SKILL_ROOT);
   const portable = Object.fromEntries(
     Object.entries(canonical).filter(([path]) => path !== "agents/openai.yaml"),
@@ -183,7 +183,7 @@ function verifyInstalledSkill(
     `${label} modified AGENTS.md`,
   );
   expectEqual(
-    readFileSync(join(projectDir, ".relic", "RELIC.md"), "utf8"),
+    readFileSync(join(projectDir, "relic.yaml"), "utf8"),
     relicEntry,
     `${label} modified project knowledge during engine installation`,
   );

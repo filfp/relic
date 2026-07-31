@@ -36,39 +36,32 @@ afterEach(() => {
 });
 
 describe("Relic 2.0 init", () => {
-  test("creates only RELIC.md and the two default corpus roots", async () => {
+  test("creates only the root topology file", async () => {
     const result = await runInit({ dir });
-    expect(result.created).toEqual([
-      ".relic/RELIC.md",
-      ".relic/specs/",
-      ".relic/shared/",
-    ]);
-    expect(readdirSync(join(dir, ".relic")).sort()).toEqual([
-      "RELIC.md",
-      "shared",
-      "specs",
-    ]);
-    expect(readdirSync(dir).sort()).toEqual([".relic"]);
+    expect(result.created).toEqual(["relic.yaml"]);
+    expect(readdirSync(dir)).toEqual(["relic.yaml"]);
+    expect(existsSync(join(dir, ".relic"))).toBe(false);
   });
 
-  test("writes the accepted default topology and authoring rule", async () => {
+  test("writes topology-only YAML with conventional default paths", async () => {
     await runInit({ dir });
     const project = loadKnowledgeProject(dir);
     expect(project.topology).toEqual({
       specs: ".relic/specs",
       shared: ".relic/shared",
       records: {
-        fr: "docs/requirements/functional",
-        nfr: "docs/requirements/non-functional",
-        adr: "docs/decisions",
-        epic: "docs/epics",
+        fr: ".relic/records/requirements/functional",
+        nfr: ".relic/records/requirements/non-functional",
+        adr: ".relic/records/decisions",
+        epic: ".relic/records/epics",
       },
     });
-    expect(readFileSync(join(dir, ".relic", "RELIC.md"), "utf8")).toContain(
-      "one greater than the greatest valid current identity",
-    );
-    expect(project.diagnostics.some((item) => item.code === "missing-corpus-root"))
-      .toBe(false);
+    const source = readFileSync(join(dir, "relic.yaml"), "utf8");
+    expect(source.startsWith("topology:\n")).toBe(true);
+    expect(source).not.toContain("---");
+    expect(source).not.toContain("# Relic");
+    expect(project.documents).toEqual([]);
+    expect(project.diagnostics).toEqual([]);
   });
 
   test("leaves project-owned AGENTS.md byte-for-byte unchanged", async () => {
@@ -78,15 +71,15 @@ describe("Relic 2.0 init", () => {
     expect(readFileSync(join(dir, "AGENTS.md"))).toEqual(agents);
   });
 
-  test("creates no configuration, governance, session, or manifest files", async () => {
+  test("creates no corpus, governance, session, or manifest files", async () => {
     await runInit({ dir });
     for (const path of [
-      ".relic/config.json",
-      ".relic/config.yaml",
-      ".relic/preamble.md",
-      ".relic/constitution.md",
-      ".relic/session.json",
-      ".relic/specs/manifest.toon",
+      ".relic",
+      "config.json",
+      "config.yaml",
+      "preamble.md",
+      "constitution.md",
+      "session.json",
       "PROJECT.md",
       "PRINCIPLES.md",
       "TEMPLATE.md",
@@ -95,23 +88,23 @@ describe("Relic 2.0 init", () => {
     }
   });
 
-  test("accepts an existing empty .relic directory", async () => {
+  test("leaves an existing legacy .relic tree untouched", async () => {
     mkdirSync(join(dir, ".relic"));
+    writeFileSync(join(dir, ".relic", "legacy.md"), "legacy evidence\n");
+
     await runInit({ dir });
-    expect(existsSync(join(dir, ".relic", "RELIC.md"))).toBe(true);
-    expect(readdirSync(dir).some((entry) => entry.startsWith(".relic-init-")))
-      .toBe(false);
+
+    expect(existsSync(join(dir, "relic.yaml"))).toBe(true);
+    expect(readFileSync(join(dir, ".relic", "legacy.md"), "utf8"))
+      .toBe("legacy evidence\n");
   });
 
-  test("refuses to merge with or overwrite existing Relic files", async () => {
-    mkdirSync(join(dir, ".relic"));
-    const original = "legacy evidence\n";
-    writeFileSync(join(dir, ".relic", "legacy.md"), original);
+  test("refuses to overwrite an existing relic.yaml", async () => {
+    const original = "topology: project-owned\n";
+    writeFileSync(join(dir, "relic.yaml"), original);
 
-    await expect(runInit({ dir })).rejects.toThrow(/will not merge or overwrite/);
-    expect(readFileSync(join(dir, ".relic", "legacy.md"), "utf8")).toBe(original);
-    expect(existsSync(join(dir, ".relic", "RELIC.md"))).toBe(false);
-    expect(existsSync(join(dir, ".relic", "specs"))).toBe(false);
+    await expect(runInit({ dir })).rejects.toThrow(/will not overwrite/);
+    expect(readFileSync(join(dir, "relic.yaml"), "utf8")).toBe(original);
   });
 
   test("refuses a missing project directory instead of creating it", async () => {

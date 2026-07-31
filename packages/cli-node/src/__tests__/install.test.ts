@@ -100,7 +100,7 @@ describe("Relic install command", () => {
       mkdirSync(join(legacy, ".relic"));
       await expect(
         runInstall({ engine: "codex", projectDir: legacy }),
-      ).rejects.toThrow(/Missing \.relic\/RELIC\.md/);
+      ).rejects.toThrow(/Missing relic\.yaml/);
       expect(existsSync(join(legacy, ".codex"))).toBe(false);
     } finally {
       rmSync(legacy, { recursive: true, force: true });

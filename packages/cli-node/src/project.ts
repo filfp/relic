@@ -1,15 +1,6 @@
 import { lstatSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-function dirExists(path: string): boolean {
-  try {
-    const stat = lstatSync(path);
-    return stat.isDirectory() && !stat.isSymbolicLink();
-  } catch {
-    return false;
-  }
-}
-
 function fileExists(path: string): boolean {
   try {
     const stat = lstatSync(path);
@@ -20,15 +11,13 @@ function fileExists(path: string): boolean {
 }
 
 export function isRelicProjectRoot(path: string): boolean {
-  return dirExists(join(path, ".relic")) &&
-    fileExists(join(path, ".relic", "RELIC.md"));
+  return fileExists(join(path, "relic.yaml"));
 }
 
-export function findRelicDir(startDir: string): string | null {
+export function findRelicProjectRoot(startDir: string): string | null {
   let current = startDir;
   while (true) {
-    const candidate = join(current, ".relic");
-    if (isRelicProjectRoot(current)) return candidate;
+    if (isRelicProjectRoot(current)) return current;
     const parent = dirname(current);
     if (parent === current) return null;
     current = parent;
@@ -39,12 +28,12 @@ export function resolveRelicProjectDir(projectDir?: string): string {
   if (projectDir !== undefined) {
     const resolved = resolve(projectDir);
     if (!isRelicProjectRoot(resolved)) {
-      throw new Error("Missing .relic/RELIC.md. Run: relic init");
+      throw new Error("Missing relic.yaml. Run: relic init");
     }
     return resolved;
   }
 
-  const relicDir = findRelicDir(process.cwd());
-  if (!relicDir) throw new Error("Not in a Relic project. Run: relic init");
-  return dirname(relicDir);
+  const projectRoot = findRelicProjectRoot(process.cwd());
+  if (!projectRoot) throw new Error("Not in a Relic project. Run: relic init");
+  return projectRoot;
 }
