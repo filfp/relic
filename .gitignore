@@ -6,8 +6,8 @@ out
 dist
 *.tgz
 
-# generated files (rebuilt by scripts/embed-templates.ts)
-packages/core/src/generated/
+# generated viewer assets
+packages/cli-node/src/generated/
 
 # code coverage
 coverage

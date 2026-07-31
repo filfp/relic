@@ -398,8 +398,8 @@ agents, building on the project-local adapters required by Stage 5:
   installer validates embedded paths and writes from that map, so neither the Node
   bundle nor compiled Bun binaries resolve a skill path from the source checkout.
 - npm and PyPI builds now depend only on the embedded skill and viewer. The Claude plugin
-  generator was removed from the build and publication path; legacy template generation
-  remains test-only until the Stage 7 code retirement.
+  generator was removed from the build and publication path. Stage 7 subsequently
+  removed the legacy generators and their source trees entirely.
 - Disposable projects exercised both the Node bundle and the compiled Bun binary through
   `init`, explicit installation for Claude, Copilot, and Codex, no-argument engine
   discovery, and `search`. Every native root received byte-identical skill content and
@@ -417,6 +417,9 @@ agents, building on the project-local adapters required by Stage 5:
   bug that was invisible in the Node bundle.
 
 ## 7. Retire Relic 1.x Machinery
+
+> **Status:** implemented. The executable repository now contains only the Relic 2.0
+> read model, four-command CLI, central-skill installer, and knowledge viewer.
 
 After the 2.0 vertical slice, skill workflow, CLI, and distribution gates are green,
 remove code that exists only for the discarded model:
@@ -439,6 +442,36 @@ removed workflows.
 - Repository search finds no user-facing instruction that requires a removed workflow.
 - The full test, typecheck, build, and packaging checks pass against the reduced surface.
 - Removal does not regress search, relationships, canonical HTML, or the frontend.
+
+### Evidence
+
+- The workflow commands, direct-model path, session and project configuration, TOON and
+  manifest writers, ownership validation, changelog machinery, mode synchronization,
+  external records, migration commands, MCP server, upgrade path, and their tests were
+  deleted rather than retained behind compatibility exports.
+- The Claude plugin, marketplace, generated Claude and Copilot command hooks, prompt
+  templates, shared snippets, scaffold templates, engine-template generator, and legacy
+  engine adapters were removed. The current build has no legacy generation step.
+- `@relic/core` is now a pure knowledge read model with no dependency on commands, HTTP,
+  React, engines, or project mutation. The CLI package owns the four commands and
+  read-only HTTP surface; the engine package owns only central-skill installation.
+- The residual `@relic/utility` package was removed. Its deleted configuration, session,
+  TOON, fetch, and spec-selection facilities served only 1.x; the few filesystem
+  operations still needed now live at their actual call sites.
+- Active README and package documentation describe only natural skill usage, current
+  topology, living knowledge, and `init`, `install`, `search`, and `serve`. Repository
+  search finds no active product instruction invoking a removed command or slash
+  workflow.
+- The pre-2.0 self-hosted `.relic/` corpus remains deliberately inert as migration input
+  for Stage 8. It is neither accepted by the 2.0 commands without `RELIC.md` nor included
+  in distribution artifacts; Git remains its history while the next stage curates the
+  repository onto the new model.
+- Starting with both generated asset files absent, `build:assets` regenerated only the
+  central skill and viewer. Typecheck, frontend lint, 58 focused tests, and the full
+  distribution trial pass.
+- The distribution trial again exercised the npm bundle and compiled Bun binary in clean
+  projects across all three engine roots, search, the embedded viewer, and `npm pack`.
+  Bundle inspection finds no removed workflow, state, plugin, or template token.
 
 ## 8. Use Operational Relic 2.0 to Self-Host and Release
 

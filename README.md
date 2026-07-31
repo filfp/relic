@@ -1,207 +1,111 @@
 # Relic
 
-> Spec-driven development with a shared artifact layer.
+> Shared project knowledge for coding agents.
 
-Relic connects all your specs through a shared "brain" — domains, contracts, rules, and assumptions that live independently of any single feature. When two specs touch the same contract, Relic detects it. When a bug appears months later, the original spec constrains the fix.
+Relic keeps the current boundary of a project's knowledge in the repository so
+different developers and coding agents can work from the same context. Its
+specification-driven workflow is intentionally lightweight: one central skill
+challenges ideas, explores code, and persists only the knowledge the developer
+chooses to retain.
 
----
-
-## The problem with existing SDD tools
-
-Tools like spec-kit, Kiro, and OpenSpec treat specs as isolated silos. There is no shared context between them — the LLM implementing spec B has no idea spec A already owns the auth contract. Specs also die the moment implementation finishes: when a bug appears in production, the original intent, decisions, and contracts are completely abandoned.
-
-Relic fixes both.
-
----
+Relic does not impose a `specify → clarify → plan → tasks` pipeline, own
+`AGENTS.md`, select an agent's search tools, or maintain hidden workflow state.
+Code is the authority for implemented behavior; Relic records explain the
+current requirements, decisions, boundaries, and intent around it.
 
 ## Install
 
-**npm (Node.js 18+):**
+Using npm with Node.js 18 or newer:
+
 ```bash
 npm install -g relic-cli
 ```
 
-**uv (no runtime required):**
+Or install a native binary through Python tooling:
+
 ```bash
 uv tool install relic-cli
-```
-
-**pip:**
-```bash
+# or
 pip install relic-cli
 ```
 
----
-
-## Getting started
+## Start a project
 
 ```bash
 cd my-project
 relic init
-
-# Open your AI agent (Claude Code, Copilot, Codex) and run:
-# Existing codebase:  /relic:scan  then  /relic:constitution
-# New project:        /relic:constitution  then  /relic:specify
+relic install --engine codex
 ```
 
----
+Supported engines are `claude`, `copilot`, and `codex`. Installation copies the
+same central Relic skill into the selected engine's project-local native skill
+directory. It does not edit project instructions or application documentation.
 
-## How it works
+Then work with the agent naturally:
 
+```text
+Use Relic to roast this feature before we implement it.
 ```
+
+Explicitly naming Relic is the portable fallback when an agent does not invoke
+the skill ambiently.
+
+## Knowledge model
+
+`.relic/RELIC.md` is the stable entry point and the sole topology authority.
+The default project starts with:
+
+```text
 .relic/
-  shared/              ← THE BRAIN — shared across all specs
-    domains/           ← bounded context definitions, entity models
-    contracts/         ← API shapes, event schemas, data interfaces
-    rules/             ← cross-cutting business rules
-    assumptions/       ← declared assumptions about the environment
+  RELIC.md
   specs/
-    001-auth/
-      spec.md
-      plan.md
-      tasks.md
-      artifacts.json   ← declares owns/reads/touches — never stores artifacts
-      history.json     ← gitignored — per-spec conversation history for direct model calls
-  fixes/               ← fix documents (committed — team audit trail)
-    manifest.toon      ← toon index of all fix documents
-    2026-04-13-null-session-crash.md
-  preamble.md          ← Relic's immutable structural rules
-  constitution.md      ← project-specific governance, extracted from your codebase
-  changelog.md         ← full audit trail of every plan mutation
-  models.json          ← gitignored — model config for direct invocation (baseUrl, model, apiKey)
-  session.json         ← gitignored — your active spec and fix session state
+  shared/
 ```
 
-**Specs do not depend on each other.** They both depend on shared artifacts. This makes intersections explicit and detectable.
+The topology may point functional requirements, non-functional requirements,
+architecture decisions, and epics anywhere in the repository. Shared knowledge
+and typed records are Markdown. Every canonical specification is one typed HTML
+document; other files in its folder are searchable artifacts rather than
+canonical knowledge.
 
----
+Documents form a web through ordinary repository-relative links. They are
+living records: update the current document when the project's present
+knowledge changes and use Git when historical recovery is needed.
 
-## CLI commands
-
-### Setup and navigation
+## CLI
 
 | Command | Purpose |
 |---|---|
-| `relic init [--engine claude\|copilot\|codex]` | Scaffold `.relic/` in your project |
-| `relic add-engine <engine>` | Add AI engine hooks to an existing project |
-| `relic use <spec-id>` | Set the active spec for this session |
-| `relic use --fix <fix-id>` | Set the active fix (validates fix doc exists) |
-| `relic use --clear-fix` | Clear the active fix from session state |
-| `relic context [--spec id] [--text]` | Resolve active spec; report file/artifact status and `current_fix` |
-| `relic scaffold [--title t\|--spec id]` | Ensure spec folder exists; create from templates if new |
-| `relic validate [--text]` | Check artifact integrity and ownership conflicts |
-| `relic search <keywords...> [--deep] [--knowledge\|--spec\|--fix]` | Search the knowledge, spec, and fix indexes (`--deep` returns all entries) |
-| `relic mode [md\|html]` | Get/set the artifact mode (html = fragments rendered by the viewer) |
-| `relic snippet <name>` | Print a shared prompt snippet (used by the AI workflow prompts) |
-| `relic write --changelog\|--specs\|--fixes\|--knowledge-* --payload <json>` | Structured writes — the only way manifests/changelog are mutated |
-| `relic external [init\|set\|link\|create\|list]` | External spec repo integration (fr/nfr/br/adr/us/epic docs) |
-| `relic serve [--port]` | Spec viewer: browse specs/fixes at `http://localhost:<port>` (read-only, per-project) |
-| `relic mcp` | MCP server for AI agents (view_spec / view_fix / list_views) — ships with the plugin |
-| `relic viewer-migrate` | Convert pre-viewer HTML spec files into `<relic-body>` fragments |
-| `relic upgrade [--check] [--prompts] [--clean]` | Upgrade relic-cli, refresh hooks, migrate HTML (`--clean` removes pre-plugin command copies) |
+| `relic init [--dir path]` | Create the minimal `.relic/` foundation |
+| `relic install [--engine claude\|copilot\|codex]` | Install or refresh the central skill |
+| `relic search <query...> [--json]` | Search the complete current corpus |
+| `relic serve [--port number]` | Serve the read-only interactive knowledge viewer |
 
-### AI workflow commands
+Without `--engine`, `install` refreshes supported project-local engine roots
+that already exist.
 
-The workflow steps (`scan`, `specify`, `clarify`, `plan`, `analyse`, `tasks`,
-`implement`, `fix`, `solve`, `constitution`, `ask`, `use`) are **not** CLI
-subcommands — they run inside your AI engine:
+## Development
 
-- **Claude Code:** `/relic:specify`, `/relic:plan`, … via the Relic plugin (see below)
-- **Copilot / Codex:** prompt files written per-project by `relic init --engine <engine>`
-
-The prompts drive the CLI (`relic context`, `relic search`, `relic write`, …) under
-the hood; shared prompt fragments are resolved at runtime via `relic snippet <name>`.
-
----
-
-## Claude Code plugin
-
-For Claude Code, Relic ships as a **plugin** — commands and ambient skills in one
-versioned unit. `relic init --engine claude` writes the per-project installation into
-`.claude/settings.json` (marketplace + plugin enablement), so everyone opening the
-project gets it automatically. Manual install:
-
-```
-/plugin marketplace add filfp/relic
-/plugin install relic@relic
-```
-
-Then `/relic:setup` finishes onboarding (installs the CLI if missing, runs `relic init`).
-The plugin's ambient skills make SDD part of everyday work: Claude searches the brain
-before exploring code, opens a spec when you ask for a new capability, routes bugs
-through the fix pipeline, and keeps tasks/changelog true — governed by the `sdd` knob in
-`config.json` (`auto` announce-then-do, default; `suggest` ask-first). The bundled MCP
-tools let Claude hand you live spec views: ask "show me spec 009" and get
-`http://localhost:4747/spec/009-…` served by the embedded viewer.
-
-## AI slash commands
-
-The workflow lives inside your AI agent. In Claude Code the commands come from the
-plugin; for Copilot/Codex they are written to the engine's hooks directory by
-`relic init`:
-
-| Slash command | Purpose |
-|---|---|
-| `/relic:constitution` | Extract project-specific coding principles from the codebase |
-| `/relic:scan` | Bootstrap shared artifacts (domains, contracts, rules, assumptions) |
-| `/relic:specify` | Create a new spec from a PRD or user story |
-| `/relic:clarify` | Append details or change contracts (checks intersections) |
-| `/relic:plan` | Create an implementation plan (principal intersection point) |
-| `/relic:analyse` | Non-destructive consistency check |
-| `/relic:tasks` | Generate tasks from the current plan |
-| `/relic:implement` | Build the plan |
-| `/relic:fix` | Cross-spec ownership check + diagnosis → writes fix document to `.relic/fixes/` |
-| `/relic:solve` | Apply the active fix document, update knowledge layer, close the fix |
-| `/relic:use` | Switch the active spec or fix from inside the AI session |
-
----
-
-## AI engine support
+Relic uses Bun with hoisted workspace dependencies.
 
 ```bash
-relic init                              # defaults to Claude Code
-relic init --engine claude,copilot,codex
-
-relic add-engine copilot                # add to an existing project
+bun install
+bun run build:assets
+bun run typecheck
+bun run test
+bun run test:distribution
 ```
 
-| Engine | Hook location | Format |
-|---|---|---|
-| Claude Code | plugin (`relic@relic`) + `.claude/settings.json` | 13 commands + 4 ambient skills |
-| GitHub Copilot | `.github/prompts/relic.*.prompt.md` | 11 slash commands (with YAML frontmatter) |
-| Codex | `.codex/commands/relic.*.md` | 11 slash commands |
-
----
-
-## Three lifecycles
-
-**Bootstrap** (existing codebase):
-```
-relic init → /relic:scan → /relic:constitution → /relic:specify
-```
-
-**Forward** (new feature):
-```
-/relic:specify → /relic:clarify → /relic:plan → /relic:tasks → /relic:implement
-```
-
-**Feedback** (bug fix, keeps the spec alive):
-```
-/relic:fix → [review fix doc] → /relic:solve → [contract changed?] → /relic:clarify
-```
-
----
+The product architecture and accepted migration decisions live in
+[docs/relic-2.0.md](docs/relic-2.0.md) and
+[docs/relic-2.0-work-order.md](docs/relic-2.0-work-order.md).
 
 ## Distribution
 
-| Channel | Package | Status |
-|---|---|---|
-| npm | `relic-cli` | ✅ Available |
-| PyPI / uv | `relic-cli` | ✅ Available |
-| Homebrew | `relic` | planned |
+| Channel | Package |
+|---|---|
+| npm | `relic-cli` |
+| PyPI / uv | `relic-cli` |
 
----
-
-## Repository
-
-[github.com/filfp/relic](https://github.com/filfp/relic)
+[Repository](https://github.com/filfp/relic) ·
+[Report an issue](https://github.com/filfp/relic/issues)

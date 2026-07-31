@@ -195,8 +195,6 @@ run("bun", [
   "--compile",
   "--outfile",
   "dist/relic",
-  "--define",
-  'INSTALL_CHANNEL="npm"',
 ]);
 
 const nodeProject = verifyInstalledSkill(

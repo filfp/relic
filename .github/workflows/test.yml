@@ -15,8 +15,6 @@ jobs:
       - run: bun install
       - name: Build Relic 2.0 distribution assets
         run: bun run build:assets
-      - name: Build temporary Relic 1.x test assets
-        run: bun run scripts/embed-engine-templates.ts && bun run scripts/embed-templates.ts
       - run: bun run scripts/embed-skill.ts --check
       - run: bun run typecheck
       - run: bun run test

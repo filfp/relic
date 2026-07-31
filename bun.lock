@@ -18,7 +18,7 @@
       },
       "devDependencies": {
         "@relic/core": "workspace:*",
-        "@relic/utility": "workspace:*",
+        "@relic/engines": "workspace:*",
         "commander": "14.0.3",
       },
     },
@@ -26,8 +26,6 @@
       "name": "@relic/core",
       "version": "0.1.0",
       "dependencies": {
-        "@relic/engines": "workspace:*",
-        "@relic/utility": "workspace:*",
         "marked": "15.0.12",
         "parse5": "8.0.1",
         "yaml": "2.9.0",
@@ -38,16 +36,6 @@
     },
     "packages/engines": {
       "name": "@relic/engines",
-      "version": "0.1.0",
-      "dependencies": {
-        "@relic/utility": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/bun": "1.3.12",
-      },
-    },
-    "packages/utility": {
-      "name": "@relic/utility",
       "version": "0.1.0",
       "devDependencies": {
         "@types/bun": "1.3.12",
@@ -122,8 +110,6 @@
     "@relic/core": ["@relic/core@workspace:packages/core"],
 
     "@relic/engines": ["@relic/engines@workspace:packages/engines"],
-
-    "@relic/utility": ["@relic/utility@workspace:packages/utility"],
 
     "@relic/viewer": ["@relic/viewer@workspace:packages/viewer"],
 

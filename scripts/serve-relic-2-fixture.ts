@@ -3,7 +3,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { runServe } from "../packages/core/src/index.ts";
+import { runServe } from "../packages/cli-node/src/commands/serve.ts";
 
 await runServe({
   projectDir: process.env.RELIC_FIXTURE_ROOT ?? join(

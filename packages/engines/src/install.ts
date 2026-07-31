@@ -5,11 +5,10 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, posix, resolve, sep } from "node:path";
-
-import { dirExists, ensureDir } from "@relic/utility";
 
 import { RELIC_SKILL_FILES } from "./generated/relic-skill.ts";
 
@@ -48,6 +47,14 @@ export interface InstalledSkill {
 
 export function isEngine(value: string): value is Engine {
   return (SUPPORTED_ENGINES as readonly string[]).includes(value);
+}
+
+function dirExists(path: string): boolean {
+  return existsSync(path) && statSync(path).isDirectory();
+}
+
+function ensureDir(path: string): void {
+  mkdirSync(path, { recursive: true });
 }
 
 function validatedSkillFiles(

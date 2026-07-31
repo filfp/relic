@@ -3,13 +3,12 @@ import { Command, InvalidArgumentError } from "commander";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import {
-  runInit,
-  runInstall,
-  runSearch,
-  runServe,
-  SUPPORTED_ENGINES,
-} from "@relic/core";
+import { SUPPORTED_ENGINES } from "@relic/engines";
+
+import { runInit } from "./commands/init.ts";
+import { runInstall } from "./commands/install.ts";
+import { runSearch } from "./commands/search.ts";
+import { runServe } from "./commands/serve.ts";
 
 const VERSION = "0.9.0";
 
