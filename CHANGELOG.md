@@ -9,6 +9,20 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.1] — 2026-07-31
+
+### Added
+- Project-declared Markdown record kinds whose uppercase numbered identity prefixes
+  derive directly from the lowercase keys in `topology.records`.
+- Conventional business-rule (`BR`) and glossary (`GL`) record definitions, topology
+  defaults, search coverage, and distribution fixtures.
+
+### Changed
+- Replaced the core's closed FR/NFR/ADR/EPIC record taxonomy with an open topology map;
+  projects may add or omit every individual record kind without changing Relic.
+- Updated the central skill and self-hosted knowledge to treat record definitions,
+  authorship, and lifecycle as project-owned governance.
+
 ## [2.0.0] — 2026-07-31
 
 ### Added
