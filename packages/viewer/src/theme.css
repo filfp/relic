@@ -107,6 +107,8 @@ h1.rl-page-title { font-size: 1.45rem; font-weight: 700; margin-bottom: 0.75rem;
 .rl-callout .ico { font-weight: 700; margin-right: 0.5rem; font-size: 0.88em; }
 .rl-callout.info    { background: var(--tone-blue-bg);  border-color: var(--tone-blue-bd);  border-left-color: #3b82f6; }
 .rl-callout.info .ico { color: #3b82f6; }
+.rl-callout.neutral { background: var(--tone-slate-bg); border-color: var(--tone-slate-bd); border-left-color: var(--tone-slate-fg); }
+.rl-callout.neutral .ico { color: var(--tone-slate-fg); }
 .rl-callout.warn    { background: var(--tone-amber-bg); border-color: var(--tone-amber-bd); border-left-color: #f59e0b; }
 .rl-callout.warn .ico { color: #f59e0b; }
 .rl-callout.risk    { background: var(--tone-red-bg);   border-color: var(--tone-red-bd);   border-left-color: #f43f5e; }

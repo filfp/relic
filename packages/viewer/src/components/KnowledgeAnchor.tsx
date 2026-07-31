@@ -9,33 +9,38 @@ import {
 export function KnowledgeAnchor({
   relation,
   href,
+  title,
   children,
 }: {
   relation?: KnowledgeLink;
   href?: string;
+  title?: string;
   children: ReactNode;
 }) {
-  if (!relation) return href ? <a href={href}>{children}</a> : <>{children}</>;
+  if (!relation) return href ? <a href={href} title={title}>{children}</a> : <>{children}</>;
 
   switch (relation.status) {
     case "canonical":
       return relation.targetPath ? (
-        <a href={`${documentRoute(relation.targetPath)}${relation.fragment ? `#${relation.fragment}` : ""}`}>
+        <a
+          href={`${documentRoute(relation.targetPath)}${relation.fragment ? `#${relation.fragment}` : ""}`}
+          title={title}
+        >
           {children}
         </a>
       ) : <>{children}</>;
     case "artifact":
       return relation.resolvedPath ? (
-        <a href={artifactRoute(relation.resolvedPath)}>{children}</a>
+        <a href={artifactRoute(relation.resolvedPath)} title={title}>{children}</a>
       ) : <>{children}</>;
     case "external":
       return (
-        <a href={relation.href} target="_blank" rel="noreferrer">
+        <a href={relation.href} target="_blank" rel="noreferrer" title={title}>
           {children}
         </a>
       );
     case "fragment":
-      return <a href={relation.href}>{children}</a>;
+      return <a href={relation.href} title={title}>{children}</a>;
     case "missing":
       return (
         <span className="rl-broken-link" title={`Missing: ${relation.resolvedPath ?? relation.href}`}>

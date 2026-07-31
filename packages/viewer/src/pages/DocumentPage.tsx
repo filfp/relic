@@ -12,6 +12,7 @@ import { Callout, Chip } from "../components/bits";
 import { Fragment } from "../components/Fragment";
 import { KnowledgeAnchor } from "../components/KnowledgeAnchor";
 import { Markdown } from "../components/Markdown";
+import { diagnosticTone } from "../diagnostics";
 
 function DiagnosticList({ diagnostics }: { diagnostics: Diagnostic[] }) {
   if (diagnostics.length === 0) return null;
@@ -20,7 +21,7 @@ function DiagnosticList({ diagnostics }: { diagnostics: Diagnostic[] }) {
       <h2>Maintenance evidence</h2>
       <div className="rl-diagnostics">
         {diagnostics.map((diagnostic, index) => (
-          <Callout key={`${diagnostic.code}:${index}`} type={diagnostic.severity === "error" ? "risk" : "warn"}>
+          <Callout key={`${diagnostic.code}:${index}`} type={diagnosticTone(diagnostic.severity)}>
             <strong>{diagnostic.code}</strong> — {diagnostic.message}
             {diagnostic.href && <code>{diagnostic.href}</code>}
           </Callout>
@@ -73,7 +74,10 @@ export function DocumentPage({ path }: { path: string }) {
       {Object.keys(document.metadata).length > 0 && (
         <section className="rl-metadata">
           {Object.entries(document.metadata).map(([key, value]) => (
-            <span key={key}><strong>{key}</strong> {String(value)}</span>
+            <span key={key}>
+              <strong>{key}</strong>{" "}
+              {typeof value === "string" ? value : JSON.stringify(value)}
+            </span>
           ))}
         </section>
       )}
@@ -112,6 +116,26 @@ export function DocumentPage({ path }: { path: string }) {
             : <p className="muted">No backlinks.</p>}
         </section>
       </div>
+
+      {view.related.length > 0 && (
+        <section className="rl-section">
+          <h2>Related knowledge</h2>
+          <div className="rl-catalog">
+            {view.related.map((related) => (
+              <a key={related.path} href={documentRoute(related.path)} className="rl-document-card">
+                <div className="row">
+                  {related.id && <Chip color="blue">{related.id}</Chip>}
+                  {related.memberships.map((membership) => (
+                    <Chip key={membership}>{membership}</Chip>
+                  ))}
+                </div>
+                <strong>{related.label}</strong>
+                <code className="rl-path">{related.path}</code>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {view.artifacts.length > 0 && (
         <section className="rl-section">

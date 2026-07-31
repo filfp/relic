@@ -12,6 +12,22 @@ function relationFor(links: KnowledgeLink[], href: string | undefined) {
   return href === undefined ? undefined : links.find((link) => link.href === href);
 }
 
+function textOf(node: MarkdownAstNode): string {
+  if (node.children) return node.children.map(textOf).join("");
+  return node.text ?? "";
+}
+
+function headingId(node: MarkdownAstNode): string | undefined {
+  const value = textOf(node)
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/[\s-]+/g, "-");
+  return value || undefined;
+}
+
 function Nodes({
   nodes,
   links,
@@ -50,7 +66,7 @@ function Node({
     case "heading": {
       const depth = Math.min(Math.max(node.depth ?? 2, 1), 6);
       const Tag = `h${depth}` as keyof React.JSX.IntrinsicElements;
-      return <Tag>{children}</Tag>;
+      return <Tag id={headingId(node)}>{children}</Tag>;
     }
     case "strong":
       return <strong>{children}</strong>;
@@ -77,6 +93,7 @@ function Node({
         <KnowledgeAnchor
           href={node.href}
           relation={relationFor(links, node.href)}
+          title={node.title ?? undefined}
         >
           {children}
         </KnowledgeAnchor>
@@ -87,14 +104,19 @@ function Node({
       }
       const resolved = resolveRelativePath(sourcePath, node.href);
       return resolved ? (
-        <img src={artifactContentUrl(resolved)} alt={node.text ?? ""} />
+        <img
+          src={artifactContentUrl(resolved)}
+          alt={node.text ?? ""}
+          title={node.title ?? undefined}
+        />
       ) : (
         <span className="rl-warning">image unavailable: {node.text}</span>
       );
     }
     case "list": {
-      const Tag = node.ordered ? "ol" : "ul";
-      return <Tag>{children}</Tag>;
+      return node.ordered
+        ? <ol start={node.start}>{children}</ol>
+        : <ul>{children}</ul>;
     }
     case "list_item":
       return (
@@ -125,9 +147,25 @@ function Node({
         </table>
       );
     case "table_header":
-      return <tr>{node.children?.map((cell, index) => <th key={index}><Node node={cell} links={links} sourcePath={sourcePath} /></th>)}</tr>;
+      return (
+        <tr>
+          {node.children?.map((cell, index) => (
+            <th key={index} style={{ textAlign: cell.align }}>
+              <Node node={cell} links={links} sourcePath={sourcePath} />
+            </th>
+          ))}
+        </tr>
+      );
     case "table_row":
-      return <tr>{node.children?.map((cell, index) => <td key={index}><Node node={cell} links={links} sourcePath={sourcePath} /></td>)}</tr>;
+      return (
+        <tr>
+          {node.children?.map((cell, index) => (
+            <td key={index} style={{ textAlign: cell.align }}>
+              <Node node={cell} links={links} sourcePath={sourcePath} />
+            </td>
+          ))}
+        </tr>
+      );
     case "table_cell":
       return children;
     case "html":

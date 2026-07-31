@@ -16,7 +16,9 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 export function parseFrontmatter(source: string, path: string): ParsedFrontmatter {
   const normalized = source.replace(/^\uFEFF/, "");
-  const match = normalized.match(/^---[ \t]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/);
+  const match = normalized.match(
+    /^---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/,
+  );
   if (!match) {
     return { metadata: {}, body: normalized, diagnostics: [], present: false };
   }

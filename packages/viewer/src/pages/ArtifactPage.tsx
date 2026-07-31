@@ -26,7 +26,13 @@ export function ArtifactPage({ path }: { path: string }) {
       <a href="/" className="rl-back">← catalog</a>
       <div className="rl-page-heading">
         <div>
-          <p className="rl-eyebrow">Searchable specification artifact</p>
+          <p className="rl-eyebrow">
+            {view.artifact.searchableText !== undefined
+              ? "Searchable specification artifact"
+              : view.artifact.mediaType === "text"
+                ? "Text specification artifact"
+                : "Binary specification artifact"}
+          </p>
           <h1 className="rl-page-title">{path.split("/").at(-1)}</h1>
           <code>{path}</code>
         </div>

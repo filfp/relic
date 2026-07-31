@@ -38,7 +38,9 @@ export interface MarkdownAstNode {
   lang?: string;
   depth?: number;
   ordered?: boolean;
+  start?: number;
   checked?: boolean;
+  align?: "left" | "center" | "right";
   children?: MarkdownAstNode[];
 }
 

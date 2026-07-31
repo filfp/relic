@@ -1,11 +1,7 @@
 export { parseFrontmatter } from "./frontmatter.ts";
 export { parseMarkdown } from "./markdown.ts";
 export { parseSpecHtml } from "./html.ts";
-export {
-  formatIdentityNumber,
-  loadKnowledgeProject,
-  nextIdentityNumber,
-} from "./read-model.ts";
+export { loadKnowledgeProject } from "./read-model.ts";
 export { searchKnowledge } from "./search.ts";
 export {
   artifactView,
@@ -30,7 +26,6 @@ export type {
   LinkStatus,
   MarkdownAstNode,
 } from "./types.ts";
-export type { NumberedIdentityKind } from "./read-model.ts";
 export type {
   KnowledgeArtifactSummary,
   KnowledgeArtifactView,

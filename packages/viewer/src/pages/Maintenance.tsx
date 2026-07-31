@@ -6,6 +6,7 @@ import {
   type ProjectView,
 } from "../api";
 import { Callout, Chip } from "../components/bits";
+import { diagnosticTone } from "../diagnostics";
 
 export function Maintenance() {
   const [project, setProject] = useState<ProjectView | null>(null);
@@ -37,7 +38,7 @@ export function Maintenance() {
       ) : (
         <div className="rl-diagnostics">
           {project.diagnostics.map((diagnostic, index) => (
-            <Callout key={`${diagnostic.path}:${diagnostic.code}:${index}`} type={diagnostic.severity === "error" ? "risk" : "warn"}>
+            <Callout key={`${diagnostic.path}:${diagnostic.code}:${index}`} type={diagnosticTone(diagnostic.severity)}>
               <div className="row">
                 <Chip>{diagnostic.severity}</Chip>
                 <strong>{diagnostic.code}</strong>

@@ -50,6 +50,7 @@ function toAst(token: Token): MarkdownAstNode {
   if (token.type === "list") {
     const list = token as Tokens.List;
     node.ordered = list.ordered;
+    if (typeof list.start === "number") node.start = list.start;
     node.children = list.items.map((item) => ({
       type: "list_item",
       checked: item.checked,
@@ -62,15 +63,17 @@ function toAst(token: Token): MarkdownAstNode {
     node.children = [
       {
         type: "table_header",
-        children: table.header.map((cell) => ({
+        children: table.header.map((cell, index) => ({
           type: "table_cell",
+          ...(table.align[index] && { align: table.align[index]! }),
           children: cell.tokens.map(toAst),
         })),
       },
       ...table.rows.map((row) => ({
         type: "table_row",
-        children: row.map((cell) => ({
+        children: row.map((cell, index) => ({
           type: "table_cell",
+          ...(table.align[index] && { align: table.align[index]! }),
           children: cell.tokens.map(toAst),
         })),
       })),

@@ -772,34 +772,3 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
   );
   return { ...(topology !== undefined && { topology }), documents, artifacts, diagnostics };
 }
-
-export type NumberedIdentityKind = "spec" | "fr" | "nfr" | "adr" | "epic";
-
-export function nextIdentityNumber(
-  project: KnowledgeProject,
-  kind: NumberedIdentityKind,
-): number {
-  const patterns: Record<NumberedIdentityKind, RegExp> = {
-    spec: /^(\d+)-/i,
-    fr: /^FR-(\d+)$/i,
-    nfr: /^NFR-(\d+)$/i,
-    adr: /^ADR-(\d+)$/i,
-    epic: /^EPIC-(\d+)$/i,
-  };
-  let greatest = 0;
-  for (const document of project.documents) {
-    if (!document.id) continue;
-    const match = document.id.match(patterns[kind]);
-    if (!match) continue;
-    const value = Number.parseInt(match[1]!, 10);
-    if (Number.isSafeInteger(value)) greatest = Math.max(greatest, value);
-  }
-  return greatest + 1;
-}
-
-export function formatIdentityNumber(value: number): string {
-  if (!Number.isSafeInteger(value) || value < 1) {
-    throw new RangeError("Identity number must be a positive safe integer");
-  }
-  return String(value).padStart(3, "0");
-}

@@ -13,9 +13,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  formatIdentityNumber,
   loadKnowledgeProject,
-  nextIdentityNumber,
   parseFrontmatter,
   parseMarkdown,
   parseSpecHtml,
@@ -168,22 +166,6 @@ describe("Relic 2.0 knowledge read model", () => {
     }
   });
 
-  test("derives next identity values from only the current corpus", () => {
-    const project = loadKnowledgeProject(fixture);
-
-    expect(formatIdentityNumber(nextIdentityNumber(project, "spec"))).toBe("003");
-    expect(formatIdentityNumber(nextIdentityNumber(project, "fr"))).toBe("002");
-    expect(formatIdentityNumber(nextIdentityNumber(project, "nfr"))).toBe("002");
-    expect(formatIdentityNumber(nextIdentityNumber(project, "adr"))).toBe("002");
-    expect(formatIdentityNumber(nextIdentityNumber(project, "epic"))).toBe("002");
-
-    const copied = copyFixture();
-    rmSync(
-      join(copied, "knowledge/records/epics/EPIC-001-authentication.md"),
-    );
-    expect(nextIdentityNumber(loadKnowledgeProject(copied), "epic")).toBe(1);
-  });
-
   test("searches every canonical document and textual artifact with parent context", () => {
     const project = loadKnowledgeProject(fixture);
     const artifactResults = searchKnowledge(project, "legacy session cookie");
@@ -280,7 +262,7 @@ describe("Relic 2.0 typed HTML parser", () => {
 describe("Relic 2.0 Markdown parser", () => {
   test("keeps lists and tables structurally renderable", () => {
     const parsed = parseMarkdown(
-      "# Record\n\n- first\n- [x] second\n\n| Kind | Count |\n| --- | ---: |\n| FR | 2 |\n",
+      "# Record\n\n4. first\n5. second\n\n| Kind | Count |\n| :--- | ---: |\n| FR | 2 |\n",
       "records/FR-001.md",
     );
     const list = parsed.ast.find((node) => node.type === "list");
@@ -290,10 +272,14 @@ describe("Relic 2.0 Markdown parser", () => {
       "list_item",
       "list_item",
     ]);
-    expect(list?.children?.[1]?.checked).toBe(true);
+    expect(list).toMatchObject({ ordered: true, start: 4 });
     expect(table?.children?.map((node) => node.type)).toEqual([
       "table_header",
       "table_row",
+    ]);
+    expect(table?.children?.[0]?.children?.map((cell) => cell.align)).toEqual([
+      "left",
+      "right",
     ]);
   });
 });
@@ -309,5 +295,14 @@ describe("Relic 2.0 frontmatter parser", () => {
     expect(parsed.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
       "unsafe-frontmatter-alias",
     );
+  });
+
+  test("accepts empty frontmatter as an empty mapping", () => {
+    expect(parseFrontmatter("---\n---\n# Empty\n", "empty.md")).toMatchObject({
+      present: true,
+      metadata: {},
+      body: "# Empty\n",
+      diagnostics: [],
+    });
   });
 });

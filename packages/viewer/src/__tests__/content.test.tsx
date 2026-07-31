@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import type { HtmlAstNode, MarkdownAstNode } from "../api";
 import { pathFromRoute, resolveRelativePath } from "../api";
+import { Callout } from "../components/bits";
 import { Flow } from "../components/Flow";
 import { Fragment } from "../components/Fragment";
 import { Markdown } from "../components/Markdown";
@@ -112,5 +113,60 @@ describe("Relic viewer content rendering", () => {
     )).toBe("knowledge/specs/001-auth/index.html");
     expect(pathFromRoute("/artifact/%", "/artifact/")).toBeUndefined();
     expect(pathFromRoute("/document/", "/document/")).toBeUndefined();
+  });
+
+  test("preserves Markdown navigation and table semantics", () => {
+    const ast: MarkdownAstNode[] = [
+      {
+        type: "heading",
+        depth: 2,
+        children: [{ type: "text", text: "Current boundary" }],
+      },
+      {
+        type: "list",
+        ordered: true,
+        start: 4,
+        children: [
+          {
+            type: "list_item",
+            children: [{ type: "text", text: "Fourth" }],
+          },
+        ],
+      },
+      {
+        type: "table",
+        children: [
+          {
+            type: "table_header",
+            children: [
+              {
+                type: "table_cell",
+                align: "right",
+                children: [{ type: "text", text: "Count" }],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "link",
+        href: "https://example.com",
+        title: "Evidence",
+        children: [{ type: "text", text: "source" }],
+      },
+    ];
+    const markup = renderToStaticMarkup(
+      <Markdown ast={ast} links={[]} sourcePath="knowledge/shared/current.md" />,
+    );
+
+    expect(markup).toContain('<h2 id="current-boundary">');
+    expect(markup).toContain('<ol start="4">');
+    expect(markup).toContain('style="text-align:right"');
+    expect(markup).toContain('title="Evidence"');
+  });
+
+  test("keeps unknown callout kinds visually neutral", () => {
+    expect(renderToStaticMarkup(<Callout type="project-specific">Readable</Callout>))
+      .toContain("rl-callout neutral");
   });
 });
