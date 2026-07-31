@@ -13,8 +13,10 @@ from dictating unresolved product contracts.
 - Complete stages in order. Do not begin a dependent stage while its gate is open.
 - Preserve the working Relic 1.x implementation until a Relic 2.0 read-only vertical
   slice proves the replacement foundations.
-- Reuse code only after it is shown to serve the 2.0 contract without retaining a 1.x
-  workflow assumption.
+- Give Relic 1.x code no presumption of reuse. Reuse code only after positive evidence
+  shows that it serves the 2.0 contract without retaining a 1.x workflow assumption.
+  When the evidence leaves a choice between adapting and removing, remove and rebuild
+  cleanly from the accepted contracts.
 - Keep product contracts, implementation, and retirement decisions auditable in separate
   changes.
 - Validate each stage with focused tests before expanding the surface.
@@ -108,9 +110,12 @@ the spec/fix API, ID-only routes, spec-only dashboard, fixed spec/plan/tasks tab
 interpreted validation summary, derived workflow data, `viewer.json`, and MCP viewer
 bridge are classified **replace/remove**.
 
-For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
-**remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,
-templates, MCP surface, packaging, and tests.
+The accepted [`Relic 2.0 codebase inventory`](relic-2.0-codebase-inventory.md) records a
+**keep**, **adapt**, **replace**, or **remove** disposition for the current workspace,
+CLI, core, utilities, viewer, engine adapters, skills, plugin, templates, MCP surface,
+packaging, CI, and tests. It also records the clean-rebuild default and the current test
+baseline. Those classifications govern later implementation stages; similarity to a
+retained capability does not by itself justify adapting its 1.x implementation.
 
 ### Gate
 
