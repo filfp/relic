@@ -1,4 +1,0 @@
-interface:
-  display_name: "Architecture Roast"
-  short_description: "Challenge design assumptions before documentation"
-  default_prompt: "Use $architecture-roast to challenge and clarify this architecture before drafting documentation."

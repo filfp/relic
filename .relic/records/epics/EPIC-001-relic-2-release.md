@@ -1,6 +1,6 @@
 ---
 id: EPIC-001
-status: in-progress
+status: ready-for-owner-verification
 ---
 
 # Relic 2.0 release
@@ -18,14 +18,18 @@ Completed scope:
 - deletion of executable 1.x workflows, plugin, templates, sessions, modes, and
   manifests;
 - curated self-hosted 2.0 knowledge corpus.
+- byte-identical installation of the central skill in the repository's Claude and
+  Codex roots, followed by removal of the construction-only architecture-roast and
+  requirement-record skills;
+- clean lint and type checks, 74 passing tests, zero dependency vulnerabilities, and a
+  passing Node bundle, compiled Bun binary, native-engine, viewer, and npm package trial;
+- live self-hosted viewer evidence: 12 canonical documents, zero diagnostics, zero
+  orphans, 10 outgoing spec links, four spec backlinks, and all 11 peer nodes related.
 
 Remaining release gate:
 
-- install the central skill into this repository's native engine roots;
-- verify search, frontend routes, graph, package contents, tests, types, lint, audit, and
-  release metadata against the self-hosted corpus;
-- remove the temporary architecture-roast and requirement-record development skills;
-- perform an owner visual pass before publication.
+- perform an owner visual pass of the catalog and canonical specification;
+- prepare the chosen release version and dated changelog entry before publication.
 
 See the [product specification](../../specs/001-relic-2/index.html),
 [implementation map](../../shared/SHARED-development.md), and

@@ -90,15 +90,18 @@ Relic uses Bun with hoisted workspace dependencies.
 
 ```bash
 bun install --frozen-lockfile
-bun run build:assets
+bun run lint
 bun run typecheck
 bun run test
 bun run test:distribution
+bun audit
 ```
 
-The product architecture and accepted migration decisions live in
-[docs/relic-2.0.md](docs/relic-2.0.md) and
-[docs/relic-2.0-work-order.md](docs/relic-2.0-work-order.md).
+The repository self-hosts its current product knowledge. Start from
+[.relic/RELIC.md](.relic/RELIC.md) and the
+[Relic 2.0 specification](.relic/specs/001-relic-2/index.html). See
+[CONTRIBUTING.md](CONTRIBUTING.md) for package boundaries, validation, and
+release preparation.
 
 ## Distribution
 
@@ -108,4 +111,5 @@ The product architecture and accepted migration decisions live in
 | PyPI / uv | `relic-cli` |
 
 [Repository](https://github.com/filfp/relic) ·
+[Contributing](CONTRIBUTING.md) ·
 [Report an issue](https://github.com/filfp/relic/issues)
