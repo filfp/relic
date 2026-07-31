@@ -1,10 +1,6 @@
-export type CorpusMembership =
-  | "spec"
-  | "shared"
-  | "fr"
-  | "nfr"
-  | "adr"
-  | "epic";
+export type RecordKind = string;
+
+export type CorpusMembership = "spec" | "shared" | RecordKind;
 
 export type DocumentFormat = "markdown" | "spec-html";
 
@@ -21,12 +17,7 @@ export interface KnowledgeDiagnostic {
 export interface KnowledgeTopology {
   specs: string;
   shared: string;
-  records: {
-    fr: string;
-    nfr: string;
-    adr: string;
-    epic: string;
-  };
+  records: Record<RecordKind, string>;
 }
 
 export interface MarkdownAstNode {

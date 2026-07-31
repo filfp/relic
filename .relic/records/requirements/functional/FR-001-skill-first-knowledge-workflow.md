@@ -15,10 +15,10 @@ permits only one coherent choice, and stops asking when no remaining decision ch
 blocks the requested scope.
 
 When work creates durable knowledge, the skill may propose a specification, shared
-document, FR, NFR, ADR, or EPIC at a natural boundary. It must prefer updating existing
-knowledge and may write only after the developer explicitly requests the artifact or
-confirms a proposal that named the exact writes. Code authorization alone is not
-documentation authorization.
+document, or project-declared record such as an FR, NFR, ADR, BR, GL, or EPIC at a
+natural boundary. It must prefer updating existing knowledge and may write only after
+the developer explicitly requests the artifact or confirms a proposal that named the
+exact writes. Code authorization alone is not documentation authorization.
 
 The same invocation continues into implementation and validation when those actions are
 part of the request. Consulting knowledge for a fix or ordinary development creates no

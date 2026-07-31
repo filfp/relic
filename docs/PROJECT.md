@@ -107,8 +107,9 @@ shapes tested locally.
 ### `.relic` and `relic.yaml`
 
 `relic.yaml` is the only topology authority. The paths it declares contain the
-current canonical product knowledge: specs, shared documents, requirements,
-decisions, and epics.
+current canonical product knowledge: specs, shared documents, and project-defined
+record kinds such as requirements, decisions, business rules, glossary entries, and
+epics.
 
 ### `docs`
 

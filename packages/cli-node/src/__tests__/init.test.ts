@@ -53,6 +53,8 @@ describe("Relic 2.0 init", () => {
         fr: ".relic/records/requirements/functional",
         nfr: ".relic/records/requirements/non-functional",
         adr: ".relic/records/decisions",
+        br: ".relic/records/business-rules",
+        gl: ".relic/records/glossary",
         epic: ".relic/records/epics",
       },
     });

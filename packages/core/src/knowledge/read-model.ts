@@ -30,14 +30,8 @@ import type {
   KnowledgeTopology,
 } from "./types.ts";
 
-const MEMBERSHIP_ORDER: CorpusMembership[] = [
-  "spec",
-  "shared",
-  "fr",
-  "nfr",
-  "adr",
-  "epic",
-];
+const RECORD_KIND_PATTERN = /^[a-z][a-z0-9]*$/;
+const RESERVED_RECORD_KINDS = new Set(["spec", "shared"]);
 
 const TEXT_ARTIFACT_EXTENSIONS = new Set([
   ".css",
@@ -170,12 +164,33 @@ function readTopology(
 
   const specs = validateTopologyPath(raw.specs, "specs", projectRoot, diagnostics);
   const shared = validateTopologyPath(raw.shared, "shared", projectRoot, diagnostics);
-  const fr = validateTopologyPath(raw.records.fr, "records.fr", projectRoot, diagnostics);
-  const nfr = validateTopologyPath(raw.records.nfr, "records.nfr", projectRoot, diagnostics);
-  const adr = validateTopologyPath(raw.records.adr, "records.adr", projectRoot, diagnostics);
-  const epic = validateTopologyPath(raw.records.epic, "records.epic", projectRoot, diagnostics);
-  if (!specs || !shared || !fr || !nfr || !adr || !epic) return undefined;
-  return { specs, shared, records: { fr, nfr, adr, epic } };
+  const records: Record<string, string> = {};
+  let recordsValid = true;
+  for (const [kind, value] of Object.entries(raw.records)) {
+    if (!RECORD_KIND_PATTERN.test(kind) || RESERVED_RECORD_KINDS.has(kind)) {
+      diagnostics.push({
+        code: "invalid-record-kind",
+        severity: "error",
+        message: `topology.records key "${kind}" must be a lowercase record prefix and cannot be spec or shared`,
+        path: "relic.yaml",
+      });
+      recordsValid = false;
+      continue;
+    }
+    const path = validateTopologyPath(
+      value,
+      `records.${kind}`,
+      projectRoot,
+      diagnostics,
+    );
+    if (!path) {
+      recordsValid = false;
+      continue;
+    }
+    records[kind] = path;
+  }
+  if (!specs || !shared || !recordsValid) return undefined;
+  return { specs, shared, records };
 }
 
 function parseTopologyFile(
@@ -389,21 +404,19 @@ function discoverSpecs(
 }
 
 function sortedMemberships(values: Set<CorpusMembership>): CorpusMembership[] {
-  return [...values].sort(
-    (left, right) => MEMBERSHIP_ORDER.indexOf(left) - MEMBERSHIP_ORDER.indexOf(right),
+  const rank = (membership: CorpusMembership) =>
+    membership === "spec" ? 0 : membership === "shared" ? 1 : 2;
+  return [...values].sort((left, right) =>
+    rank(left) - rank(right) || left.localeCompare(right)
   );
 }
 
 function expectedId(memberships: CorpusMembership[], id: string): boolean {
-  const checks: Partial<Record<CorpusMembership, RegExp>> = {
-    spec: /^\d{3,}-[a-z0-9][a-z0-9-]*$/i,
-    shared: /^SHARED-[a-z0-9][a-z0-9-]*$/i,
-    fr: /^FR-\d{3,}$/i,
-    nfr: /^NFR-\d{3,}$/i,
-    adr: /^ADR-\d{3,}$/i,
-    epic: /^EPIC-\d{3,}$/i,
-  };
-  return memberships.some((membership) => checks[membership]?.test(id) === true);
+  return memberships.some((membership) => {
+    if (membership === "spec") return /^\d{3,}-[a-z0-9][a-z0-9-]*$/i.test(id);
+    if (membership === "shared") return /^SHARED-[a-z0-9][a-z0-9-]*$/i.test(id);
+    return new RegExp(`^${membership}-\\d{3,}$`, "i").test(id);
+  });
 }
 
 function displayLabel(
@@ -630,10 +643,9 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
   if (topology) {
     discoverSpecs(topology.specs, projectRoot, candidates, artifactCandidates, diagnostics);
     discoverMarkdownRoot(topology.shared, "shared", projectRoot, candidates, diagnostics);
-    discoverMarkdownRoot(topology.records.fr, "fr", projectRoot, candidates, diagnostics);
-    discoverMarkdownRoot(topology.records.nfr, "nfr", projectRoot, candidates, diagnostics);
-    discoverMarkdownRoot(topology.records.adr, "adr", projectRoot, candidates, diagnostics);
-    discoverMarkdownRoot(topology.records.epic, "epic", projectRoot, candidates, diagnostics);
+    for (const [kind, path] of Object.entries(topology.records)) {
+      discoverMarkdownRoot(path, kind, projectRoot, candidates, diagnostics);
+    }
   }
 
   for (const realPath of candidates.keys()) artifactCandidates.delete(realPath);

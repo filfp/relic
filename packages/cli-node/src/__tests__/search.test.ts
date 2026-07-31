@@ -77,6 +77,22 @@ describe("Relic 2.0 search command", () => {
           path: "knowledge/specs/001-auth/notes.md",
         }),
       ]);
+    expect((await runSearch({ query: "BR-001", projectDir: fixture })).results)
+      .toContainEqual(
+        expect.objectContaining({
+          type: "document",
+          id: "BR-001",
+          memberships: ["br"],
+        }),
+      );
+    expect((await runSearch({ query: "refresh-token family", projectDir: fixture })).results)
+      .toContainEqual(
+        expect.objectContaining({
+          type: "document",
+          id: "GL-001",
+          memberships: ["gl"],
+        }),
+      );
   });
 
   test("emits the same exhaustive result model as JSON", async () => {

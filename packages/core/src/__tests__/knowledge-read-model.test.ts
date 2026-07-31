@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import {
   cpSync,
   mkdtempSync,
+  mkdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -49,10 +50,12 @@ describe("Relic 2.0 knowledge read model", () => {
         fr: "knowledge/records/requirements",
         nfr: "knowledge/records/requirements/non-functional",
         adr: "knowledge/records/decisions",
+        br: "knowledge/records/business-rules",
+        gl: "knowledge/records/glossary",
         epic: "knowledge/records/epics",
       },
     });
-    expect(project.documents).toHaveLength(8);
+    expect(project.documents).toHaveLength(10);
     expect(project.documents.map((document) => document.path)).not.toContain(
       "relic.yaml",
     );
@@ -67,6 +70,43 @@ describe("Relic 2.0 knowledge read model", () => {
       }),
     ]);
     expect(project.artifacts[0]!.searchableText).toContain("legacy session cookie");
+  });
+
+  test("discovers business rules and glossary entries as canonical records", () => {
+    const project = loadKnowledgeProject(fixture);
+    const businessRule = project.documents.find((document) => document.id === "BR-001");
+    const glossaryEntry = project.documents.find((document) => document.id === "GL-001");
+
+    expect(businessRule?.memberships).toEqual(["br"]);
+    expect(glossaryEntry?.memberships).toEqual(["gl"]);
+    expect(businessRule?.diagnostics.map((diagnostic) => diagnostic.code))
+      .not.toContain("invalid-document-id");
+    expect(glossaryEntry?.diagnostics.map((diagnostic) => diagnostic.code))
+      .not.toContain("invalid-document-id");
+  });
+
+  test("discovers project-defined record kinds without a core taxonomy change", () => {
+    const copied = copyFixture();
+    const risks = join(copied, "knowledge/records/risks");
+    mkdirSync(risks);
+    writeFileSync(
+      join(risks, "RISK-001-provider-outage.md"),
+      "---\nid: RISK-001\n---\n\n# Provider outage\n",
+      "utf8",
+    );
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}    risk: knowledge/records/risks\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.documents.find((document) => document.id === "RISK-001"))
+      .toMatchObject({ memberships: ["risk"] });
+    expect(project.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "invalid-record-kind" }),
+    );
   });
 
   test("deduplicates overlapping canonical roots into memberships", () => {
@@ -225,6 +265,25 @@ describe("Relic 2.0 knowledge read model", () => {
     expect(project.documents).toEqual([]);
     expect(project.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
       "invalid-topology",
+    );
+  });
+
+  test("rejects record keys that cannot define an unambiguous ID prefix", () => {
+    const copied = copyFixture();
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}    business-rule: knowledge/records/business-rules\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology).toBeUndefined();
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-record-kind",
+        path: "relic.yaml",
+      }),
     );
   });
 
