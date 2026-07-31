@@ -92,6 +92,16 @@ installs that engine idempotently. The current `validate`, `use`, `scan`, `conte
 `html-sync`, workflow commands, and self-upgrade behavior are classified **remove**. MCP
 is excluded from the minimal surface pending distribution evidence.
 
+The path-addressed, read-only frontend, generic document page, catalog-first navigation,
+local graph neighborhood, artifact boundary, internal API, and localized diagnostics are
+accepted in [`relic-2.0.md`](relic-2.0.md#frontend-and-local-read-surface). Typed spec
+HTML and canonical Markdown are the only semantic document grammars. Additional spec
+files remain searchable artifacts but do not become catalog or graph nodes. The current
+embedded localhost server and safe presentation components are classified **adapt**;
+the spec/fix API, ID-only routes, spec-only dashboard, fixed spec/plan/tasks tabs,
+interpreted validation summary, derived workflow data, `viewer.json`, and MCP viewer
+bridge are classified **replace/remove**.
+
 For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
 **remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,
 templates, MCP surface, packaging, and tests.
@@ -99,19 +109,23 @@ templates, MCP surface, packaging, and tests.
 ### Gate
 
 - A readiness roast reports no unresolved contradiction or blocking decision.
-- One small fixture can represent a project map, shared contract, spec HTML, FR, ADR, and
-  the relations between them without relying on Relic 1.x session or ownership state.
+- One small fixture can represent a project map, shared contract, spec HTML, searchable
+  spec artifact, FR, ADR, and the relations between canonical documents without relying
+  on Relic 1.x session or ownership state.
 
 ## 2. Build the Knowledge Read Model
 
 Implement the pure core that reads the accepted contracts:
 
 - load `.relic/RELIC.md` and the corpus roots declared by its topology;
-- discover every physical file across governance, shared knowledge, specs, and typed
-  records, deduplicating it while preserving all corpus memberships;
+- discover `RELIC.md` and canonical Markdown across governance, shared knowledge, and
+  typed records, plus one canonical typed HTML document per specification;
+- discover other files as artifacts, deduplicating them for listing and supported
+  full-text search without promoting them to document nodes;
 - normalize identities and preserve optional project metadata without interpreting its
   status vocabulary;
-- parse ordinary relative links, derive backlinks, and retain link context;
+- parse ordinary relative links only from canonical documents, derive backlinks, and
+  retain link context;
 - derive deterministic labels, catalog entries, and full-text content where supported;
 - report broken links, duplicate identities, orphan nodes, and unsupported content
   without blocking unrelated discovery;
@@ -128,15 +142,18 @@ frontend, plugin, or a particular coding agent.
 - Moving a declared corpus root exposes affected path links as repairable diagnostics.
 - Broken links produce focused diagnostics while unrelated knowledge remains readable.
 - Backlinks are derived without a manually synchronized reverse index.
-- Every fixture document remains cataloged and searchable even without graph edges.
+- Every canonical fixture document remains cataloged and searchable even without graph
+  edges.
+- A Markdown artifact inside a specification is searchable with parent context but has
+  no independent catalog node, metadata, graph edges, or backlinks.
 
 ## 3. Prove a Read-Only Vertical Slice
 
 Connect the knowledge read model to the two retained product surfaces:
 
 - search across governance, shared knowledge, specs, and typed records;
-- an exhaustive catalog and local frontend for canonical spec HTML, supporting files,
-  records, governance, shared knowledge, and attachments;
+- an exhaustive catalog and local frontend for canonical spec HTML, records, governance,
+  and shared knowledge, with spec artifacts listed separately;
 - navigation between forward references, backlinks, and related records;
 - visible orphan, duplicate-ID, unsupported-content, and broken-link diagnostics;
 - semantic rendering for flows, charts, tables, callouts, and existing reusable
@@ -151,7 +168,9 @@ that their behavior is independent from 1.x modes, manifests, sessions, and fix 
 
 - One command or development entry point opens the fixture in the frontend.
 - The same fixture is searchable without requiring agents to use search exclusively.
-- Every fixture document is browsable, including one intentionally orphaned document.
+- Every canonical fixture document is browsable, including one intentionally orphaned
+  document.
+- A textual spec artifact appears in query results but not as a canonical document page.
 - A broken relative link is visible at its source without breaking other pages.
 - A spec page reaches its FR, ADR, and shared contract in both directions.
 - No Relic 1.x workflow command is required by the vertical slice.
@@ -295,7 +314,8 @@ Move this repository itself onto the completed model:
 - create its real `.relic/RELIC.md` map;
 - retain and curate current `.relic/shared/` knowledge;
 - express current FR, NFR, ADR, and EPIC records through the living-record contract;
-- convert retained specifications to canonical 2.0 HTML with free supporting content;
+- convert retained specifications to canonical 2.0 HTML while preserving useful
+  supporting files as searchable artifacts;
 - remove stale history from the active knowledge frontier while leaving Git intact;
 - use the central skill for a real feature discussion, documentation extraction, fix,
   and compliance roast;
@@ -307,5 +327,6 @@ Move this repository itself onto the completed model:
 - The Relic repository can be understood and changed using only its 2.0 knowledge and
   skills.
 - A second agent can recover the same current context without chat history.
-- The frontend, search, and relationship graph agree on the current corpus.
+- The frontend, search, and relationship graph agree on canonical nodes and on the
+  searchable-artifact boundary.
 - No 1.x compatibility promise remains in product documentation or release artifacts.

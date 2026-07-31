@@ -138,10 +138,12 @@ particular phase.
 
 Relic metadata is required only for Relic-native knowledge: canonical specification
 HTML, FRs, NFRs, ADRs, EPICs, and addressable documents under `.relic/shared/`.
-Governance sources, specification support material, code, tests, and ordinary project
-documentation remain readable and searchable without adopting Relic metadata. Such a
-document is addressed by repository-relative path until the developer deliberately
-adopts it as Relic-native knowledge.
+Declared governance Markdown remains canonical by topology without adopting Relic
+metadata. Specification support material remains a searchable artifact addressed by
+repository-relative path rather than a canonical document node until the developer
+deliberately synthesizes or moves its knowledge into a Relic document. Code, tests, and
+ordinary project documentation outside declared topology remain available to agent-native
+exploration rather than entering the Relic corpus implicitly.
 
 The only required metadata field for native knowledge is its stable `id`. Every other
 field is optional, project-defined, and opaque to the Relic core:
@@ -209,11 +211,12 @@ development.
 ### Relationship and backlink contract
 
 Links are edges in the knowledge web, not declarations of authority, ownership, or
-hierarchy. The web spans the `RELIC.md` guide, `.relic/specs/`, `.relic/shared/`, and
-every governance or record root declared by topology; operational state elsewhere under
-`.relic/` is not included automatically. A project may enter the web through any
-document. Specifications and EPICs are common navigation entry points because they
-aggregate delivery knowledge, not because other documents are subordinate to them.
+hierarchy. The web spans the `RELIC.md` guide, each canonical specification HTML, and
+canonical Markdown discovered through `.relic/shared/` and every governance or record
+root declared by topology; spec artifacts and operational state elsewhere under
+`.relic/` are not included automatically. A project may enter the web through any
+canonical document. Specifications and EPICs are common navigation entry points because
+they aggregate delivery knowledge, not because other documents are subordinate to them.
 `RELIC.md` remains the bootstrap map for discovery.
 
 Only explicit, ordinary file links create graph edges. Authors derive their relative
@@ -231,12 +234,13 @@ paths from the current topology:
 
 Relic defines no custom link protocol and performs no ID-to-path resolution for authors.
 Standard links work in Git hosts, editors, browsers, and coding agents without a Relic
-integration. A relative link contributes an edge and backlink when its target belongs to
-the discovered knowledge corpus. External URLs remain ordinary outbound navigation.
-Plain ID mentions, code blocks, comments, search similarity, arbitrary JSON or
-JavaScript, and visual labels without an actual link do not create edges. Semantic
-visualizations that intend a relation must expose an ordinary link through their
-component contract.
+integration. A relative link in a canonical document contributes an edge and backlink
+when its target is another canonical node. A link to an artifact remains a file
+reference, and links authored inside artifacts are not graph input. External URLs remain
+ordinary outbound navigation. Plain ID mentions, code blocks, comments, search
+similarity, arbitrary JSON or JavaScript, and visual labels without an actual link do
+not create edges. Semantic visualizations that intend a relation must expose an ordinary
+link through their component contract.
 
 The read model resolves relative links from their source documents in order to derive
 the graph; this generic read-side parsing is not a responsibility imposed on the central
@@ -267,11 +271,14 @@ Each specification has its own folder, but Relic imposes no fixed internal set o
 Markdown documents. Supporting discussions, investigations, reports, references, and
 other useful material may be organized according to the needs of that specification.
 
-The one required specification artifact is its canonical HTML landing document. The HTML
-is the agent-authored synthesis of the specification's current knowledge, not a rendered
-copy that must be synchronized with a mandatory Markdown source. Supporting documents
-remain independently discoverable and searchable; information does not disappear merely
-because it has not been repeated in the landing document.
+The one required specification document is its canonical HTML landing document. The
+HTML is the agent-authored synthesis of the specification's current knowledge, not a
+rendered copy that must be synchronized with a mandatory Markdown source. It is the
+specification folder's only canonical Relic document. Other files in the folder are
+artifacts: their supported textual content remains discoverable by search, but they do
+not become catalog nodes, graph participants, backlinks, or additional rendered
+specification documents. The canonical HTML does not need to repeat artifact content
+merely to make it searchable.
 
 Agents choose semantic structures such as flows, charts, tables, callouts, progress, and
 other reusable visual components. The frontend owns their styling, colors, layout, and
@@ -467,24 +474,39 @@ techniques.
 
 ## Consultability Contract
 
-Freedom of authorship is paired with deterministic reading. The corpus contains the
-`RELIC.md` guide, declared governance sources, and files discovered under the specs,
-shared, and typed-record roots. Operational configuration, generated caches, and other
-Relic machinery are not knowledge merely because they live under `.relic/`. Supported
-text documents are indexed by content; other discovered files remain visible as
-attachments rather than silently disappearing.
+Freedom of authorship is paired with deterministic reading. Relic has two semantic
+document parsers:
 
-Every discovered physical file has one read-model node even when it has no Relic ID or
-links. Overlapping roots add memberships to that node instead of duplicating it. Every
-node is available through an exhaustive catalog organized by membership and path,
-including orphaned documents with no incoming or outgoing edges. Specs and EPICs are
-useful entry points, but no node depends on them for discovery.
+- the typed HTML parser for each specification's canonical landing document;
+- the Markdown parser for `RELIC.md`, declared governance, shared knowledge, and FR,
+  NFR, ADR, and EPIC roots.
 
-The read model derives a display label from optional metadata, document title or first
-heading, ID, and finally filename. It preserves arbitrary metadata without interpreting
-its vocabulary. Search is a core, full-text capability across the declared corpus and
-can filter or display raw memberships, paths, IDs, and metadata. Agents are never forced
-to use it as their only exploration mechanism.
+These parsed files are canonical document nodes. Other discovered files are artifacts,
+including additional Markdown or text files inside a specification folder. Supported
+text artifacts participate in query-time full-text discovery and may have snippets, but
+they are not semantically parsed into metadata, links, backlinks, or graph nodes. This
+text extraction is not a third document grammar. Binary or otherwise non-textual
+artifacts remain visible from their containing specification or corpus location without
+silently becoming knowledge documents.
+
+Operational configuration, generated caches, and other Relic machinery are not
+knowledge or searchable artifacts merely because they live under `.relic/`. Overlapping
+roots map each canonical physical document to one node with several memberships rather
+than duplicating it. Artifacts are likewise deduplicated for listing and search without
+being promoted to nodes.
+
+Every canonical node is available through an exhaustive catalog organized by membership
+and path, including orphaned documents with no incoming or outgoing edges. Specs and
+EPICs are useful entry points, but no node depends on them for discovery. Artifact search
+results identify their path, containing specification or corpus location, and matching
+snippet; they do not create an independent canonical-document page.
+
+The read model derives a document display label from optional metadata, document title
+or first heading, ID, and finally filename. It preserves arbitrary metadata without
+interpreting its vocabulary. Search is a core, full-text capability across canonical
+documents and supported textual artifacts and can display paths, memberships, IDs,
+metadata, parent context, and snippets where applicable. Agents are never forced to use
+it as their only exploration mechanism.
 
 Catalogs, graph edges, backlinks, snippets, diagnostics, and search indexes are derived
 projections. Source files remain authoritative for their own content. A cache may improve
@@ -492,6 +514,71 @@ performance but may never become the only copy of knowledge or silently return a
 incomplete corpus when stale. Broken links, duplicate IDs, unsupported content, and
 orphaned nodes remain visible, non-blocking maintenance evidence in both the read model
 and frontend.
+
+## Frontend and Local Read Surface
+
+The frontend is a disposable, read-only projection of the current read model. Source
+files remain authoritative for their own content; the frontend does not create, edit,
+renumber, repair, approve, or persist project knowledge. It has no active specification,
+active fix, document lifecycle, validity state, or resolved-diagnostic state.
+Presentation-only browser preferences such as theme and filters may remain local to the
+browser and never enter project files.
+
+Canonical navigation uses normalized repository-relative document paths rather than
+Relic IDs. IDs remain searchable labels and may route to a disambiguation result, but
+duplicate IDs cannot make a path-addressed page ambiguous. A moved document may
+therefore invalidate an old browser bookmark just as it may invalidate an authored
+relative link; no persistent route registry is maintained.
+
+The frontend consumes the core read model instead of independently interpreting source
+files. The typed HTML and Markdown parsers produce the semantic representations used for
+rendering, text discovery, metadata, links, and diagnostics. A raw-source view may show
+original content without becoming a second parser or relation source.
+
+Its primary surfaces are:
+
+- an exhaustive catalog of canonical documents, with search, memberships, paths, and
+  raw project metadata;
+- one generic document page that renders typed spec HTML or canonical Markdown and shows
+  outgoing links, backlinks, memberships, local graph neighborhood, and focused
+  diagnostics;
+- specification pages that render only the canonical typed HTML and list other folder
+  files as artifacts;
+- search results that include matching textual artifacts with their parent context and
+  snippets without presenting them as canonical documents;
+- an optional filtered global graph, while catalog and local neighborhoods remain the
+  primary navigation;
+- the semantic component reference for the installed frontend version.
+
+An artifact may be downloaded or safely previewed as raw local content, but the frontend
+does not render it as another specification document. Links inside artifacts do not
+create graph edges. A canonical document's link to an existing artifact remains a file
+reference rather than a document edge.
+
+The read model resolves authored relative links from their source files before the
+frontend renders them. It retains the original reference, resolved target, fragment,
+link text, and source context. Links to canonical nodes navigate through their
+path-addressed frontend route; missing targets receive localized chiplets; existing
+project files outside the corpus remain outside the graph and are not exposed through
+arbitrary filesystem reads.
+
+Diagnostics are maintenance evidence rather than a global valid/invalid verdict. The
+frontend presents them at the affected document or reference and may provide a global
+maintenance overview. A partially readable project still opens: when topology prevents
+catalog construction, the application shell presents the focused bootstrap diagnostic
+instead of collapsing into an opaque server error.
+
+The local API is an internal transport shipped and versioned with the frontend, not an
+independent public compatibility contract. It exposes the project summary, canonical
+catalog, path-addressed node details, search results, graph relations, diagnostics, and
+safe artifact access needed by that bundled client. It has no spec-, fix-, task-, mode-,
+or validation-specific authority.
+
+The server accepts read-only requests, binds locally by default, stores no lifecycle
+file, and reflects filesystem changes without requiring a process restart. It does not
+execute corpus scripts or automatically fetch external images, embeds, or other remote
+content. Relative images and attachments inside the discovered project boundary may be
+served safely; external URLs remain explicit user navigation.
 
 ## Minimal CLI Contract
 
@@ -582,7 +669,6 @@ mandatory development methodology.
 The following decisions are intentionally outside this conceptual baseline:
 
 - plugin and multi-engine distribution;
-- frontend and local-server implementation;
 - migration or removal of the Relic 1.x codebase.
 
 These decisions must be derived from the product model above. They may not restore a
