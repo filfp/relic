@@ -15,6 +15,8 @@ topology:
     fr: docs/requirements/functional
     nfr: docs/requirements/non-functional
     adr: docs/decisions
+    br: docs/business-rules
+    gl: docs/glossary
     epic: docs/epics
 ```
 
@@ -27,11 +29,21 @@ topology into another file. Derive authored relative links from the current loca
 - A specification synthesizes a feature or system surface in canonical `index.html`.
 - Shared knowledge stands independently and is reusable across specifications or
   records.
-- An FR captures durable functional behavior.
-- An NFR captures a durable quality or operational constraint.
+- An FR captures one user-visible goal as functional behavior with testable acceptance
+  criteria.
+- An NFR captures a quality attribute with a measurable target.
 - An ADR captures a structural decision whose rationale matters to current work.
+- A BR captures a domain invariant or policy such as an enum, cardinality, state
+  transition, temporal rule, or system boundary.
+- A GL entry fixes the project's operational meaning of a domain entity, state, enum,
+  or overloaded term whose ordinary reading would be misleading.
 - An EPIC captures coordinated delivery scope large enough to benefit from an independent
   implementation boundary.
+
+These are common meanings, not a closed taxonomy. Every lowercase key under
+`topology.records` declares another record kind whose identity prefix is the uppercase
+key. Follow project-owned definitions, authorship, and lifecycle rules when they exist;
+Relic does not infer ownership or make a record append-only.
 
 These are peer nodes in a knowledge web, not a hierarchy. Specifications and EPICs are
 common entry points because they aggregate context. No kind owns another document.
@@ -53,7 +65,10 @@ Canonical identities are case-insensitive:
 - functional requirement: `FR-001`;
 - non-functional requirement: `NFR-001`;
 - architecture decision: `ADR-001`;
+- business rule: `BR-001`;
+- glossary entry: `GL-001`;
 - implementation epic: `EPIC-001`;
+- project-declared `risk` record: `RISK-001`;
 - shared knowledge: `SHARED-auth-api`.
 
 Record filenames contain the ID and a readable slug. A specification folder is named by

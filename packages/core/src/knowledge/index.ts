@@ -25,6 +25,7 @@ export type {
   KnowledgeTopology,
   LinkStatus,
   MarkdownAstNode,
+  RecordKind,
 } from "./types.ts";
 export type {
   KnowledgeArtifactSummary,

@@ -67,11 +67,12 @@ relic.yaml
   records/
 ```
 
-The topology may point functional requirements, non-functional requirements,
-architecture decisions, and epics anywhere in the repository. Shared knowledge
-and typed records are Markdown. Every canonical specification is one typed HTML
-document; other files in its folder are searchable artifacts rather than
-canonical knowledge.
+The topology may declare any lowercase record prefix and point each kind anywhere in
+the repository. The conventional defaults are functional requirements, non-functional
+requirements, architecture decisions, business rules, glossary entries, and epics;
+projects may add or omit kinds without a Relic code change. Shared knowledge and typed
+records are Markdown. Every canonical specification is one typed HTML document; other
+files in its folder are searchable artifacts rather than canonical knowledge.
 
 Documents form a web through ordinary repository-relative links. They are
 living records: update the current document when the project's present

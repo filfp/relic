@@ -49,6 +49,11 @@ Its paths may use any project layout, including directories supplied through a
 submodule. Relic follows those paths without owning the external repository or
 requiring a `.relic` directory.
 
+Record kinds are declared by the project as lowercase identity prefixes mapped to
+Markdown roots. Relic may provide conventional defaults, but its core does not own a
+closed FR/NFR/ADR/EPIC taxonomy. A declared `br`, `gl`, `risk`, or other kind is read by
+the same deterministic path without adding parser branches or lifecycle rules.
+
 Relative links are ordinary project links derived from the current topology.
 Topology changes may require link maintenance; broken-link diagnostics make that
 work visible without a link registry or migration engine.

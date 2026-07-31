@@ -83,8 +83,9 @@ natural boundary:
 
 1. Look for an existing canonical document that should be corrected or extended.
 2. Prefer updating that document over creating duplicate knowledge.
-3. Suggest a new specification, shared document, FR, NFR, ADR, or EPIC only when the
-   knowledge has a useful independent identity.
+3. Suggest a new specification, shared document, or project-declared record only when
+   the knowledge has a useful independent identity. Common records include FR, NFR,
+   ADR, BR, GL, and EPIC.
 4. Do not repeat a declined suggestion without new evidence.
 
 Using Relic as context creates no documentation obligation. Investigations, discarded

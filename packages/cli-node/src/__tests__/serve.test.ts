@@ -86,9 +86,9 @@ describe("Relic 2.0 read-only viewer API", () => {
       "knowledge/specs/001-auth/notes.md",
     ]);
     expect(body.counts).toMatchObject({
-      documents: 8,
+      documents: 10,
       artifacts: 1,
-      orphans: 3,
+      orphans: 5,
     });
   });
 

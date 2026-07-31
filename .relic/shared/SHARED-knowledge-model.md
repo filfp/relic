@@ -5,9 +5,15 @@ id: SHARED-knowledge-model
 # Relic knowledge model
 
 The root relic.yaml is the single topology authority. It contains only the
-specification, shared, FR, NFR, ADR, and EPIC roots. It is configuration, not a
-canonical document. No engine registry, ID counter, manifest, session file, or hidden
-state participates in knowledge discovery.
+specification root, shared root, and a map of project-declared record prefixes to
+Markdown roots. It is configuration, not a canonical document. No engine registry, ID
+counter, manifest, session file, or hidden state participates in knowledge discovery.
+
+Record kinds are open rather than compiled into Relic. Conventional topology may use
+FR, NFR, ADR, BR, GL, and EPIC; a project may add or omit kinds. Each lowercase topology
+key defines the corresponding uppercase numbered identity prefix, so `br` accepts
+`BR-001` and a project-defined `risk` accepts `RISK-001`. Definitions, authorship, and
+lifecycle remain project-owned metadata and governance.
 
 Canonical nodes are:
 

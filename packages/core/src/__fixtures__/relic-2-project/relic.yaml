@@ -5,4 +5,6 @@ topology:
     fr: knowledge/records/requirements
     nfr: knowledge/records/requirements/non-functional
     adr: knowledge/records/decisions
+    br: knowledge/records/business-rules
+    gl: knowledge/records/glossary
     epic: knowledge/records/epics
