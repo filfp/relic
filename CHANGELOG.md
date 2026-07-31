@@ -9,6 +9,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-07-31
+
 ### Added
 - Relic 2.0 knowledge model with root `relic.yaml` as topology-only authority,
   living Markdown records, typed specification HTML, shared knowledge,
