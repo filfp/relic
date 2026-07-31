@@ -119,6 +119,8 @@ export function installRelicSkill(options: InstallSkillOptions): InstalledSkill 
 
   const stagingRoot = mkdtempSync(join(skillsRoot, ".relic-install-"));
   const stagedSkill = join(stagingRoot, "relic");
+  const previousSkill = join(stagingRoot, "previous");
+  let cleanupStaging = true;
   try {
     mkdirSync(stagedSkill);
     for (const [relativePath, content] of Object.entries(skillFiles)) {
@@ -126,10 +128,28 @@ export function installRelicSkill(options: InstallSkillOptions): InstalledSkill 
       ensureDir(dirname(destination));
       writeFileSync(destination, content, "utf8");
     }
-    if (existsSync(target)) rmSync(target, { recursive: true, force: true });
-    renameSync(stagedSkill, target);
+    const replacing = existsSync(target);
+    if (replacing) renameSync(target, previousSkill);
+    try {
+      renameSync(stagedSkill, target);
+    } catch (installError) {
+      if (replacing) {
+        try {
+          renameSync(previousSkill, target);
+        } catch (rollbackError) {
+          cleanupStaging = false;
+          throw new AggregateError(
+            [installError, rollbackError],
+            `Failed to install and restore the previous ${options.engine} Relic skill; recovery copy kept at ${previousSkill}`,
+          );
+        }
+      }
+      throw installError;
+    }
   } finally {
-    rmSync(stagingRoot, { recursive: true, force: true });
+    if (cleanupStaging) {
+      rmSync(stagingRoot, { recursive: true, force: true });
+    }
   }
 
   return {

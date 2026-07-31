@@ -75,6 +75,27 @@ describe("thin native engine skill adapters", () => {
     ]);
   });
 
+  test("keeps the installed skill when staging the replacement fails", () => {
+    const installed = installRelicSkill({ engine: "codex", projectDir: dir });
+    const previous = files(installed.path);
+
+    expect(() =>
+      installRelicSkill({
+        engine: "codex",
+        projectDir: dir,
+        skillFiles: {
+          "SKILL.md": "replacement",
+          collision: "file",
+          "collision/child.md": "cannot be written below a file",
+        },
+      })
+    ).toThrow();
+    expect(files(installed.path)).toEqual(previous);
+    expect(readdirSync(join(dir, ".codex", "skills")).sort()).toEqual([
+      "relic",
+    ]);
+  });
+
   test("preserves unrelated skills beside the Relic target", () => {
     const other = join(dir, ".claude", "skills", "project-skill");
     mkdirSync(other, { recursive: true });

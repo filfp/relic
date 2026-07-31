@@ -8,15 +8,15 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 
 const ROOT = join(import.meta.dir, "..");
 const NODE_BUNDLE = join(ROOT, "packages", "cli-node", "dist", "relic.js");
 const BUN_BINARY = join(ROOT, "dist", "relic");
 const SKILL_ROOT = join(ROOT, "skills", "relic");
+const TEMPORARY_PROJECTS = new Set<string>();
 
 function fail(message: string): never {
   throw new Error(`distribution test failed: ${message}`);
@@ -66,36 +66,30 @@ function expectEqual<T>(actual: T, expected: T, message: string): void {
   }
 }
 
-async function availablePort(): Promise<number> {
-  return await new Promise((resolvePort, reject) => {
-    const server = createServer();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (address === null || typeof address === "string") {
-        server.close();
-        reject(new Error("could not allocate a local test port"));
-        return;
-      }
-      server.close((error) => {
-        if (error) reject(error);
-        else resolvePort(address.port);
-      });
-    });
-  });
+async function waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {
+  if (child.exitCode !== null || child.signalCode !== null) return true;
+  return await Promise.race([
+    new Promise<boolean>((resolveExit) => {
+      child.once("exit", () => resolveExit(true));
+    }),
+    Bun.sleep(timeoutMs).then(() => false),
+  ]);
 }
 
 async function verifyViewer(projectDir: string): Promise<void> {
-  const port = await availablePort();
   const child = spawn(
     "node",
-    [NODE_BUNDLE, "serve", "--port", String(port)],
+    [NODE_BUNDLE, "serve"],
     {
       cwd: projectDir,
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
+  let stdout = "";
   let stderr = "";
+  child.stdout?.on("data", (chunk) => {
+    stdout += String(chunk);
+  });
   child.stderr?.on("data", (chunk) => {
     stderr += String(chunk);
   });
@@ -104,16 +98,20 @@ async function verifyViewer(projectDir: string): Promise<void> {
     const deadline = Date.now() + 5_000;
     let response: Response | undefined;
     while (Date.now() < deadline) {
-      try {
-        response = await fetch(`http://127.0.0.1:${port}/`);
-        if (response.ok) break;
-      } catch {
-        // The process may still be binding its localhost socket.
+      const url = stdout.match(/http:\/\/127\.0\.0\.1:\d+/)?.[0];
+      if (url) {
+        try {
+          response = await fetch(url);
+          if (response.ok) break;
+        } catch {
+          // The URL can be printed just before the socket accepts requests.
+        }
       }
+      if (child.exitCode !== null) break;
       await Bun.sleep(50);
     }
     if (!response?.ok) {
-      fail(`bundled viewer did not start on localhost\n${stderr}`);
+      fail(`bundled viewer did not start on localhost\n${stdout}\n${stderr}`);
     }
     const html = await response.text();
     if (!html.includes('<div id="root"></div>')) {
@@ -121,13 +119,12 @@ async function verifyViewer(projectDir: string): Promise<void> {
     }
   } finally {
     child.kill("SIGTERM");
-    await new Promise<void>((resolveExit) => {
-      if (child.exitCode !== null) {
-        resolveExit();
-        return;
+    if (!await waitForExit(child, 2_000)) {
+      child.kill("SIGKILL");
+      if (!await waitForExit(child, 2_000)) {
+        fail("bundled viewer process did not stop after SIGKILL");
       }
-      child.once("exit", () => resolveExit());
-    });
+    }
   }
 }
 
@@ -137,6 +134,7 @@ function verifyInstalledSkill(
   label: string,
 ): string {
   const projectDir = mkdtempSync(join(tmpdir(), `relic-${label}-`));
+  TEMPORARY_PROJECTS.add(projectDir);
   const agents = "# Project-owned agent instructions\n";
   writeFileSync(join(projectDir, "AGENTS.md"), agents);
 
@@ -187,24 +185,23 @@ function verifyInstalledSkill(
   return projectDir;
 }
 
-console.log("Building self-contained npm and Bun artifacts...");
-run("bun", ["run", "build:npm"]);
-run("bun", [
-  "build",
-  "packages/cli-node/src/bin.ts",
-  "--compile",
-  "--outfile",
-  "dist/relic",
-]);
-
-const nodeProject = verifyInstalledSkill(
-  "node",
-  [NODE_BUNDLE],
-  "node-bundle",
-);
-const binaryProject = verifyInstalledSkill(BUN_BINARY, [], "bun-binary");
-
 try {
+  console.log("Building self-contained npm and Bun artifacts...");
+  run("bun", ["run", "build:npm"]);
+  run("bun", [
+    "build",
+    "packages/cli-node/src/bin.ts",
+    "--compile",
+    "--outfile",
+    "dist/relic",
+  ]);
+
+  const nodeProject = verifyInstalledSkill(
+    "node",
+    [NODE_BUNDLE],
+    "node-bundle",
+  );
+  verifyInstalledSkill(BUN_BINARY, [], "bun-binary");
   await verifyViewer(nodeProject);
 
   const pack = JSON.parse(
@@ -230,8 +227,9 @@ try {
     fail("npm bundle still depends on the source checkout skill path");
   }
 } finally {
-  rmSync(nodeProject, { recursive: true, force: true });
-  rmSync(binaryProject, { recursive: true, force: true });
+  for (const projectDir of TEMPORARY_PROJECTS) {
+    rmSync(projectDir, { recursive: true, force: true });
+  }
 }
 
 console.log(
