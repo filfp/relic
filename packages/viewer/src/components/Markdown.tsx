@@ -82,11 +82,12 @@ function Node({
         </KnowledgeAnchor>
       );
     case "image": {
-      return node.href ? (
-        <img
-          src={artifactContentUrl(resolveRelativePath(sourcePath, node.href))}
-          alt={node.text ?? ""}
-        />
+      if (!node.href) {
+        return <span className="rl-warning">image unavailable: {node.text}</span>;
+      }
+      const resolved = resolveRelativePath(sourcePath, node.href);
+      return resolved ? (
+        <img src={artifactContentUrl(resolved)} alt={node.text ?? ""} />
       ) : (
         <span className="rl-warning">image unavailable: {node.text}</span>
       );

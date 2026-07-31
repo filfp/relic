@@ -178,8 +178,15 @@ export function artifactContentUrl(path: string, download = false): string {
   return `/api/content?${parameters.toString()}`;
 }
 
-export function resolveRelativePath(sourcePath: string, reference: string): string {
-  const base = new URL(`/project/${sourcePath}`, "https://relic.invalid");
-  const resolved = new URL(reference, base);
-  return decodeURIComponent(resolved.pathname.replace(/^\/project\//, ""));
+export function resolveRelativePath(
+  sourcePath: string,
+  reference: string,
+): string | undefined {
+  try {
+    const base = new URL(`/project/${sourcePath}`, "https://relic.invalid");
+    const resolved = new URL(reference, base);
+    return decodeURIComponent(resolved.pathname.replace(/^\/project\//, ""));
+  } catch {
+    return undefined;
+  }
 }

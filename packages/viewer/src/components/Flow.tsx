@@ -80,6 +80,7 @@ export function Flow({ source }: { source: string }) {
   const rankGap = horiz ? 150 : 90;
   const nodeGap = horiz ? 72 : 136;
   const ranks = rankNodes(nodes, edges);
+  const maxRank = Math.max(...ranks.values(), 0);
   const rankGroups = new Map<number, string[]>();
   nodes.forEach((_, id) => {
     const r = ranks.get(id) ?? 0;
@@ -90,8 +91,9 @@ export function Flow({ source }: { source: string }) {
   let svgW = 0, svgH = 0;
   rankGroups.forEach((ids, rank) => {
     ids.forEach((id, i) => {
-      const x = horiz ? rank * rankGap + 24 : i * nodeGap + 24;
-      const y = horiz ? i * nodeGap + 24 : rank * rankGap + 24;
+      const displayRank = dir === "RL" || dir === "BT" ? maxRank - rank : rank;
+      const x = horiz ? displayRank * rankGap + 24 : i * nodeGap + 24;
+      const y = horiz ? i * nodeGap + 24 : displayRank * rankGap + 24;
       pos.set(id, { x, y });
       svgW = Math.max(svgW, x + nodeW + 40);
       svgH = Math.max(svgH, y + nodeH + 60);

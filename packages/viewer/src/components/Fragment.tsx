@@ -48,7 +48,7 @@ function chartData(node: Extract<HtmlAstNode, { type: "element" }>) {
 
   const entries = descendants(node, "li")
     .map((item) => item.type === "element" ? textOf(item.children) : "")
-    .map((item) => item.match(/^(.*?)(?:\\s*[:—-]\\s*|\\s+)(-?\\d+(?:\\.\\d+)?)\\s*$/))
+    .map((item) => item.match(/^(.*?)(?:\s*[:—-]\s*|\s+)(-?\d+(?:\.\d+)?)\s*$/))
     .filter((match): match is RegExpMatchArray => match !== null);
   return {
     labels: entries.map((entry) => entry[1]!.trim()),
@@ -68,6 +68,7 @@ function reactAttributes(attributes: Record<string, string>): Record<string, unk
     else if (name === "rowspan") result.rowSpan = Number(value);
     else if (name === "datetime") result.dateTime = value;
     else if (name === "class") result.className = value;
+    else if (name === "open" || name === "reversed") result[name] = true;
     else result[name] = value;
   }
   return result;
@@ -127,10 +128,14 @@ function Element({
     if (!node.attributes.src) {
       return <span className="rl-warning">image unavailable: {node.attributes.alt ?? node.attributes.src}</span>;
     }
+    const resolved = resolveRelativePath(sourcePath, node.attributes.src);
+    if (!resolved) {
+      return <span className="rl-warning">image unavailable: invalid repository path</span>;
+    }
     return (
       <img
         {...attributes}
-        src={artifactContentUrl(resolveRelativePath(sourcePath, node.attributes.src))}
+        src={artifactContentUrl(resolved)}
         alt={node.attributes.alt ?? ""}
       />
     );
