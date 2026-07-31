@@ -14,9 +14,6 @@ def main():
         )
         sys.exit(1)
 
-    if sys.platform != "win32":
-        binary.chmod(binary.stat().st_mode | 0o111)
-
     result = subprocess.run([str(binary)] + sys.argv[1:])
     sys.exit(result.returncode)
 

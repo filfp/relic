@@ -7,8 +7,8 @@ One central skill helps coding agents challenge ideas, explore the code, and
 persist only the requirements, decisions, epics, shared knowledge, and
 specifications the developer chooses to keep.
 
-This package ships a pre-compiled native binary. The command does not require
-Node.js or a Python runtime after installation.
+This package ships a pre-compiled native binary. Its small Python launcher
+requires Python, but the Relic runtime itself does not require Node.js or Bun.
 
 ## Install
 
@@ -60,9 +60,9 @@ that already exist.
 
 | Platform | Architecture |
 |---|---|
-| Linux | x86_64, arm64 |
-| macOS | x86_64 (Intel), arm64 (Apple Silicon) |
-| Windows | x86_64 |
+| Linux glibc 2.17+ | x86_64 (SSE4.2 baseline), arm64 |
+| macOS 13+ | x86_64 (Intel), arm64 (Apple Silicon) |
+| Windows | x86_64 (SSE4.2 baseline) |
 
 ## Also available via npm
 

@@ -2,3 +2,4 @@ relic/relic
 relic/relic.exe
 dist/
 *.egg-info/
+__pycache__/
