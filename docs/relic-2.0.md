@@ -670,6 +670,8 @@ The following decisions are intentionally outside this conceptual baseline:
 
 - plugin and multi-engine distribution;
 - migration or removal of the Relic 1.x codebase.
+- self-hosting this repository before the Relic 2.0 capabilities are operational on an
+  isolated fixture or pilot.
 
 These decisions must be derived from the product model above. They may not restore a
 mandatory workflow merely to preserve an existing implementation.

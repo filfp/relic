@@ -20,6 +20,12 @@ from dictating unresolved product contracts.
 - Validate each stage with focused tests before expanding the surface.
 - Do not create backward-compatibility machinery. Migrate this repository deliberately
   after the new model works.
+- Treat this repository's current `.relic/` tree as Relic 1.x evidence throughout Stages
+  1–7. Do not convert it incrementally, use it as the 2.0 acceptance fixture, or require
+  it to satisfy contracts that the operational 2.0 product cannot yet enforce.
+- Prove 2.0 with isolated fixtures and a disposable pilot first. Self-hosting begins only
+  after the read model, search, frontend, central skill, CLI, distribution, and 1.x
+  retirement gates are green together.
 
 ## 1. Close the Relic 2.0 Contracts
 
@@ -307,9 +313,12 @@ removed workflows.
   surface.
 - Removal does not regress search, relationships, canonical HTML, or the frontend.
 
-## 8. Self-Host Relic 2.0 and Release
+## 8. Use Operational Relic 2.0 to Self-Host and Release
 
-Move this repository itself onto the completed model:
+This stage is not a prerequisite for proving the new architecture. It begins only after
+the completed 2.0 capabilities can initialize, install, search, and serve an isolated
+fixture or pilot without Relic 1.x machinery. Use that operational product to curate
+this repository onto its own model:
 
 - create its real `.relic/RELIC.md` map;
 - retain and curate current `.relic/shared/` knowledge;
@@ -320,7 +329,8 @@ Move this repository itself onto the completed model:
 - use the central skill for a real feature discussion, documentation extraction, fix,
   and compliance roast;
 - update README, installation, contribution, security, and release documentation;
-- run full automated validation plus an owner browser pass of the knowledge web.
+- run the full test, typecheck, build, packaging, and distribution checks plus an owner
+  browser pass of the knowledge web.
 
 ### Gate
 
@@ -330,3 +340,5 @@ Move this repository itself onto the completed model:
 - The frontend, search, and relationship graph agree on canonical nodes and on the
   searchable-artifact boundary.
 - No 1.x compatibility promise remains in product documentation or release artifacts.
+- No self-hosting decision required temporary compatibility or a pre-2.0 document
+  mutation path.
