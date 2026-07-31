@@ -20,10 +20,10 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
 import {
-  canonicalSkillSource,
   discoverEngines,
   ENGINE_SKILL_ROOTS,
   installRelicSkill,
+  RELIC_SKILL_FILES,
   type Engine,
 } from "../install.ts";
 
@@ -55,13 +55,12 @@ afterEach(() => {
 
 describe("thin native engine skill adapters", () => {
   test("copies the same canonical skill into every supported native root", () => {
-    const source = files(canonicalSkillSource());
     for (const engine of ["claude", "copilot", "codex"] satisfies Engine[]) {
       const installed = installRelicSkill({ engine, projectDir: dir });
       expect(installed.path).toBe(
         join(realpathSync(dir), ENGINE_SKILL_ROOTS[engine], "relic"),
       );
-      expect(files(installed.path)).toEqual(source);
+      expect(files(installed.path)).toEqual(RELIC_SKILL_FILES);
     }
   });
 
@@ -70,7 +69,7 @@ describe("thin native engine skill adapters", () => {
     writeFileSync(join(first.path, "stale.md"), "obsolete");
 
     const second = installRelicSkill({ engine: "codex", projectDir: dir });
-    expect(files(second.path)).toEqual(files(canonicalSkillSource()));
+    expect(files(second.path)).toEqual(RELIC_SKILL_FILES);
     expect(readdirSync(join(dir, ".codex", "skills")).sort()).toEqual([
       "relic",
     ]);
@@ -95,17 +94,29 @@ describe("thin native engine skill adapters", () => {
     expect(discoverEngines(dir)).toEqual(["claude", "copilot", "codex"]);
   });
 
-  test("rejects incomplete sources before modifying an engine root", () => {
-    const incomplete = join(dir, "incomplete");
-    mkdirSync(incomplete);
+  test("rejects incomplete embedded content before modifying an engine root", () => {
     expect(() =>
       installRelicSkill({
         engine: "codex",
         projectDir: dir,
-        skillSourceDir: incomplete,
+        skillFiles: {},
       })
-    ).toThrow(/source is incomplete/);
-    expect(readdirSync(dir).sort()).toEqual(["incomplete"]);
+    ).toThrow(/skill is incomplete/);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  test("rejects embedded paths that could escape the skill root", () => {
+    expect(() =>
+      installRelicSkill({
+        engine: "codex",
+        projectDir: dir,
+        skillFiles: {
+          "SKILL.md": "valid",
+          "../outside.md": "escape",
+        },
+      })
+    ).toThrow(/unsafe path/);
+    expect(readdirSync(dir)).toEqual([]);
   });
 
   test("refuses a native engine root that escapes through a symlink", () => {

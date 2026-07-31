@@ -369,6 +369,9 @@ available through the new surface.
 
 ## 6. Rebuild Distribution Around Skills
 
+> **Status:** implemented. npm and PyPI-style binaries now carry the same central skill,
+> four-command CLI, and viewer without requiring the source checkout or plugin machinery.
+
 Package the central Relic skill, living-record support, CLI, and viewer for the supported
 agents, building on the project-local adapters required by Stage 5:
 
@@ -388,6 +391,30 @@ agents, building on the project-local adapters required by Stage 5:
 - Another supported engine can consume the same repository knowledge without a different
   document layout.
 - Installation does not inject or own `AGENTS.md` or project documentation.
+
+### Evidence
+
+- `skills/relic/` is deterministically embedded as four distribution files. The
+  installer validates embedded paths and writes from that map, so neither the Node
+  bundle nor compiled Bun binaries resolve a skill path from the source checkout.
+- npm and PyPI builds now depend only on the embedded skill and viewer. The Claude plugin
+  generator was removed from the build and publication path; legacy template generation
+  remains test-only until the Stage 7 code retirement.
+- Disposable projects exercised both the Node bundle and the compiled Bun binary through
+  `init`, explicit installation for Claude, Copilot, and Codex, no-argument engine
+  discovery, and `search`. Every native root received byte-identical skill content and
+  the same `.relic/RELIC.md` corpus.
+- Those distribution trials preserved project-owned `AGENTS.md` and project knowledge
+  byte-for-byte during engine installation. The native Codex and Claude locations use
+  the same project-local discovery mechanism already exercised by this repository's
+  development skills.
+- The bundled viewer served its application shell over localhost, and `npm pack`
+  contained only the package manifest, current README, and self-contained CLI bundle.
+- The package READMEs document natural agent requests and explicit `Use Relic ...` as
+  the portable fallback when ambient invocation is unavailable.
+- `scripts/test-distribution.ts`, skill freshness checks, typecheck, and the full
+  workspace suite pass. The compiled-binary trial also caught and fixed an entrypoint
+  bug that was invisible in the Node bundle.
 
 ## 7. Retire Relic 1.x Machinery
 

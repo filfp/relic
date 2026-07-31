@@ -1,15 +1,19 @@
 import {
-  cpSync,
   existsSync,
   mkdtempSync,
+  mkdirSync,
   realpathSync,
   renameSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, isAbsolute, join, posix, resolve, sep } from "node:path";
 
-import { dirExists, ensureDir, fileExists } from "@relic/utility";
+import { dirExists, ensureDir } from "@relic/utility";
+
+import { RELIC_SKILL_FILES } from "./generated/relic-skill.ts";
+
+export { RELIC_SKILL_FILES };
 
 export type Engine = "claude" | "copilot" | "codex";
 
@@ -34,7 +38,7 @@ const ENGINE_DISCOVERY_ROOTS: Record<Engine, string> = {
 export interface InstallSkillOptions {
   engine: Engine;
   projectDir: string;
-  skillSourceDir?: string;
+  skillFiles?: Readonly<Record<string, string>>;
 }
 
 export interface InstalledSkill {
@@ -46,18 +50,29 @@ export function isEngine(value: string): value is Engine {
   return (SUPPORTED_ENGINES as readonly string[]).includes(value);
 }
 
-export function canonicalSkillSource(): string {
-  return resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../../skills/relic",
-  );
-}
-
-function validatedSkillSource(skillSourceDir: string): string {
-  if (!dirExists(skillSourceDir) || !fileExists(join(skillSourceDir, "SKILL.md"))) {
-    throw new Error(`Relic skill source is incomplete: ${skillSourceDir}`);
+function validatedSkillFiles(
+  skillFiles: Readonly<Record<string, string>>,
+): Readonly<Record<string, string>> {
+  if (typeof skillFiles["SKILL.md"] !== "string") {
+    throw new Error("Embedded Relic skill is incomplete: missing SKILL.md");
   }
-  return realpathSync(skillSourceDir);
+  for (const [path, content] of Object.entries(skillFiles)) {
+    const normalized = posix.normalize(path);
+    if (
+      path.length === 0 ||
+      path.includes("\\") ||
+      isAbsolute(path) ||
+      normalized !== path ||
+      normalized === ".." ||
+      normalized.startsWith("../")
+    ) {
+      throw new Error(`Embedded Relic skill has an unsafe path: ${path}`);
+    }
+    if (typeof content !== "string") {
+      throw new Error(`Embedded Relic skill has invalid content: ${path}`);
+    }
+  }
+  return skillFiles;
 }
 
 function isInside(root: string, target: string): boolean {
@@ -83,8 +98,8 @@ export function discoverEngines(projectDir: string): Engine[] {
 
 export function installRelicSkill(options: InstallSkillOptions): InstalledSkill {
   const projectDir = realpathSync(resolve(options.projectDir));
-  const skillSourceDir = validatedSkillSource(
-    resolve(options.skillSourceDir ?? canonicalSkillSource()),
+  const skillFiles = validatedSkillFiles(
+    options.skillFiles ?? RELIC_SKILL_FILES,
   );
   assertLocalEngineRoot(projectDir, options.engine);
 
@@ -98,13 +113,11 @@ export function installRelicSkill(options: InstallSkillOptions): InstalledSkill 
   const stagingRoot = mkdtempSync(join(skillsRoot, ".relic-install-"));
   const stagedSkill = join(stagingRoot, "relic");
   try {
-    cpSync(skillSourceDir, stagedSkill, {
-      recursive: true,
-      force: true,
-      errorOnExist: false,
-    });
-    if (!fileExists(join(stagedSkill, "SKILL.md"))) {
-      throw new Error("Staged Relic skill is incomplete");
+    mkdirSync(stagedSkill);
+    for (const [relativePath, content] of Object.entries(skillFiles)) {
+      const destination = join(stagedSkill, ...relativePath.split("/"));
+      ensureDir(dirname(destination));
+      writeFileSync(destination, content, "utf8");
     }
     if (existsSync(target)) rmSync(target, { recursive: true, force: true });
     renameSync(stagedSkill, target);

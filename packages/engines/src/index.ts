@@ -5,13 +5,13 @@ import { writeCopilot } from "./engines/copilot/index.ts";
 import { writeCodex } from "./engines/codex/index.ts";
 
 export {
-  canonicalSkillSource,
   discoverEngines,
   ENGINE_SKILL_ROOTS,
   installRelicSkill,
   isEngine,
   SUPPORTED_ENGINES,
 } from "./install.ts";
+export { RELIC_SKILL_FILES } from "./generated/relic-skill.ts";
 export type {
   Engine,
   InstalledSkill,

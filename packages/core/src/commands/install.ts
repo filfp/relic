@@ -1,7 +1,6 @@
 import { dirname, join, resolve } from "node:path";
 
 import {
-  canonicalSkillSource,
   discoverEngines,
   installRelicSkill,
   isEngine,
@@ -14,7 +13,6 @@ import { fileExists, findRelicDir } from "@relic/utility";
 export interface InstallOptions {
   engine?: string;
   projectDir?: string;
-  skillSourceDir?: string;
 }
 
 export interface InstallResult {
@@ -54,9 +52,8 @@ export async function runInstall(
     }
   }
 
-  const skillSourceDir = options.skillSourceDir ?? canonicalSkillSource();
   const installed = engines.map((engine) =>
-    installRelicSkill({ engine, projectDir, skillSourceDir })
+    installRelicSkill({ engine, projectDir })
   );
 
   console.log("Relic skill installed:");

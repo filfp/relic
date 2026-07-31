@@ -7,27 +7,27 @@
     "packages/*"
   ],
   "scripts": {
-    "build:engine-templates": "bun run scripts/embed-engine-templates.ts",
-    "build:templates": "bun run build:engine-templates && bun run scripts/embed-templates.ts && bun run build:plugin && bun run build:viewer",
-    "build:binary": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --outfile dist/relic --define 'INSTALL_CHANNEL=\"npm\"'",
-    "build:npm": "bun run build:templates && bun build packages/cli-node/src/bin.ts --target node --outfile packages/cli-node/dist/relic.js --define 'INSTALL_CHANNEL=\"npm\"' && node scripts/fix-shebang.mjs",
+    "build:skill": "bun run scripts/embed-skill.ts",
+    "build:assets": "bun run build:skill && bun run build:viewer",
+    "build:binary": "bun run build:assets && bun build packages/cli-node/src/bin.ts --compile --outfile dist/relic --define 'INSTALL_CHANNEL=\"npm\"'",
+    "build:npm": "bun run build:assets && bun build packages/cli-node/src/bin.ts --target node --outfile packages/cli-node/dist/relic.js --define 'INSTALL_CHANNEL=\"npm\"' && node scripts/fix-shebang.mjs",
     "dev": "bun run packages/cli-node/src/bin.ts",
     "dev:viewer:fixture": "bun run build:viewer && bun run scripts/serve-relic-2-fixture.ts",
     "typecheck": "tsc --noEmit",
     "publish": "bun run scripts/publish.ts",
     "publish:npm": "bun run build:npm && cd packages/cli-node && npm publish --access public",
-    "build:pypi:linux-x64": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --target bun-linux-x64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
-    "build:pypi:linux-arm64": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --target bun-linux-arm64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
-    "build:pypi:macos-x64": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --target bun-darwin-x64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
-    "build:pypi:macos-arm64": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --target bun-darwin-arm64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
-    "build:pypi:windows-x64": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --target bun-windows-x64 --outfile packages/cli-python/relic/relic.exe --define 'INSTALL_CHANNEL=\"pypi\"'",
+    "build:pypi:linux-x64": "bun run build:assets && bun build packages/cli-node/src/bin.ts --compile --target bun-linux-x64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
+    "build:pypi:linux-arm64": "bun run build:assets && bun build packages/cli-node/src/bin.ts --compile --target bun-linux-arm64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
+    "build:pypi:macos-x64": "bun run build:assets && bun build packages/cli-node/src/bin.ts --compile --target bun-darwin-x64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
+    "build:pypi:macos-arm64": "bun run build:assets && bun build packages/cli-node/src/bin.ts --compile --target bun-darwin-arm64 --outfile packages/cli-python/relic/relic --define 'INSTALL_CHANNEL=\"pypi\"'",
+    "build:pypi:windows-x64": "bun run build:assets && bun build packages/cli-node/src/bin.ts --compile --target bun-windows-x64 --outfile packages/cli-python/relic/relic.exe --define 'INSTALL_CHANNEL=\"pypi\"'",
     "test": "bun run --filter '*' test",
-    "build:plugin": "bun run scripts/build-plugin.ts",
+    "test:distribution": "bun run scripts/test-distribution.ts",
     "build:viewer": "bun run scripts/embed-viewer.ts"
   },
   "devDependencies": {
     "@types/bun": "1.3.12",
-    "typescript": "^6.0.2",
-    "@types/node": "^25.6.0"
+    "typescript": "6.0.2",
+    "@types/node": "25.6.0"
   }
 }

@@ -72,17 +72,17 @@ export async function main(argv = process.argv): Promise<void> {
 }
 
 const invokedPath = process.argv[1];
-let isMain = false;
+let isPathMain = false;
 if (invokedPath !== undefined) {
   try {
-    isMain = realpathSync(fileURLToPath(import.meta.url)) ===
+    isPathMain = realpathSync(fileURLToPath(import.meta.url)) ===
       realpathSync(invokedPath);
   } catch {
-    isMain = false;
+    isPathMain = false;
   }
 }
 
-if (isMain) {
+if (import.meta.main || isPathMain) {
   try {
     await main();
   } catch (error) {
