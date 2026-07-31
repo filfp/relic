@@ -142,11 +142,15 @@ function verifyInstalledSkill(
   run(executable, [...prefix, "init", "--dir", projectDir]);
   const relicEntry = readFileSync(join(projectDir, ".relic", "RELIC.md"), "utf8");
   const canonical = files(SKILL_ROOT);
+  const portable = Object.fromEntries(
+    Object.entries(canonical).filter(([path]) => path !== "agents/openai.yaml"),
+  );
 
   for (const [engine, root] of [
     ["claude", ".claude"],
     ["copilot", ".github"],
     ["codex", ".codex"],
+    ["agents", ".agents"],
   ] as const) {
     run(executable, [...prefix, "install", "--engine", engine], {
       cwd: projectDir,
@@ -157,13 +161,17 @@ function verifyInstalledSkill(
       "skills",
       "relic",
     );
-    expectEqual(files(installed), canonical, `${label} changed the ${engine} skill`);
+    expectEqual(
+      files(installed),
+      engine === "codex" ? canonical : portable,
+      `${label} installed the wrong ${engine} skill files`,
+    );
   }
 
   const discovered = run(executable, [...prefix, "install"], {
     cwd: projectDir,
   });
-  for (const engine of ["claude", "copilot", "codex"]) {
+  for (const engine of ["claude", "copilot", "codex", "agents"]) {
     if (!discovered.includes(`${engine}:`)) {
       fail(`${label} did not discover the existing ${engine} root`);
     }

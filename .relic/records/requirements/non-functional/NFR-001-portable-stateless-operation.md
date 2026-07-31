@@ -4,9 +4,10 @@ id: NFR-001
 
 # Portable stateless operation
 
-Relic must give Codex, Claude, Copilot, and future supported agents the same repository
-knowledge and central reasoning contract through each engine's project-local native
-skill location.
+Relic must give Codex, Claude, Copilot, standards-based agents, and future supported
+hosts the same repository knowledge and central reasoning contract through each
+project-local skill location. Portable files are shared; host-specific metadata must
+be confined to the target that owns and interprets it.
 
 Installation must not edit AGENTS.md, project documentation, or desired-state
 configuration. Explicit engine installation changes only the selected engine; discovery

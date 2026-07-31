@@ -10,13 +10,14 @@ Relic is a Bun workspace with four active implementation boundaries:
   search, and read-model projections. It has no CLI, HTTP, React, or engine dependency.
 - packages/cli-node owns the four-command CLI, project discovery, the read-only local
   HTTP boundary, and embedded viewer delivery.
-- packages/engines owns only project-local discovery and failure-safe installation of
-  the central skill from embedded distribution content.
+- packages/engines owns only project-local discovery, target-owned file selection, and
+  failure-safe installation of the central skill from embedded distribution content.
 - packages/viewer renders the core transport contract without independently parsing or
   interpreting project knowledge.
 
-skills/relic is the distribution source of truth. Engine-native copies are
-installations, never independently maintained product sources.
+skills/relic is the complete distribution source of truth. Its portable contract is
+shared by every target; optional host metadata is selected only for its owning target.
+Engine-native copies are installations, never independently maintained product sources.
 
 Use exact dependency versions and the hoisted Bun install configured at the workspace
 root. The normal validation surface is:

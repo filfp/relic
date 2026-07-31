@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { relative, resolve } from "node:path";
 
 const repositoryRoot = resolve(import.meta.dir, "../../../..");
 const skillRoot = resolve(repositoryRoot, "skills/relic");
@@ -18,6 +18,23 @@ const openAiMetadata = readFileSync(
   "utf8",
 );
 const normalizedSkill = skill.replaceAll(/\s+/g, " ");
+
+function files(root: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const visit = (directory: string): void => {
+    for (const name of readdirSync(directory).sort()) {
+      const path = resolve(directory, name);
+      if (statSync(path).isDirectory()) {
+        visit(path);
+      } else {
+        result[relative(root, path).replaceAll("\\", "/")] =
+          readFileSync(path, "utf8");
+      }
+    }
+  };
+  visit(root);
+  return result;
+}
 
 describe("central Relic skill distribution source", () => {
   test("is one portable skill without executable workflow machinery", () => {
@@ -107,9 +124,28 @@ describe("central Relic skill distribution source", () => {
     );
   });
 
-  test("ships optional Codex UI metadata without making it the skill authority", () => {
+  test("ships Codex-owned UI metadata without making it portable authority", () => {
     expect(openAiMetadata).toContain('display_name: "Relic"');
     expect(openAiMetadata).toContain("Use $relic");
     expect(skill).not.toContain("agents/openai.yaml");
+  });
+
+  test("keeps self-hosted installs aligned with their target contracts", () => {
+    const canonical = files(skillRoot);
+    const portable = Object.fromEntries(
+      Object.entries(canonical).filter(
+        ([path]) => path !== "agents/openai.yaml",
+      ),
+    );
+
+    expect(files(resolve(repositoryRoot, ".codex/skills/relic"))).toEqual(
+      canonical,
+    );
+    expect(files(resolve(repositoryRoot, ".agents/skills/relic"))).toEqual(
+      portable,
+    );
+    expect(files(resolve(repositoryRoot, ".claude/skills/relic"))).toEqual(
+      portable,
+    );
   });
 });

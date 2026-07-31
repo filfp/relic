@@ -46,9 +46,20 @@ describe("Relic install command", () => {
       .toBe(true);
     expect(existsSync(join(dir, ".claude"))).toBe(false);
     expect(existsSync(join(dir, ".github"))).toBe(false);
+    expect(existsSync(join(dir, ".agents"))).toBe(false);
     expect(readFileSync(join(dir, "AGENTS.md"), "utf8")).toBe(agents);
     expect(existsSync(join(dir, ".relic", "config.yaml"))).toBe(false);
     expect(existsSync(join(dir, ".relic", "config.json"))).toBe(false);
+  });
+
+  test("agents engine installs only the portable skill in .agents", async () => {
+    const result = await runInstall({ engine: "agents", projectDir: dir });
+    const skill = join(dir, ".agents", "skills", "relic");
+
+    expect(result.installed.map((item) => item.engine)).toEqual(["agents"]);
+    expect(existsSync(join(skill, "SKILL.md"))).toBe(true);
+    expect(existsSync(join(skill, "agents", "openai.yaml"))).toBe(false);
+    expect(existsSync(join(dir, ".codex"))).toBe(false);
   });
 
   test("no argument refreshes every detected native engine root", async () => {
@@ -80,6 +91,7 @@ describe("Relic install command", () => {
     expect(existsSync(join(dir, ".codex"))).toBe(false);
     expect(existsSync(join(dir, ".claude"))).toBe(false);
     expect(existsSync(join(dir, ".github"))).toBe(false);
+    expect(existsSync(join(dir, ".agents"))).toBe(false);
   });
 
   test("requires the 2.0 project entry instead of adopting a legacy tree", async () => {

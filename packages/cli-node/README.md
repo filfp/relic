@@ -27,10 +27,11 @@ relic init
 relic install --engine codex
 ```
 
-Supported engines are `claude`, `copilot`, and `codex`. Installation copies the
-same Relic skill into that engine's project-local native skill directory. It
-does not create or edit `AGENTS.md`, application documentation, or agent-owned
-configuration.
+Supported engines are `claude`, `copilot`, `codex`, and `agents`. The `codex`
+target installs in `.codex/skills`; the portable `agents` target installs in
+`.agents/skills`. Every target receives the same reasoning contract, while
+host-specific metadata stays with its host. Installation does not create or edit
+`AGENTS.md`, application documentation, or agent-owned configuration.
 
 Then ask the agent naturally:
 
@@ -46,7 +47,7 @@ above is the portable fallback across supported agents.
 | Command | Purpose |
 |---|---|
 | `relic init [--dir path]` | Create the minimal `.relic/` knowledge foundation |
-| `relic install [--engine claude\|copilot\|codex]` | Install or refresh the central skill |
+| `relic install [--engine claude\|copilot\|codex\|agents]` | Install or refresh the central skill |
 | `relic search <query...> [--json]` | Search the complete current Relic corpus |
 | `relic serve [--port number]` | Open the read-only interactive knowledge viewer |
 

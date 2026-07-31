@@ -45,6 +45,14 @@ function files(root: string): Record<string, string> {
   return result;
 }
 
+function portableSkillFiles(): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(RELIC_SKILL_FILES).filter(
+      ([path]) => path !== "agents/openai.yaml",
+    ),
+  );
+}
+
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "relic-engine-install-"));
 });
@@ -54,23 +62,33 @@ afterEach(() => {
 });
 
 describe("thin native engine skill adapters", () => {
-  test("copies the same canonical skill into every supported native root", () => {
-    for (const engine of ["claude", "copilot", "codex"] satisfies Engine[]) {
+  test("installs the portable skill and confines OpenAI metadata to codex", () => {
+    const portableFiles = portableSkillFiles();
+    for (const engine of [
+      "claude",
+      "copilot",
+      "codex",
+      "agents",
+    ] satisfies Engine[]) {
       const installed = installRelicSkill({ engine, projectDir: dir });
       expect(installed.path).toBe(
         join(realpathSync(dir), ENGINE_SKILL_ROOTS[engine], "relic"),
       );
-      expect(files(installed.path)).toEqual(RELIC_SKILL_FILES);
+      expect(files(installed.path)).toEqual(
+        engine === "codex" ? RELIC_SKILL_FILES : portableFiles,
+      );
     }
   });
 
-  test("refresh is idempotent and removes stale Relic-owned files", () => {
-    const first = installRelicSkill({ engine: "codex", projectDir: dir });
+  test("refresh removes stale and host-inapplicable Relic files", () => {
+    const first = installRelicSkill({ engine: "claude", projectDir: dir });
     writeFileSync(join(first.path, "stale.md"), "obsolete");
+    mkdirSync(join(first.path, "agents"));
+    writeFileSync(join(first.path, "agents", "openai.yaml"), "stale metadata");
 
-    const second = installRelicSkill({ engine: "codex", projectDir: dir });
-    expect(files(second.path)).toEqual(RELIC_SKILL_FILES);
-    expect(readdirSync(join(dir, ".codex", "skills")).sort()).toEqual([
+    const second = installRelicSkill({ engine: "claude", projectDir: dir });
+    expect(files(second.path)).toEqual(portableSkillFiles());
+    expect(readdirSync(join(dir, ".claude", "skills")).sort()).toEqual([
       "relic",
     ]);
   });
@@ -108,11 +126,17 @@ describe("thin native engine skill adapters", () => {
   test("discovers only existing project-local engine roots", () => {
     mkdirSync(join(dir, ".claude"));
     mkdirSync(join(dir, ".codex"));
+    mkdirSync(join(dir, ".agents", "skills"), { recursive: true });
     mkdirSync(join(dir, ".github"));
-    expect(discoverEngines(dir)).toEqual(["claude", "codex"]);
+    expect(discoverEngines(dir)).toEqual(["claude", "codex", "agents"]);
 
     mkdirSync(join(dir, ".github", "skills"));
-    expect(discoverEngines(dir)).toEqual(["claude", "copilot", "codex"]);
+    expect(discoverEngines(dir)).toEqual([
+      "claude",
+      "copilot",
+      "codex",
+      "agents",
+    ]);
   });
 
   test("rejects incomplete embedded content before modifying an engine root", () => {

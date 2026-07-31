@@ -14,24 +14,33 @@ import { RELIC_SKILL_FILES } from "./generated/relic-skill.ts";
 
 export { RELIC_SKILL_FILES };
 
-export type Engine = "claude" | "copilot" | "codex";
+export type Engine = "claude" | "copilot" | "codex" | "agents";
 
 export const SUPPORTED_ENGINES: readonly Engine[] = [
   "claude",
   "copilot",
   "codex",
+  "agents",
 ];
 
 export const ENGINE_SKILL_ROOTS: Record<Engine, string> = {
   claude: ".claude/skills",
   copilot: ".github/skills",
   codex: ".codex/skills",
+  agents: ".agents/skills",
 };
 
 const ENGINE_DISCOVERY_ROOTS: Record<Engine, string> = {
   claude: ".claude",
   copilot: ".github/skills",
   codex: ".codex",
+  agents: ".agents/skills",
+};
+
+const ENGINE_ONLY_SKILL_FILES: Readonly<
+  Record<string, readonly Engine[]>
+> = {
+  "agents/openai.yaml": ["codex"],
 };
 
 export interface InstallSkillOptions {
@@ -82,6 +91,18 @@ function validatedSkillFiles(
   return skillFiles;
 }
 
+function skillFilesForEngine(
+  engine: Engine,
+  skillFiles: Readonly<Record<string, string>>,
+): Readonly<Record<string, string>> {
+  return Object.fromEntries(
+    Object.entries(skillFiles).filter(([path]) => {
+      const owners = ENGINE_ONLY_SKILL_FILES[path];
+      return owners === undefined || owners.includes(engine);
+    }),
+  );
+}
+
 function isInside(root: string, target: string): boolean {
   return target === root || target.startsWith(`${root}${sep}`);
 }
@@ -105,8 +126,9 @@ export function discoverEngines(projectDir: string): Engine[] {
 
 export function installRelicSkill(options: InstallSkillOptions): InstalledSkill {
   const projectDir = realpathSync(resolve(options.projectDir));
-  const skillFiles = validatedSkillFiles(
-    options.skillFiles ?? RELIC_SKILL_FILES,
+  const skillFiles = skillFilesForEngine(
+    options.engine,
+    validatedSkillFiles(options.skillFiles ?? RELIC_SKILL_FILES),
   );
   assertLocalEngineRoot(projectDir, options.engine);
 
