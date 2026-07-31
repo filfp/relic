@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 
 import {
   artifactRoute,
@@ -21,13 +20,13 @@ export function KnowledgeAnchor({
   switch (relation.status) {
     case "canonical":
       return relation.targetPath ? (
-        <Link to={`${documentRoute(relation.targetPath)}${relation.fragment ? `#${relation.fragment}` : ""}`}>
+        <a href={`${documentRoute(relation.targetPath)}${relation.fragment ? `#${relation.fragment}` : ""}`}>
           {children}
-        </Link>
+        </a>
       ) : <>{children}</>;
     case "artifact":
       return relation.resolvedPath ? (
-        <Link to={artifactRoute(relation.resolvedPath)}>{children}</Link>
+        <a href={artifactRoute(relation.resolvedPath)}>{children}</a>
       ) : <>{children}</>;
     case "external":
       return (

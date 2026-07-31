@@ -1,61 +1,74 @@
 name: Tag release
 
 on:
-  push:
+  pull_request:
     branches:
       - main
+    types:
+      - closed
 
 permissions: {}
 
 jobs:
   tag:
-    name: Create release tag on version bump
+    name: Tag merged release branch
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
       actions: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 2
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
 
-      - name: Detect version bump and push tag
+      - name: Validate release contract and push tag
         id: tag
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
-          prev=$(git show HEAD~1:packages/cli-node/package.json 2>/dev/null \
-            | grep '"version"' \
-            | sed 's/.*"version": *"\([^"]*\)".*/\1/' || echo "")
-          curr=$(grep '"version"' packages/cli-node/package.json \
-            | sed 's/.*"version": *"\([^"]*\)".*/\1/')
-
-          if [ -z "$curr" ]; then
-            echo "Could not read current version — skipping."
-            echo "tag=" >> "$GITHUB_OUTPUT"
-            exit 0
+          release="${HEAD_REF#release/v}"
+          if [[ ! "$release" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-(npm|pypi))?$ ]]; then
+            echo "Invalid release branch: $HEAD_REF" >&2
+            exit 1
           fi
 
-          if [ "$prev" = "$curr" ]; then
-            echo "No version bump detected (both at $curr) — skipping."
-            echo "tag=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          version="${BASH_REMATCH[1]}"
+          target="${BASH_REMATCH[3]}"
+          tag="v${release}"
+          npm_version=$(node -p "require('./packages/cli-node/package.json').version")
+          root_version=$(node -p "require('./package.json').version")
+          python_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' packages/cli-python/pyproject.toml)
+          binary_version=$(sed -n 's/^const VERSION = "\([^"]*\)";/\1/p' packages/cli-node/src/bin.ts)
+          module_version=$(sed -n 's/^__version__ = "\([^"]*\)"/\1/p' packages/cli-python/relic/__init__.py)
 
-          tag="v${curr}"
-          echo "Version bumped: $prev → $curr. Creating tag $tag."
+          if [[ "$npm_version" != "$version" || "$root_version" != "$version" || "$python_version" != "$version" || "$binary_version" != "$version" || "$module_version" != "$version" ]]; then
+            echo "Release branch $HEAD_REF does not match package versions" >&2
+            exit 1
+          fi
+          if ! grep -Fq "## [$version]" CHANGELOG.md; then
+            echo "CHANGELOG.md has no ## [$version] release entry" >&2
+            exit 1
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$tag"
+          git tag "$tag" "$MERGE_SHA"
           git push origin "$tag"
-          echo "Tag $tag pushed."
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "target=$target" >> "$GITHUB_OUTPUT"
 
-      - name: Dispatch publish workflows
-        if: steps.tag.outputs.tag != ''
+      - name: Dispatch selected publish workflows
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          TARGET: ${{ steps.tag.outputs.target }}
         run: |
-          tag="${{ steps.tag.outputs.tag }}"
-          gh workflow run publish-npm.yml --ref "refs/tags/${tag}"
-          gh workflow run publish-pypi.yml --ref "refs/tags/${tag}"
-          echo "Dispatched publish-npm.yml and publish-pypi.yml at ${tag}."
+          if [[ -z "$TARGET" || "$TARGET" == "npm" ]]; then
+            gh workflow run publish-npm.yml --ref "refs/tags/$TAG"
+          fi
+          if [[ -z "$TARGET" || "$TARGET" == "pypi" ]]; then
+            gh workflow run publish-pypi.yml --ref "refs/tags/$TAG"
+          fi

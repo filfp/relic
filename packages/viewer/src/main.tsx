@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { App } from "./App";
+import { pathFromRoute } from "./api";
 import { ArtifactPage } from "./pages/ArtifactPage";
 import { Catalog } from "./pages/Catalog";
 import { Components } from "./pages/Components";
@@ -9,23 +9,23 @@ import { DocumentPage } from "./pages/DocumentPage";
 import { Maintenance } from "./pages/Maintenance";
 import "./theme.css";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-    children: [
-      { index: true, element: <Catalog /> },
-      { path: "document/*", element: <DocumentPage /> },
-      { path: "artifact/*", element: <ArtifactPage /> },
-      { path: "maintenance", element: <Maintenance /> },
-      { path: "components", element: <Components /> },
-      { path: "*", element: <Navigate to="/" replace /> },
-    ],
-  },
-]);
+const pathname = window.location.pathname;
+const documentPath = pathFromRoute(pathname, "/document/");
+const artifactPath = pathFromRoute(pathname, "/artifact/");
+
+let page;
+if (pathname === "/") page = <Catalog />;
+else if (documentPath) page = <DocumentPage path={documentPath} />;
+else if (artifactPath) page = <ArtifactPage path={artifactPath} />;
+else if (pathname === "/maintenance") page = <Maintenance />;
+else if (pathname === "/components") page = <Components />;
+else {
+  window.history.replaceState(null, "", "/");
+  page = <Catalog />;
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <App currentPath={window.location.pathname}>{page}</App>
   </StrictMode>
 );

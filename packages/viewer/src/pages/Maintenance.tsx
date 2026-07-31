@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 import {
   documentRoute,
@@ -43,7 +42,7 @@ export function Maintenance() {
                 <Chip>{diagnostic.severity}</Chip>
                 <strong>{diagnostic.code}</strong>
                 {diagnostic.path && project.documents.some((document) => document.path === diagnostic.path) ? (
-                  <Link to={documentRoute(diagnostic.path)}>{diagnostic.path}</Link>
+                  <a href={documentRoute(diagnostic.path)}>{diagnostic.path}</a>
                 ) : diagnostic.path ? <code>{diagnostic.path}</code> : null}
               </div>
               <p>{diagnostic.message}</p>

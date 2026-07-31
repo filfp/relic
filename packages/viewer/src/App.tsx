@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
 
-export function App() {
+export function App({
+  currentPath,
+  children,
+}: {
+  currentPath: string;
+  children: ReactNode;
+}) {
   const [theme, setTheme] = useState(
     () =>
       localStorage.getItem("relic-theme") ??
@@ -16,18 +21,18 @@ export function App() {
   return (
     <>
       <header className="rl-header">
-        <Link to="/" className="brand">relic</Link>
+        <a href="/" className="brand">relic</a>
         <span className="title">Knowledge frontier</span>
         <nav>
-          <NavLink to="/" end className={({ isActive }) => `rl-btn${isActive ? " active" : ""}`}>
+          <a href="/" className={`rl-btn${currentPath === "/" ? " active" : ""}`}>
             catalog
-          </NavLink>
-          <NavLink to="/maintenance" className={({ isActive }) => `rl-btn${isActive ? " active" : ""}`}>
+          </a>
+          <a href="/maintenance" className={`rl-btn${currentPath === "/maintenance" ? " active" : ""}`}>
             maintenance
-          </NavLink>
-          <NavLink to="/components" className={({ isActive }) => `rl-btn${isActive ? " active" : ""}`}>
+          </a>
+          <a href="/components" className={`rl-btn${currentPath === "/components" ? " active" : ""}`}>
             components
-          </NavLink>
+          </a>
         </nav>
         <button
           className="rl-btn"
@@ -38,7 +43,7 @@ export function App() {
         </button>
       </header>
       <main className="rl-main">
-        <Outlet />
+        {children}
       </main>
     </>
   );

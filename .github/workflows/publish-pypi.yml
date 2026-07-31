@@ -12,6 +12,8 @@ jobs:
   build-wheels:
     if: "!endsWith(github.ref_name, '-npm')"
     runs-on: ${{ matrix.runs_on }}
+    permissions:
+      contents: read
     defaults:
       run:
         shell: bash
@@ -39,13 +41,13 @@ jobs:
             binary: relic.exe
             runs_on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.3.14"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
 
@@ -84,7 +86,7 @@ jobs:
           python -m pip install --force-reinstall dist/*.whl
           python -m relic --version
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: wheel-${{ matrix.platform_tag }}
           path: dist/*.whl
@@ -95,7 +97,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: wheel-*
           merge-multiple: true
@@ -104,4 +106,4 @@ jobs:
       - name: List wheels
         run: ls -lh dist/
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1

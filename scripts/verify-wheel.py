@@ -37,6 +37,11 @@ with ZipFile(wheel) as archive:
 
     if not any(name.endswith(".dist-info/licenses/LICENSE") for name in names):
         fail("wheel does not contain the project license")
+    if not any(
+        name.endswith(".dist-info/licenses/THIRD_PARTY_NOTICES.md")
+        for name in names
+    ):
+        fail("wheel does not contain third-party notices")
 
     if not platform_tag.startswith("win"):
         mode = archive.getinfo(binary_name).external_attr >> 16

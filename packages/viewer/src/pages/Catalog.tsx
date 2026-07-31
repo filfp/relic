@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 
 import {
   artifactRoute,
@@ -14,7 +13,7 @@ import { Callout, Chip } from "../components/bits";
 
 function DocumentCard({ document }: { document: DocumentSummary }) {
   return (
-    <Link to={documentRoute(document.path)} className="rl-document-card">
+    <a href={documentRoute(document.path)} className="rl-document-card">
       <div className="row">
         {document.id && <Chip color="blue">{document.id}</Chip>}
         {document.memberships.map((membership) => (
@@ -29,7 +28,7 @@ function DocumentCard({ document }: { document: DocumentSummary }) {
       <span className="subtle">
         {document.outgoing} outgoing · {document.backlinks} backlinks
       </span>
-    </Link>
+    </a>
   );
 }
 
@@ -38,7 +37,7 @@ function Result({ result }: { result: SearchResult }) {
     ? documentRoute(result.path)
     : artifactRoute(result.path);
   return (
-    <Link to={route} className="rl-search-result">
+    <a href={route} className="rl-search-result">
       <div className="row">
         <Chip color={result.type === "document" ? "blue" : "purple"}>{result.type}</Chip>
         {"id" in result && result.id && <Chip>{result.id}</Chip>}
@@ -46,7 +45,7 @@ function Result({ result }: { result: SearchResult }) {
       </div>
       {"label" in result && <strong>{result.label}</strong>}
       <p>{result.snippet}</p>
-    </Link>
+    </a>
   );
 }
 

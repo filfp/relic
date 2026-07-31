@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { HtmlAstNode, MarkdownAstNode } from "../api";
-import { resolveRelativePath } from "../api";
+import { pathFromRoute, resolveRelativePath } from "../api";
 import { Flow } from "../components/Flow";
 import { Fragment } from "../components/Fragment";
 import { Markdown } from "../components/Markdown";
@@ -103,5 +103,14 @@ describe("Relic viewer content rendering", () => {
     );
     expect(markup).toContain("image unavailable: broken image");
     expect(markup).not.toContain("<img");
+  });
+
+  test("decodes shareable knowledge routes without throwing", () => {
+    expect(pathFromRoute(
+      "/document/knowledge/specs/001-auth/index.html",
+      "/document/",
+    )).toBe("knowledge/specs/001-auth/index.html");
+    expect(pathFromRoute("/artifact/%", "/artifact/")).toBeUndefined();
+    expect(pathFromRoute("/document/", "/document/")).toBeUndefined();
   });
 });

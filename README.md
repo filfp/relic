@@ -89,7 +89,7 @@ that already exist.
 Relic uses Bun with hoisted workspace dependencies.
 
 ```bash
-bun install
+bun install --frozen-lockfile
 bun run build:assets
 bun run typecheck
 bun run test

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
 
 import {
   artifactContentUrl,
@@ -9,8 +8,7 @@ import {
 } from "../api";
 import { Callout, Chip } from "../components/bits";
 
-export function ArtifactPage() {
-  const path = useParams()["*"] ?? "";
+export function ArtifactPage({ path }: { path: string }) {
   const [view, setView] = useState<ArtifactView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +23,7 @@ export function ArtifactPage() {
 
   return (
     <>
-      <Link to="/" className="rl-back">← catalog</Link>
+      <a href="/" className="rl-back">← catalog</a>
       <div className="rl-page-heading">
         <div>
           <p className="rl-eyebrow">Searchable specification artifact</p>
@@ -43,7 +41,7 @@ export function ArtifactPage() {
         <h2>Parent specifications</h2>
         <ul>
           {view.parents.map((parent) => (
-            <li key={parent.path}><Link to={documentRoute(parent.path)}>{parent.label}</Link></li>
+            <li key={parent.path}><a href={documentRoute(parent.path)}>{parent.label}</a></li>
           ))}
         </ul>
       </section>

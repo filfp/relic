@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
 
 import {
   artifactRoute,
@@ -42,8 +41,7 @@ function Outgoing({ link }: { link: KnowledgeLink }) {
   );
 }
 
-export function DocumentPage() {
-  const path = useParams()["*"] ?? "";
+export function DocumentPage({ path }: { path: string }) {
   const [view, setView] = useState<DocumentView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +57,7 @@ export function DocumentPage() {
   const { document } = view;
   return (
     <>
-      <Link to="/" className="rl-back">← catalog</Link>
+      <a href="/" className="rl-back">← catalog</a>
       <div className="rl-page-heading">
         <div>
           <p className="rl-eyebrow">{document.format}</p>
@@ -105,7 +103,7 @@ export function DocumentPage() {
               <ul>
                 {document.backlinks.map((backlink) => (
                   <li key={backlink.sourcePath}>
-                    <Link to={documentRoute(backlink.sourcePath)}>{backlink.text || backlink.sourcePath}</Link>
+                    <a href={documentRoute(backlink.sourcePath)}>{backlink.text || backlink.sourcePath}</a>
                     <code className="rl-path">{backlink.sourcePath}</code>
                   </li>
                 ))}
@@ -120,13 +118,13 @@ export function DocumentPage() {
           <h2>Specification artifacts</h2>
           <div className="rl-catalog">
             {view.artifacts.map((artifact) => (
-              <Link key={artifact.path} to={artifactRoute(artifact.path)} className="rl-document-card">
+              <a key={artifact.path} href={artifactRoute(artifact.path)} className="rl-document-card">
                 <div className="row">
                   <Chip color="purple">artifact</Chip>
                   <Chip>{artifact.mediaType}</Chip>
                 </div>
                 <code className="rl-path">{artifact.path}</code>
-              </Link>
+              </a>
             ))}
           </div>
         </section>

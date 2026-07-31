@@ -215,7 +215,13 @@ try {
   const packagedFiles = pack[0]?.files.map((file) => file.path).sort();
   expectEqual(
     packagedFiles,
-    ["README.md", "dist/relic.js", "package.json"],
+    [
+      "LICENSE",
+      "README.md",
+      "THIRD_PARTY_NOTICES.md",
+      "dist/relic.js",
+      "package.json",
+    ],
     "npm package contains an unexpected file set",
   );
 

@@ -162,6 +162,20 @@ export function artifactRoute(path: string): string {
   return `/artifact/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+export function pathFromRoute(
+  pathname: string,
+  prefix: "/document/" | "/artifact/",
+): string | undefined {
+  if (!pathname.startsWith(prefix)) return undefined;
+  const encoded = pathname.slice(prefix.length);
+  if (encoded === "") return undefined;
+  try {
+    return encoded.split("/").map(decodeURIComponent).join("/");
+  } catch {
+    return undefined;
+  }
+}
+
 export const fetchProject = () => get<ProjectView>("/api/project");
 export const fetchDocument = (path: string) =>
   get<DocumentView>(`/api/document?${query(path)}`);
