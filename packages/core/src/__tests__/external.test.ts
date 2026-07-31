@@ -182,10 +182,9 @@ describe("relic external list", () => {
   });
 });
 
-describe("context/validate/init external extensions", () => {
+describe("legacy context/validate external extensions", () => {
   const { runContext } = require("../commands/context.ts");
   const { runValidate } = require("../commands/validate.ts");
-  const { runInit } = require("../commands/init.ts");
 
   async function captureJson(fn: () => Promise<void>): Promise<any> {
     const logs: string[] = [];
@@ -249,21 +248,4 @@ describe("context/validate/init external extensions", () => {
     expect(result.valid).toBe(true);
   });
 
-  test("relic init --external-<type> writes config.external", async () => {
-    const freshDir = mkdtempSync(join(tmpdir(), "relic-init-external-"));
-    try {
-      const logs: string[] = [];
-      const orig = console.log;
-      console.log = (msg: string) => logs.push(String(msg));
-      try {
-        await runInit({ dir: freshDir, force: false, engines: [], external: { fr: "./specs/fr", adr: "./docs/adr" } });
-      } finally {
-        console.log = orig;
-      }
-      const config = JSON.parse(readFileSync(join(freshDir, ".relic", "config.json"), "utf8"));
-      expect(config.external).toEqual({ fr: "./specs/fr", adr: "./docs/adr" });
-    } finally {
-      rmSync(freshDir, { recursive: true, force: true });
-    }
-  });
 });

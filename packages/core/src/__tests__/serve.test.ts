@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { join } from "node:path";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 
 import { resolveViewerRequest } from "../commands/serve.ts";
 
@@ -15,6 +16,27 @@ function json<T>(path: string, method = "GET"): T {
   const response = request(path, method);
   expect(response.contentType).toContain("application/json");
   return JSON.parse(String(response.body)) as T;
+}
+
+function snapshot(root: string): Array<[string, string, number]> {
+  const entries: Array<[string, string, number]> = [];
+  const visit = (path: string) => {
+    for (const name of readdirSync(path).sort()) {
+      const child = join(path, name);
+      const stat = statSync(child);
+      if (stat.isDirectory()) {
+        visit(child);
+      } else {
+        entries.push([
+          relative(root, child),
+          readFileSync(child).toString("base64"),
+          stat.mtimeMs,
+        ]);
+      }
+    }
+  };
+  visit(root);
+  return entries;
 }
 
 describe("Relic 2.0 read-only viewer API", () => {
@@ -112,5 +134,12 @@ describe("Relic 2.0 read-only viewer API", () => {
       request(`/api/document?path=${encodeURIComponent("missing.md")}`).status,
     ).toBe(404);
     expect(request("/api/unknown").status).toBe(404);
+  });
+
+  test("stores no viewer or process state while serving the read model", () => {
+    const before = snapshot(fixture);
+    expect(request("/api/project").status).toBe(200);
+    expect(request("/api/search?q=authentication").status).toBe(200);
+    expect(snapshot(fixture)).toEqual(before);
   });
 });

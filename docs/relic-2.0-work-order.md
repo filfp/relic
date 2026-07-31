@@ -1,6 +1,6 @@
 # Relic 2.0 — Ordered Work Program
 
-> **Status:** active execution order; Stages 1–4 implemented, 2026-07-30
+> **Status:** active execution order; Stages 1–5 implemented, 2026-07-30
 > **Source:** [`relic-2.0.md`](relic-2.0.md)
 
 This document orders the design and implementation of Relic 2.0. It is not the old
@@ -300,6 +300,10 @@ fixed templates, and requirement to retain superseded files in active documentat
 
 ## 5. Replace the CLI Surface
 
+> **Status:** implemented. The four-command CLI, minimal initializer, project-local skill
+> installation, exhaustive search, and stateless viewer satisfy this stage's gate while
+> legacy internals remain isolated for the Stage 7 retirement.
+
 Implement only the four commands approved in Stage 1. The CLI provides deterministic
 initialization, engine-skill installation, search, and frontend operations; it must not
 orchestrate how the agent thinks or expose diagnostics as a separate validation
@@ -340,6 +344,28 @@ available through the new surface.
 - `search` and `serve` do not mutate project knowledge.
 - The accepted command surface contains no validation command or cognitive workflow
   stages.
+
+### Evidence
+
+- `relic --help` exposes only `init`, `install`, `search`, and `serve`, plus ordinary
+  help and version conventions; the direct-model debug entry point was removed.
+- `init` writes only `.relic/RELIC.md`, `.relic/specs/`, and `.relic/shared/`, refuses
+  to merge with an existing Relic tree, and leaves project-owned `AGENTS.md` unchanged.
+- `install` copies the one canonical `skills/relic/` tree into `.claude/skills/relic`,
+  `.codex/skills/relic`, or `.github/skills/relic`. Explicit installation touches only
+  the selected engine; discovery refreshes all existing native roots without a desired
+  state file.
+- Engine refresh removes stale Relic-owned files, preserves neighboring project skills,
+  and refuses native roots that escape the repository through a symbolic link.
+- `search` queries the complete read model and emits human or JSON projections without
+  manifest migration, scope flags, or project writes.
+- `serve` binds localhost without writing a port, process identity, or viewer state. It
+  reuses the read-only API and bundled frontend proven in Stage 3.
+- Focused command, adapter, CLI-surface, and non-mutation tests pass. A disposable clean
+  project completed `init → install --engine codex → search → serve`; its catalog and app
+  shell responded over HTTP.
+- The CLI source and Node bundle both execute the four-command help surface. Cross-engine
+  package embedding remains intentionally assigned to Stage 6.
 
 ## 6. Rebuild Distribution Around Skills
 

@@ -10,6 +10,9 @@
     "dist/relic.js",
     "README.md"
   ],
+  "scripts": {
+    "test": "bun test src/__tests__"
+  },
   "devDependencies": {
     "@relic/core": "workspace:*",
     "@relic/utility": "workspace:*",

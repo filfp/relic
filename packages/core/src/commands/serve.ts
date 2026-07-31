@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import type { AddressInfo } from "node:net";
 import {
   readFileSync,
   realpathSync,
@@ -24,7 +25,6 @@ import {
 
 export interface ServeOptions {
   port?: number;
-  text?: boolean;
   projectDir?: string;
   version?: string;
 }
@@ -35,7 +35,8 @@ export interface ViewerResponse {
   body: string | Buffer;
 }
 
-const DEFAULT_VIEWER_PORT = 4747;
+const FIRST_AVAILABLE_PORT = 4747;
+const AVAILABLE_PORT_ATTEMPTS = 100;
 
 const CONTENT_TYPES: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -220,32 +221,69 @@ export async function healthyInstance(
   }
 }
 
-export async function runServe(options: ServeOptions): Promise<void> {
+async function listen(
+  projectDir: string,
+  version: string,
+  port: number,
+) {
+  const server = createViewerServer(projectDir, version);
+  try {
+    await new Promise<void>((resolveListen, reject) => {
+      server.once("error", reject);
+      server.listen(port, "127.0.0.1", resolveListen);
+    });
+    return server;
+  } catch (error) {
+    server.close();
+    throw error;
+  }
+}
+
+function isAddressInUse(error: unknown): boolean {
+  return error instanceof Error &&
+    "code" in error &&
+    (error as Error & { code?: string }).code === "EADDRINUSE";
+}
+
+export async function runServe(options: ServeOptions) {
   let projectDir = options.projectDir;
   if (!projectDir) {
     const relicDir = findRelicDir(process.cwd());
     if (relicDir) projectDir = dirname(relicDir);
   }
   if (!projectDir) {
-    console.error("Error: not in a Relic project. Run: relic init");
-    process.exitCode = 1;
-    return;
+    throw new Error("Not in a Relic project. Run: relic init");
   }
 
-  const port = options.port ?? DEFAULT_VIEWER_PORT;
   const version = options.version ?? "dev";
-  const server = createViewerServer(projectDir, version);
-
-  await new Promise<void>((resolveListen, reject) => {
-    server.once("error", reject);
-    server.listen(port, "127.0.0.1", resolveListen);
-  });
-
-  const url = `http://127.0.0.1:${port}`;
-  if (options.text) {
-    console.log(`Relic knowledge viewer serving ${resolve(projectDir)}`);
-    console.log(`  ${url}`);
+  let server;
+  if (options.port !== undefined) {
+    server = await listen(projectDir, version, options.port);
   } else {
-    console.log(JSON.stringify({ url, port, project: resolve(projectDir) }, null, 2));
+    for (
+      let port = FIRST_AVAILABLE_PORT;
+      port < FIRST_AVAILABLE_PORT + AVAILABLE_PORT_ATTEMPTS;
+      port += 1
+    ) {
+      try {
+        server = await listen(projectDir, version, port);
+        break;
+      } catch (error) {
+        if (!isAddressInUse(error)) throw error;
+      }
+    }
+    if (!server) {
+      throw new Error(
+        `No available localhost port from ${FIRST_AVAILABLE_PORT} to ${
+          FIRST_AVAILABLE_PORT + AVAILABLE_PORT_ATTEMPTS - 1
+        }`,
+      );
+    }
   }
+
+  const address = server.address() as AddressInfo;
+  const url = `http://127.0.0.1:${address.port}`;
+  console.log(`Relic knowledge viewer serving ${resolve(projectDir)}`);
+  console.log(`  ${url}`);
+  return server;
 }

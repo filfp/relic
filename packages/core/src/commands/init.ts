@@ -1,100 +1,94 @@
-import { join } from "path";
-import { dirExists, ensureDir, writeText, writeJson, writeEngines, writeExternalType, EXTERNAL_TYPES, type ExternalType } from "@relic/utility";
-import { TEMPLATES } from "../generated/templates.ts";
-import { runAddEngine, type Engine } from "@relic/engines";
+import {
+  existsSync,
+  lstatSync,
+  readdirSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { join } from "node:path";
+
+import { ensureDir } from "@relic/utility";
 
 export interface InitOptions {
   dir: string;
-  force: boolean;
-  engines: Engine[];
-  /** Optional per-type external spec directories (--external-<type> flags). */
-  external?: Partial<Record<ExternalType, string>>;
 }
 
-export async function runInit(options: InitOptions): Promise<void> {
-  const relicDir = join(options.dir, ".relic");
+export interface InitResult {
+  projectDir: string;
+  created: string[];
+}
 
-  if (dirExists(relicDir) && !options.force) {
-    console.error(`Error: .relic/ already exists in ${options.dir}`);
-    console.error("Use --force to reinitialise.");
-    process.exit(1);
+export const RELIC_PROJECT_FILE = `---
+topology:
+  specs: .relic/specs
+  shared: .relic/shared
+  records:
+    fr: docs/requirements/functional
+    nfr: docs/requirements/non-functional
+    adr: docs/decisions
+    epic: docs/epics
+---
+
+# Relic Project Knowledge
+
+This file maps the current Relic knowledge corpus. Add project-specific guidance below
+without turning this map into a project-governance schema.
+
+When creating numbered knowledge, follow the current topology, inspect current canonical
+identities of that kind, and write directly at the next available value.
+`;
+
+function existingEntries(path: string): string[] {
+  if (!existsSync(path)) return [];
+  const stat = lstatSync(path);
+  if (stat.isSymbolicLink()) {
+    throw new Error(`${path} must not be a symbolic link`);
+  }
+  if (!stat.isDirectory()) {
+    throw new Error(`${path} exists and is not a directory`);
+  }
+  return readdirSync(path);
+}
+
+export async function runInit(options: InitOptions): Promise<InitResult> {
+  let projectDir: string;
+  try {
+    projectDir = realpathSync(options.dir);
+  } catch {
+    throw new Error(`Project directory does not exist: ${options.dir}`);
+  }
+  if (!statSync(projectDir).isDirectory()) {
+    throw new Error(`Project path is not a directory: ${options.dir}`);
   }
 
-  const dirs = [
-    relicDir,
-    join(relicDir, "shared", "domains"),
-    join(relicDir, "shared", "contracts"),
-    join(relicDir, "shared", "rules"),
-    join(relicDir, "shared", "assumptions"),
-    join(relicDir, "specs"),
-    join(relicDir, "fixes"),
-  ];
-  for (const d of dirs) ensureDir(d);
-
-  // Write empty toon index files for each index space
-  const TOON_INIT_FILES: Array<[string, string]> = [
-    ["shared/domains/manifest.toon", "# domains manifest\n"],
-    ["shared/contracts/manifest.toon", "# contracts manifest\n"],
-    ["shared/rules/manifest.toon", "# rules manifest\n"],
-    ["shared/assumptions/manifest.toon", "# assumptions manifest\n"],
-    ["specs/manifest.toon", "# specs index\n"],
-    ["fixes/manifest.toon", "# fixes index\n"],
-  ];
-  for (const [rel, content] of TOON_INIT_FILES) {
-    writeText(join(relicDir, rel), content);
+  const relicDir = join(projectDir, ".relic");
+  const entries = existingEntries(relicDir);
+  if (entries.length > 0) {
+    throw new Error(
+      `.relic/ already contains project files in ${projectDir}; init will not merge or overwrite them`,
+    );
   }
 
-  writeJson(join(relicDir, "session.json"), { spec: null, fix: null });
-  writeText(join(relicDir, ".gitignore"), "session.json\nviewer.json\n");
-  writeText(join(relicDir, "preamble.md"), TEMPLATES["preamble.md"] ?? "");
-  writeText(join(relicDir, "constitution.md"), TEMPLATES["constitution.md"] ?? "");
-  writeText(
-    join(relicDir, "changelog.md"),
-    "# Relic Changelog\n\n*All plan mutations and fix events are recorded here.*\n"
-  );
+  const specsDir = join(relicDir, "specs");
+  const sharedDir = join(relicDir, "shared");
+  ensureDir(specsDir);
+  ensureDir(sharedDir);
+  writeFileSync(join(relicDir, "RELIC.md"), RELIC_PROJECT_FILE, {
+    encoding: "utf8",
+    flag: "wx",
+  });
 
-  console.log("Relic initialised.");
-  console.log("");
-  console.log("Created:");
-  console.log("  .relic/preamble.md     (Relic architectural invariants — do not edit)");
-  console.log("  .relic/constitution.md");
-  console.log("  .relic/changelog.md");
-  console.log("  .relic/shared/  (domains/, contracts/, rules/, assumptions/)");
-  console.log("  .relic/specs/");
-  console.log("  .relic/fixes/");
-  console.log("  .relic/shared/domains/manifest.toon");
-  console.log("  .relic/shared/contracts/manifest.toon");
-  console.log("  .relic/shared/rules/manifest.toon");
-  console.log("  .relic/shared/assumptions/manifest.toon");
-  console.log("  .relic/specs/manifest.toon");
-  console.log("  .relic/fixes/manifest.toon");
-  console.log("  .relic/session.json  (gitignored — personal session state)");
-  console.log("  .relic/.gitignore  (ignores session.json — personal session state)");
-  console.log("");
+  const result = {
+    projectDir,
+    created: [
+      ".relic/RELIC.md",
+      ".relic/specs/",
+      ".relic/shared/",
+    ],
+  };
 
-  // Write engine-specific hook files
-  for (const engine of options.engines) {
-    await runAddEngine({ engine, projectDir: options.dir });
-  }
-
-  writeEngines(relicDir, options.engines.map(String));
-
-  // config.external per-type paths (FR-2)
-  if (options.external) {
-    for (const type of EXTERNAL_TYPES) {
-      const path = options.external[type];
-      if (path) writeExternalType(relicDir, type, path);
-    }
-  }
-  if (options.engines.length > 0) {
-    console.log(`  .relic/config.json  (registered engines: ${options.engines.join(", ")})`);
-  } else {
-    console.log(`  .relic/config.json  (mode: md, no engines registered)`);
-  }
-
-  console.log("");
-  console.log("Next steps — open your AI agent and run:");
-  console.log("");
-  console.log("  Existing codebase:  /relic:scan  then  /relic:constitution");
-  console.log("  New project:        /relic:constitution  then  /relic:specify");
+  console.log("Relic initialized.");
+  for (const path of result.created) console.log(`  ${path}`);
+  return result;
 }

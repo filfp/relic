@@ -1,9 +1,12 @@
 export { runInit } from "./commands/init.ts";
+export type { InitOptions, InitResult } from "./commands/init.ts";
+export { runInstall } from "./commands/install.ts";
+export type { InstallOptions, InstallResult } from "./commands/install.ts";
 export { runContext } from "./commands/context.ts";
 export { runScaffold } from "./commands/scaffold.ts";
 export { runValidate } from "./commands/validate.ts";
 export { runSearch } from "./commands/search.ts";
-export type { SearchResultEntry } from "./commands/search.ts";
+export type { SearchOptions, SearchOutput } from "./commands/search.ts";
 export { runToonMigrate, buildSpecIndex, buildFixIndex, readManifestToon } from "./commands/toon-migrate.ts";
 export type { MigrateResult, ManifestEntry } from "./commands/toon-migrate.ts";
 export { runAddEngine, SUPPORTED_ENGINES } from "@relic/engines";

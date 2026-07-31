@@ -13,6 +13,5 @@ await runServe({
   port: process.env.RELIC_VIEWER_PORT
     ? Number.parseInt(process.env.RELIC_VIEWER_PORT, 10)
     : undefined,
-  text: true,
   version: "relic-2-fixture",
 });
