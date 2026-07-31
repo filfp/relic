@@ -1,6 +1,6 @@
 # Relic 2.0 — Ordered Work Program
 
-> **Status:** active execution order; Stages 1–3 implemented, 2026-07-30
+> **Status:** active execution order; Stages 1–4 implemented, 2026-07-30
 > **Source:** [`relic-2.0.md`](relic-2.0.md)
 
 This document orders the design and implementation of Relic 2.0. It is not the old
@@ -224,6 +224,10 @@ that their behavior is independent from 1.x modes, manifests, sessions, and fix 
 
 ## 4. Build the Relic Skill Workflow
 
+> **Status:** implemented. The portable central skill, progressive authoring references,
+> persistence boundary, and scenario contract tests satisfy this stage's gate without
+> migrating the repository's Relic 1.x evidence.
+
 Turn the successful architecture-roast practice documented in the
 [`architecture-roast` evaluation](evidence/architecture-roast-evaluation.md) into the
 central Relic skill:
@@ -272,6 +276,27 @@ fixed templates, and requirement to retain superseded files in active documentat
   conversation state.
 - No trial requires a mode selector, second prompt, or separate command to continue from
   reasoning into requested implementation.
+
+### Evidence
+
+- `skills/relic/` is the distribution-owned source of one central skill. Its main
+  protocol covers proportional scrutiny, finding classification, recommendation-first
+  decisions, a temporary ledger, objective completion, progressive discovery, and
+  continuation into requested implementation.
+- `references/knowledge-authoring.md` absorbs direct living-record authoring from current
+  topology and identities without a generator, counter, lock, template, or status
+  lifecycle.
+- `references/semantic-html.md` gives agents the supported expressive vocabulary without
+  making presentation or fixed document anatomy part of authored knowledge.
+- [`relic-central-skill-scenarios.md`](evidence/relic-central-skill-scenarios.md) covers
+  idea discovery, explicit specification isolation, explicit record extraction,
+  implementation compliance, derivable implementation, a fix with no documentation, and
+  cross-session continuation.
+- Focused contract tests validate the canonical skill source, the explicit persistence
+  boundary, the absence of executable workflow machinery, and each scenario capability.
+- The existing `.codex/` and `.claude/` skills remain development evidence rather than
+  the 2.0 product source. Project-local installation is implemented in Stage 5, and this
+  repository does not self-host Relic 2.0 before the retirement gate.
 
 ## 5. Replace the CLI Surface
 
