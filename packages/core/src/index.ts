@@ -45,6 +45,8 @@ export { detectIntersections, formatIntersectionReport } from "./core/intersecti
 export { appendChangelog, filterChangelog, appendChangelogEntry } from "./core/changelog.ts";
 export { buildContext, renderContext } from "./core/context-builder.ts";
 
+export * from "./knowledge/index.ts";
+
 export { findRelicDir } from "@relic/utility";
 export { nextSpecId, slugify, inferSpecFromBranch, availableSpecs } from "@relic/utility";
 

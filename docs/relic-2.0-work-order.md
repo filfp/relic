@@ -35,8 +35,7 @@ Define the smallest deterministic contracts needed by skills, CLI, search, and f
 
 - `.relic/RELIC.md`: structured topology, project-owned Relic corpus roots, and
   free-form agent guidance without a project-governance schema;
-- `.relic/config.yaml`: managed engines and high-water marks only, without duplicated
-  topology or workflow preferences;
+- no second project configuration file, persisted ID counter, or declared engine list;
 - document identity, optional project metadata, and living-record mutation freedom;
 - references, backlinks, and relationship resolution without exclusive ownership;
 - canonical spec HTML and the supported semantic component vocabulary;
@@ -46,18 +45,19 @@ Define the smallest deterministic contracts needed by skills, CLI, search, and f
 - the minimal CLI capabilities required by those contracts;
 - the frontend's read model and its authority boundaries.
 
-The `RELIC.md` topology and `config.yaml` contracts are accepted in
+The `RELIC.md` topology contract is accepted in
 [`relic-2.0.md`](relic-2.0.md#project-file-contract). Every declared corpus root is
 project-owned and configurable; `.relic/specs/` and `.relic/shared/` are defaults. Relic
-defines no canonical project-governance roles or filenames. Their schemas and failure
-behavior are inputs to the remaining Stage 1 contracts rather than open topology
-decisions.
+defines no canonical project-governance roles or filenames. Current canonical identities
+derive the next numbered value, and project-local engine paths are the complete
+installation state. The schema and failure behavior are inputs to the remaining Stage 1
+contracts rather than open topology decisions.
 
 Document identity, native metadata scope, opaque project fields, and mutation freedom are
 accepted in [`relic-2.0.md`](relic-2.0.md#document-identity-and-mutation-contract). The
 current `requirement-records` skill and generator script are classified **remove/absorb**:
-they remain design evidence, while the central skill follows the topology and cooperative
-high-water instruction carried by `RELIC.md` and writes requested records directly.
+they remain design evidence, while the central skill follows the topology, derives the
+next free value from current canonical identities, and writes requested records directly.
 
 Ordinary relative-path web edges, derived backlinks, broken-link maintenance evidence,
 and optional ID reconciliation are accepted in
@@ -98,11 +98,12 @@ The four-command CLI, its mutation boundary, engine reconciliation behavior, rem
 a standalone validation surface, and read-model diagnostic ownership are accepted in
 [`relic-2.0.md`](relic-2.0.md#minimal-cli-contract). `init`, `search`, and `serve` are
 classified **replace/adapt** against the new contracts. Engine hook installation is
-absorbed into `install`; `install --engine <engine>` updates desired configuration and
-installs that engine idempotently. The current `validate`, `use`, `scan`, `context`,
-`scaffold`, `write`, `toon-migrate`, `mode`, `snippet`, `external`, `viewer-migrate`,
-`html-sync`, workflow commands, and self-upgrade behavior are classified **remove**. MCP
-is excluded from the minimal surface pending distribution evidence.
+absorbed into `install`; `install --engine <engine>` installs that engine idempotently,
+while no-argument installation discovers project-local engine roots. The current
+`validate`, `use`, `scan`, `context`, `scaffold`, `write`, `toon-migrate`, `mode`,
+`snippet`, `external`, `viewer-migrate`, `html-sync`, workflow commands, and self-upgrade
+behavior are classified **remove**. MCP is excluded from the minimal surface pending
+distribution evidence.
 
 The path-addressed, read-only frontend, generic document page, catalog-first navigation,
 local graph neighborhood, artifact boundary, internal API, and localized diagnostics are
@@ -228,12 +229,12 @@ central Relic skill:
 - update current knowledge only after developer authorization.
 
 Absorb the minimal record-writing behavior into the central skill and `RELIC.md`: read
-topology and high-water state, check the proposed identity case-insensitively against the
-current corpus, write the developer-requested document at the next free value, and
-advance the cooperative counter. This is a local collision check, not a lock or
-reservation. Remove the separate record skill, JSON handoff, generator script, fixed
-status vocabulary, fixed templates, and requirement to retain superseded files in active
-documentation.
+topology, derive the next numeric value from the greatest current canonical identity,
+check the proposed identity and destination case-insensitively, and write the
+developer-requested document. Removing the greatest current identity permits later reuse
+of that number. There is no persisted counter, lock, reservation, or tombstone. Remove
+the separate record skill, JSON handoff, generator script, fixed status vocabulary,
+fixed templates, and requirement to retain superseded files in active documentation.
 
 ### Gate
 
@@ -257,10 +258,12 @@ workflow.
 At this stage:
 
 - implement `relic init` without modifying `AGENTS.md`, defining or creating project
-  governance structure, or overwriting an existing `RELIC.md` or `config.yaml`;
-- implement `relic install` to reconcile configured engines, and
-  `relic install --engine <engine>` to add one desired engine and install its skill in
-  the engine's project-local native directory;
+  governance structure, creating a second configuration file, or overwriting an existing
+  `RELIC.md`;
+- implement no-argument `relic install` to discover known project-local engine roots and
+  install or refresh Relic in all of them, failing actionably when none exist;
+- implement `relic install --engine <engine>` to install or refresh the selected skill
+  in its project-local native directory without recording desired state;
 - implement the thin project-local engine adapters required by `install`; defer
   cross-engine packaging and distribution proof to Stage 6;
 - expose exhaustive current-corpus search with human and JSON projections;
@@ -278,10 +281,11 @@ available through the new surface.
 - Initialization leaves an existing `AGENTS.md` byte-for-byte unchanged.
 - Initialization creates no project-governance schema, roles, or documentation.
 - Initialization refuses to overwrite existing Relic project files.
-- Installation without `--engine` reconciles the declared engine list, while
-  `--engine` updates `config.yaml` without duplicates and installs the selected skill.
-- A failed engine installation leaves desired configuration explicit and produces a
-  repairable mismatch rather than rolling back project initialization.
+- Initialization creates no `config.yaml` or other secondary state file.
+- Installation without `--engine` refreshes every detected project-local engine root.
+- Installation with `--engine` creates or refreshes only that engine's project-local
+  Relic skill.
+- A failed engine installation leaves no hidden desired state or mismatch lifecycle.
 - CLI output contracts are tested and do not depend on one AI engine.
 - `search` and `serve` do not mutate project knowledge.
 - The accepted command surface contains no validation command or cognitive workflow

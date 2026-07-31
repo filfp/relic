@@ -51,8 +51,9 @@ boundaries.
 
 ### Replace or adapt
 
-- Replace `init` with initialization of only `.relic/RELIC.md` and
-  `.relic/config.yaml`, without changing `AGENTS.md` or defining project governance.
+- Replace `init` with initialization of `.relic/RELIC.md` and its default corpus
+  directories only, without changing `AGENTS.md`, defining project governance, or
+  creating secondary state.
 - Replace `search` against the exhaustive 2.0 knowledge read model.
 - Replace the command registration in `bin.ts` with exactly `init`, `install`,
   `search`, and `serve`.
@@ -60,8 +61,8 @@ boundaries.
   handling, embedded assets, and SPA fallback. Replace its API and lifecycle around the
   new read model.
 - Introduce `install`, absorbing the useful intent of engine addition and skill
-  refresh. `install --engine <engine>` records the desired engine in `config.yaml` and
-  installs the central skill idempotently.
+  refresh. `install --engine <engine>` installs the selected central skill
+  idempotently; no-argument installation discovers known project-local engine roots.
 
 ### Remove
 
@@ -107,7 +108,7 @@ retained as evidence; the existing parser structure has no presumption of reuse.
 | Surface | Disposition | Relic 2.0 boundary |
 | --- | --- | --- |
 | Filesystem helpers and Relic root discovery | **adapt** | Retain only traversal and path behavior that is independent of 1.x state. |
-| Project configuration | **replace** | Load the structured topology in `RELIC.md` and engines/high-water state in `config.yaml`. |
+| Project configuration | **replace** | Load structured topology from `RELIC.md`; remove `config.json`, `config.yaml`, declared engines, and persisted counters. |
 | Session and spec-ID scanning | **remove** | No active session or directory-derived authority remains. |
 | TOON, fetch, and generated-snippet utilities | **remove** | They support deleted delivery and workflow machinery. |
 | External-repository traversal subsystem | **remove** | Preserve safe traversal as a design principle, not this subsystem. |
@@ -184,11 +185,8 @@ Remove the current template set: preamble, constitution, base specification HTML
 specification/plan/tasks documents, external-record templates, workflow prompts,
 snippets, and fragment boilerplate.
 
-The only initialization templates are:
-
-- `.relic/RELIC.md`, containing the structured Relic corpus topology and minimal
-  numbered-record authoring instruction;
-- `.relic/config.yaml`, containing managed engines and cooperative high-water marks.
+The only initialization template is `.relic/RELIC.md`, containing the structured Relic
+corpus topology and minimal current-corpus ID allocation instruction.
 
 The topology defines only Relic corpus roots. It contains no canonical project-governance
 roles, filenames, or responsibility taxonomy.
@@ -241,7 +239,7 @@ distribution evidence shows that a channel no longer earns its maintenance cost.
 
 ### Required 2.0 fixture coverage
 
-- structured topology and cooperative high-water state;
+- structured topology and next-ID derivation from current canonical identities;
 - canonical `RELIC.md`, shared/FR/NFR/ADR/EPIC Markdown, and spec `index.html`;
 - searchable but non-canonical specification artifacts;
 - overlapping-root deduplication with multiple memberships;

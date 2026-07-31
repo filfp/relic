@@ -11,9 +11,12 @@
   },
   "dependencies": {
     "@relic/utility": "workspace:*",
-    "@relic/engines": "workspace:*"
+    "@relic/engines": "workspace:*",
+    "marked": "15.0.12",
+    "parse5": "8.0.1",
+    "yaml": "2.9.0"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "1.3.12"
   }
 }

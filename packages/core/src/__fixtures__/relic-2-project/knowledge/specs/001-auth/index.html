@@ -1,0 +1,22 @@
+<relic-body id="001-auth" data-status="current">
+  <h1>Authentication</h1>
+  <p>
+    Authentication follows the
+    <a href="../../shared/auth-contract.md">shared authentication contract</a>.
+  </p>
+  <relic-callout kind="decision">
+    Login must satisfy
+    <a href="../../records/requirements/FR-001-login.md">FR-001</a>.
+  </relic-callout>
+  <relic-flow>
+    Request --> Credentials --> Session
+  </relic-flow>
+  <p>
+    Token storage follows
+    <a href="../../records/decisions/ADR-001-token-storage.md">ADR-001</a>.
+  </p>
+  <p><a href="notes.md">Supporting investigation</a></p>
+  <p><a href="../../shared/missing.md">Intentionally broken contract</a></p>
+  <script>globalThis.compromised = true</script>
+  <img src="https://example.com/tracker.png" alt="remote tracker">
+</relic-body>

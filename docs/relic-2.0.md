@@ -84,10 +84,9 @@ Persistence remains developer-owned. Explicit requests such as create, document,
 record, or update authorize the named knowledge change. A confirmation also authorizes
 the change when the skill's immediately preceding proposal stated the specific
 documents it would create or update after confirmation. Agreement with a decision alone
-does not otherwise authorize an unspecified write. Creating a requested numbered record
-includes advancing its cooperative high-water mark. Authorization to change code does
-not silently authorize new documentation; when implementation changes the current
-knowledge frontier, the skill surfaces the affected documents and proposes their update.
+does not otherwise authorize an unspecified write. Authorization to change code does not
+silently authorize new documentation; when implementation changes the current knowledge
+frontier, the skill surfaces the affected documents and proposes their update.
 
 The skill may keep a temporary decision ledger in the conversation during a long
 analysis, covering confirmed and derived decisions, open forks, accepted risks,
@@ -260,11 +259,11 @@ project adds an explicit link.
 
 Duplicate IDs do not make path links ambiguous, but they do make catalog and ID search
 results ambiguous. The central Relic skill may offer a reconciliation: keep the ID on one
-document and move another to the next cooperative high-water value, or merge or remove
+document and move another to the next available current value, or merge or remove
 overlapping knowledge. If reconciliation renames or moves a file, the skill may search
 for the previous relative path and propose link repairs. It never renumbers a document,
-advances the high-water mark, moves a file, or rewrites links silently; declining the
-reconciliation leaves the ambiguity visible and otherwise usable.
+moves a file, or rewrites links silently; declining the reconciliation leaves the
+ambiguity visible and otherwise usable.
 
 ## Specifications and Canonical HTML
 
@@ -377,21 +376,13 @@ declares specification, shared-knowledge, and typed-record roots so the CLI, sea
 frontend can discover them deterministically. Its Markdown body remains a free-form guide
 for agents and developers. Topology is not copied into another configuration file.
 
-`.relic/config.yaml` is deliberately narrower. It contains only the engines the project
-expects Relic to manage and the high-water marks used to allocate stable sequential
-identifiers. Engine-native files and directories are evidence of observed installation
-state; they do not replace the project's declared engine set. The configuration contains
-no corpus paths, project-governance mappings, presentation mode, SDD mode, viewer
-settings, or cognitive workflow rules.
-
 ### Project file contract
 
 `RELIC.md` has YAML frontmatter with one required `topology` mapping. All paths use `/`,
 are relative to the repository root, and must resolve without escaping that root through
 `..`. Its Markdown body is otherwise free-form but carries the small authoring rule for
-numbered records: read the current high-water value from `config.yaml`, follow the
-current topology, write directly, and advance the cooperative mark. The minimum topology
-is:
+numbered records: follow the current topology, inspect the current canonical identities,
+and write directly at the next available value. The minimum topology is:
 
 ```yaml
 ---
@@ -415,39 +406,18 @@ orphan relative links. Relic does not migrate them automatically; broken-link
 diagnostics and ordinary text search provide the evidence for an agent-assisted
 maintenance session.
 
-`config.yaml` has exactly two top-level fields:
-
-```yaml
-engines:
-  - codex
-  - claude
-high_water:
-  spec: 0
-  fr: 0
-  nfr: 0
-  adr: 0
-  epic: 0
-```
-
-Every high-water value is a non-negative integer and begins at zero while its document
-type is unused. When the developer requests a numbered document, the central skill reads
-the current topology and high-water value, writes the document directly to the declared
-root, and advances the mark. Before creating new knowledge, it checks the proposed ID
-case-insensitively against the current corpus and advances to the next free value rather
-than knowingly creating a local duplicate. This check neither locks nor renumbers
-existing records. `RELIC.md` carries this small authoring instruction; Relic does not
-require a separate record skill, JSON input, generator script, or CLI command. The mark
-is a cooperative convenience, not a lock or distributed reservation system. Concurrent
-branches or worktrees may still allocate the same identifier; merge resolution owns that
-conflict. Duplicate identities remain focused diagnostics and do not make unrelated
-knowledge unreadable.
+When the developer requests numbered knowledge, the central skill reads the applicable
+topology root, finds the greatest currently valid numeric identity of that type, and
+proposes the next free value. It checks identity case-insensitively and verifies the
+destination before writing. There is no persisted counter, lock, reservation, tombstone,
+generator state, or second project configuration file. Removing the greatest current
+identity allows that number to be reused later; Git retains its historical meaning.
+Concurrent branches or worktrees may still allocate the same identifier, and merge
+resolution owns that conflict. Duplicate identities remain focused diagnostics and do
+not make unrelated knowledge unreadable.
 
 A missing or malformed `RELIC.md` prevents automated topology discovery and produces a
-focused diagnostic. A missing or malformed `config.yaml` does not block knowledge reads,
-search, the frontend, or manual document creation; it blocks engine installation and
-upgrade operations and Relic-managed automatic ID allocation until corrected. A
-difference between configured engines and observed engine-native installation files is a
-warning rather than a knowledge-read failure.
+focused diagnostic.
 
 The project's `AGENTS.md` remains entirely project-owned. Relic never creates, rewrites,
 or maintains a managed section in it. A project may choose to reference
@@ -601,22 +571,21 @@ context, maintain sessions, invoke models, execute prompts, choose a specificati
 write changelogs, migrate Relic 1.x, or determine how an agent reasons.
 
 `relic init` creates the smallest project foundation: `.relic/RELIC.md`,
-`.relic/config.yaml`, `.relic/specs/`, and `.relic/shared/`. The initial engine list is
-empty and the generated `RELIC.md` uses the documented default Relic corpus topology.
-Initialization defines no project-governance roles, discovers no preferred governance
-files, creates no project documentation, writes no `AGENTS.md`, and does not overwrite
-an existing `RELIC.md` or `config.yaml`. There is no force-reinitialization path.
+`.relic/specs/`, and `.relic/shared/`. The generated `RELIC.md` uses the documented
+default Relic corpus topology. Initialization defines no project-governance roles,
+discovers no preferred governance files, creates no project documentation, writes no
+`AGENTS.md`, and does not overwrite an existing `RELIC.md`. There is no
+force-reinitialization path.
 
-`relic install` reconciles the engine integrations already declared in `config.yaml`.
-With `--engine <engine>`, it first validates the engine and existing configuration,
-adds the engine to the declared list without duplication, and installs or refreshes that
-engine's Relic skill in that engine's project-local native skill directory. The packaged
-Relic distribution owns the canonical skill source; the project-local copy is managed
-installation state. If installation fails after the desired engine is recorded, the
-declaration remains and the mismatch is reported so the same command can repair it
-later. An engine removed from the configuration is not automatically deleted from its
-native directory. The command never installs a global user skill, modifies `AGENTS.md`,
-or updates the Relic binary itself.
+`relic install --engine <engine>` validates the named engine and installs or refreshes
+the Relic skill in that engine's project-local native skill directory, creating the
+native directory when necessary. Without `--engine`, the command discovers every known
+engine root already present in the project and installs or refreshes Relic in all of
+them. When no known root exists, it fails with an actionable request to pass `--engine`.
+The packaged Relic distribution owns the canonical skill source; project-local copies
+are the complete installation state. There is no declared engine list, desired-state
+file, global user installation, or mismatch lifecycle. The command never modifies
+`AGENTS.md` or updates the Relic binary itself.
 
 `relic search` queries the complete currently discovered corpus rather than the Relic
 1.x manifest, fix, or active-spec indexes. IDs, paths, labels, metadata, memberships, and
