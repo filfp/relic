@@ -1,23 +1,19 @@
-/** Bar / pie / line SVG charts. Port of the retired base.html renderer. */
+/** Progressive enhancement for semantic table/list data. */
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#84cc16"];
 
-function parseJson<T>(raw: string | undefined, fallback: T): T {
-  if (!raw) return fallback;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-export function Chart({ attrs }: { attrs: Record<string, string> }) {
-  const type = attrs.type ?? "bar";
-  const title = attrs.title ?? "";
-  const labels = parseJson<string[]>(attrs.labels, []);
-  // charts render magnitudes: non-numeric entries and negatives would produce
-  // NaN/inverted SVG geometry, so clamp to finite non-negative values
-  const nums = parseJson<unknown[]>(attrs.data, []).map((v) => {
+export function Chart({
+  type = "bar",
+  title = "",
+  labels,
+  values,
+}: {
+  type?: string;
+  title?: string;
+  labels: string[];
+  values: number[];
+}) {
+  const nums = values.map((v) => {
     const n = Number(v);
     return Number.isFinite(n) && n > 0 ? n : 0;
   });

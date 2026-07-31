@@ -1,89 +1,116 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
-import type { AddressInfo } from "net";
-import { createViewerServer, healthyInstance } from "../commands/serve.ts";
+import { describe, expect, test } from "bun:test";
+import { join } from "node:path";
 
-let dir: string;
-let relicDir: string;
-let base = "";
-let server: ReturnType<typeof createViewerServer>;
+import { resolveViewerRequest } from "../commands/serve.ts";
 
-beforeAll(async () => {
-  dir = mkdtempSync(join(tmpdir(), "relic-serve-test-"));
-  relicDir = join(dir, ".relic");
-  const specDir = join(relicDir, "specs", "001-auth");
-  mkdirSync(specDir, { recursive: true });
-  mkdirSync(join(relicDir, "fixes"), { recursive: true });
-  writeFileSync(join(relicDir, "config.json"), JSON.stringify({ engines: [], mode: "html" }));
-  writeFileSync(join(specDir, "spec.md"), "# Spec: Auth\n\n**Status:** ready\n**Created:** 2026-07-01\n");
-  writeFileSync(join(specDir, "tasks.md"), "### Phase 1 — x\n\n- [x] **T-1** done thing\n- [ ] **T-2** open thing\n");
-  writeFileSync(join(specDir, "artifacts.json"), JSON.stringify({ owns: [], reads: [], touches_files: [] }));
-  writeFileSync(
-    join(specDir, "001-auth.html"),
-    `<relic-body>\n<relic-spec-meta/>\n<relic-section title="Overview"><p>hi</p></relic-section>\n<relic-tasks/>\n</relic-body>\n`
-  );
-  writeFileSync(join(relicDir, "fixes", "2026-07-01-thing.md"), "# Fix: thing\n\n**Status:** solved\n");
+const fixture = join(import.meta.dir, "../__fixtures__/relic-2-project");
 
-  server = createViewerServer(relicDir, "test-1.0");
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
-  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-});
-afterAll(() => {
-  server?.close();
-  rmSync(dir, { recursive: true, force: true });
-});
+function request(path: string, method = "GET") {
+  const response = resolveViewerRequest(fixture, "test-2.0", method, path);
+  expect(response).toBeDefined();
+  return response!;
+}
 
-describe("relic serve — JSON API", () => {
-  test("health reports identity for same-project reuse", async () => {
-    const body = await (await fetch(`${base}/api/health`)).json();
-    expect(body).toEqual({ relic: true, project: dir, version: "test-1.0" });
-    expect(await healthyInstance((server.address() as AddressInfo).port, dir)).toBe(true);
-    expect(await healthyInstance((server.address() as AddressInfo).port, "/other/project")).toBe(false);
+function json<T>(path: string, method = "GET"): T {
+  const response = request(path, method);
+  expect(response.contentType).toContain("application/json");
+  return JSON.parse(String(response.body)) as T;
+}
+
+describe("Relic 2.0 read-only viewer API", () => {
+  test("reports the project identity without lifecycle state", () => {
+    const response = request("/api/health");
+    expect(response.status).toBe(200);
+    expect(JSON.parse(String(response.body))).toEqual({
+      relic: true,
+      project: fixture,
+      version: "test-2.0",
+    });
   });
 
-  test("project lists specs with derived task counts", async () => {
-    const body: any = await (await fetch(`${base}/api/project`)).json();
-    expect(body.mode).toBe("html");
-    expect(body.specs).toEqual([
-      { id: "001-auth", title: "Auth", status: "ready", tasks: { done: 1, total: 2 }, has_html: true },
+  test("exposes the exhaustive canonical catalog and diagnostics", () => {
+    const body = json<{
+      documents: Array<{ path: string }>;
+      artifacts: Array<{ path: string }>;
+      counts: { documents: number; artifacts: number; orphans: number };
+    }>("/api/project");
+
+    expect(body.documents.map((item) => item.path)).toContain(
+      "knowledge/specs/002-orphan/index.html",
+    );
+    expect(body.documents.map((item) => item.path)).toContain(
+      "knowledge/records/requirements/FR-001-login.md",
+    );
+    expect(body.artifacts.map((item) => item.path)).toEqual([
+      "knowledge/specs/001-auth/notes.md",
     ]);
-    expect(body.fixes).toEqual([{ id: "2026-07-01-thing", format: "md" }]);
-    expect(body.validate.valid).toBe(true);
+    expect(body.counts).toMatchObject({
+      documents: 9,
+      artifacts: 1,
+      orphans: 3,
+    });
   });
 
-  test("spec detail: fragment tree + derived data + live markdown", async () => {
-    const body: any = await (await fetch(`${base}/api/spec/001-auth`)).json();
-    expect(body.lints).toEqual([]);
-    expect(body.fragment.some((n: any) => n.tag === "relic-section")).toBe(true);
-    expect(body.derived.tasks).toMatchObject({ done: 1, total: 2 });
-    expect(body.derived.tasks.phases[0].title).toBe("Phase 1 — x");
-    expect(body.files.spec).toContain("# Spec: Auth");
+  test("addresses documents by path with relations and spec artifacts", () => {
+    const path = encodeURIComponent("knowledge/specs/001-auth/index.html");
+    const body = json<{
+      document: {
+        path: string;
+        links: Array<{ status: string; targetPath?: string }>;
+        backlinks: Array<{ sourcePath: string }>;
+      };
+      artifacts: Array<{ path: string }>;
+      related: Array<{ path: string }>;
+    }>(`/api/document?path=${path}`);
+
+    expect(body.document.path).toBe("knowledge/specs/001-auth/index.html");
+    expect(body.document.links.some((link) => link.status === "missing")).toBe(true);
+    expect(body.document.backlinks.map((link) => link.sourcePath)).toContain(
+      ".relic/RELIC.md",
+    );
+    expect(body.artifacts.map((artifact) => artifact.path)).toEqual([
+      "knowledge/specs/001-auth/notes.md",
+    ]);
+    expect(body.related.map((document) => document.path)).toContain(
+      "knowledge/records/requirements/FR-001-login.md",
+    );
   });
 
-  test("fix detail (md format)", async () => {
-    const body: any = await (await fetch(`${base}/api/fix/2026-07-01-thing`)).json();
-    expect(body.format).toBe("md");
-    expect(body.markdown).toContain("# Fix: thing");
+  test("returns artifact search results with parent context, not document nodes", () => {
+    const body = json<{
+      results: Array<{
+        type: string;
+        path: string;
+        specificationPaths?: string[];
+      }>;
+    }>("/api/search?q=legacy%20session");
+
+    expect(body.results).toEqual([
+      expect.objectContaining({
+        type: "artifact",
+        path: "knowledge/specs/001-auth/notes.md",
+        specificationPaths: ["knowledge/specs/001-auth/index.html"],
+      }),
+    ]);
   });
 
-  test("404 for unknown spec/fix/api routes", async () => {
-    expect((await fetch(`${base}/api/spec/999-nope`)).status).toBe(404);
-    expect((await fetch(`${base}/api/fix/nope`)).status).toBe(404);
-    expect((await fetch(`${base}/api/wat`)).status).toBe(404);
+  test("serves only discovered artifact content", () => {
+    const known = request(
+      `/api/content?path=${encodeURIComponent("knowledge/specs/001-auth/notes.md")}`,
+    );
+    expect(known.status).toBe(200);
+    expect(String(known.body)).toContain("legacy session cookie");
+
+    expect(
+      request(`/api/content?path=${encodeURIComponent("package.json")}`).status,
+    ).toBe(404);
   });
 
-  test("read-only: non-GET methods are 405", async () => {
-    expect((await fetch(`${base}/api/project`, { method: "POST" })).status).toBe(405);
-    expect((await fetch(`${base}/spec/001-auth`, { method: "DELETE" })).status).toBe(405);
-  });
-
-  test("serves the app shell at / and as SPA fallback", async () => {
-    const root = await fetch(`${base}/`);
-    expect(root.headers.get("content-type")).toContain("text/html");
-    const fallback = await fetch(`${base}/spec/001-auth`);
-    expect(fallback.status).toBe(200);
-    expect(await fallback.text()).toContain("<div id=\"root\">");
+  test("rejects writes and unknown API resources", () => {
+    expect(request("/api/project", "POST").status).toBe(405);
+    expect(
+      request(`/api/document?path=${encodeURIComponent("missing.md")}`).status,
+    ).toBe(404);
+    expect(request("/api/unknown").status).toBe(404);
   });
 });

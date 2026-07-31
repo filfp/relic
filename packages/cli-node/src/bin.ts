@@ -245,7 +245,7 @@ program
 
 program
   .command("serve")
-  .description("Start the spec viewer server (read-only, localhost; port from config.json viewer.port)")
+  .description("Start the read-only Relic knowledge viewer on localhost")
   .option("--port <n>", "Port override")
   .option("--text", "Human-readable output instead of JSON", false)
   .action(async (opts: { port?: string; text: boolean }) => {

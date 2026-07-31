@@ -35,6 +35,7 @@ export interface MarkdownAstNode {
   text?: string;
   href?: string;
   title?: string | null;
+  lang?: string;
   depth?: number;
   ordered?: boolean;
   checked?: boolean;

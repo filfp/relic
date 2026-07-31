@@ -7,6 +7,12 @@ export {
   nextIdentityNumber,
 } from "./read-model.ts";
 export { searchKnowledge } from "./search.ts";
+export {
+  artifactView,
+  documentView,
+  projectView,
+  searchView,
+} from "./view.ts";
 
 export type {
   CanonicalDocument,
@@ -25,3 +31,10 @@ export type {
   MarkdownAstNode,
 } from "./types.ts";
 export type { NumberedIdentityKind } from "./read-model.ts";
+export type {
+  KnowledgeArtifactSummary,
+  KnowledgeArtifactView,
+  KnowledgeDocumentSummary,
+  KnowledgeDocumentView,
+  KnowledgeProjectView,
+} from "./view.ts";

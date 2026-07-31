@@ -30,8 +30,13 @@ export { runHtmlSync } from "./commands/html-sync.ts";
 export { runViewerMigrate, migrateProject } from "./commands/viewer-migrate.ts";
 export type { MigrateOptions, MigrateReport } from "./commands/viewer-migrate.ts";
 export { runExternal } from "./commands/external.ts";
-export { runServe, createViewerServer, healthyInstance } from "./commands/serve.ts";
-export type { ServeOptions } from "./commands/serve.ts";
+export {
+  createViewerServer,
+  healthyInstance,
+  resolveViewerRequest,
+  runServe,
+} from "./commands/serve.ts";
+export type { ServeOptions, ViewerResponse } from "./commands/serve.ts";
 export { runMcp } from "./commands/mcp.ts";
 export { parseFragment, lintFragment } from "./core/fragment.ts";
 export type { FragmentNode, FragmentLint, ParsedFragment } from "./core/fragment.ts";

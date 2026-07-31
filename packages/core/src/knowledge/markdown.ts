@@ -1,4 +1,4 @@
-import { marked, type Token } from "marked";
+import { marked, type Token, type Tokens } from "marked";
 
 import { parseFrontmatter } from "./frontmatter.ts";
 import type {
@@ -47,6 +47,36 @@ function isSafeMediaUrl(value: string): boolean {
 
 function toAst(token: Token): MarkdownAstNode {
   const node: MarkdownAstNode = { type: token.type };
+  if (token.type === "list") {
+    const list = token as Tokens.List;
+    node.ordered = list.ordered;
+    node.children = list.items.map((item) => ({
+      type: "list_item",
+      checked: item.checked,
+      children: item.tokens.map(toAst),
+    }));
+    return node;
+  }
+  if (token.type === "table") {
+    const table = token as Tokens.Table;
+    node.children = [
+      {
+        type: "table_header",
+        children: table.header.map((cell) => ({
+          type: "table_cell",
+          children: cell.tokens.map(toAst),
+        })),
+      },
+      ...table.rows.map((row) => ({
+        type: "table_row",
+        children: row.map((cell) => ({
+          type: "table_cell",
+          children: cell.tokens.map(toAst),
+        })),
+      })),
+    ];
+    return node;
+  }
   if ("text" in token && typeof token.text === "string") node.text = token.text;
   if (token.type === "link" && isSafeLinkUrl(token.href)) {
     node.href = token.href;
@@ -57,8 +87,7 @@ function toAst(token: Token): MarkdownAstNode {
     node.title = token.title;
   }
   if (token.type === "heading") node.depth = token.depth;
-  if (token.type === "list") node.ordered = token.ordered;
-  if (token.type === "list_item") node.checked = token.checked;
+  if (token.type === "code" && token.lang) node.lang = token.lang;
   const children = tokenChildren(token).map(toAst);
   if (children.length > 0) node.children = children;
   return node;

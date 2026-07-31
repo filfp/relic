@@ -28,7 +28,7 @@ function parseFlow(src: string) {
     else if (label) existing.label = label;
   };
 
-  for (const line of lines.slice(1)) {
+  for (const line of dm ? lines.slice(1) : lines) {
     const em = line.match(EDGE);
     if (em) {
       const [, fId, fBox, fDiam, fCirc, label, tId, tBox, tDiam, tCirc] = em;

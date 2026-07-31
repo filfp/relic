@@ -1,6 +1,6 @@
 # Relic 2.0 — Ordered Work Program
 
-> **Status:** proposed execution order, 2026-07-29
+> **Status:** active execution order; Stages 1–3 implemented, 2026-07-30
 > **Source:** [`relic-2.0.md`](relic-2.0.md)
 
 This document orders the design and implementation of Relic 2.0. It is not the old
@@ -132,6 +132,10 @@ retained capability does not by itself justify adapting its 1.x implementation.
 
 ## 2. Build the Knowledge Read Model
 
+> **Status:** implemented. The isolated fixture, typed parsers, exhaustive read model,
+> derived relations, search, diagnostics, containment checks, and focused tests satisfy
+> this stage's gate.
+
 Implement the pure core that reads the accepted contracts:
 
 - load `.relic/RELIC.md` and the corpus roots declared by its topology;
@@ -171,6 +175,10 @@ frontend, plugin, or a particular coding agent.
 
 ## 3. Prove a Read-Only Vertical Slice
 
+> **Status:** implemented. The bundled viewer and local API consume the core read model
+> directly; the legacy spec/fix view-data contract and viewer-owned Markdown parser are
+> no longer part of this surface.
+
 Connect the knowledge read model to the two retained product surfaces:
 
 - search across shared knowledge, specs, and typed records;
@@ -196,6 +204,23 @@ that their behavior is independent from 1.x modes, manifests, sessions, and fix 
 - A broken relative link is visible at its source without breaking other pages.
 - A spec page reaches its FR, ADR, and shared contract in both directions.
 - No Relic 1.x workflow command is required by the vertical slice.
+
+### Evidence
+
+- `bun run dev:viewer:fixture` builds the bundled viewer and serves the isolated 2.0
+  fixture; `RELIC_VIEWER_PORT` is an explicit development-only port override.
+- `/api/project`, `/api/document`, `/api/artifact`, `/api/content`, and `/api/search`
+  form one versioned, read-only internal transport and reload the filesystem model per
+  request.
+- The catalog includes every canonical fixture node, including the disconnected spec;
+  artifacts remain separate and only textual artifacts participate in supported search.
+- The generic document page renders the core HTML or Markdown AST, translates canonical
+  relations to path-addressed routes, presents backlinks, and localizes broken-link and
+  unsafe-content diagnostics.
+- The viewer progressively enhances semantic flows, charts, callouts, and chips while
+  preserving the authored flow text and chart table or list as knowledge-bearing source.
+- Focused core and API tests, viewer lint/build, the workspace typecheck, and live local
+  route probes protect the slice without invoking a Relic 1.x workflow command.
 
 ## 4. Build the Relic Skill Workflow
 

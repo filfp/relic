@@ -17,6 +17,7 @@ import {
   loadKnowledgeProject,
   nextIdentityNumber,
   parseFrontmatter,
+  parseMarkdown,
   parseSpecHtml,
   searchKnowledge,
 } from "../knowledge/index.ts";
@@ -256,6 +257,44 @@ describe("Relic 2.0 typed HTML parser", () => {
     expect(parsed.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
       "unsafe-url",
     );
+  });
+
+  test("keeps semantic chart source in the renderable AST", () => {
+    const parsed = parseSpecHtml(
+      '<relic-body id="001-chart"><relic-chart type="bar"><table><tr><th>Kind</th><th>Count</th></tr><tr><td>FR</td><td>2</td></tr></table></relic-chart></relic-body>',
+      "specs/001-chart/index.html",
+    );
+    const chart = parsed.ast.find(
+      (node) => node.type === "element" && node.tag === "relic-chart",
+    );
+
+    expect(chart).toBeDefined();
+    expect(chart?.type === "element" && chart.children[0]).toMatchObject({
+      type: "element",
+      tag: "table",
+    });
+    expect(parsed.searchableText).toContain("Kind Count FR 2");
+  });
+});
+
+describe("Relic 2.0 Markdown parser", () => {
+  test("keeps lists and tables structurally renderable", () => {
+    const parsed = parseMarkdown(
+      "# Record\n\n- first\n- [x] second\n\n| Kind | Count |\n| --- | ---: |\n| FR | 2 |\n",
+      "records/FR-001.md",
+    );
+    const list = parsed.ast.find((node) => node.type === "list");
+    const table = parsed.ast.find((node) => node.type === "table");
+
+    expect(list?.children?.map((node) => node.type)).toEqual([
+      "list_item",
+      "list_item",
+    ]);
+    expect(list?.children?.[1]?.checked).toBe(true);
+    expect(table?.children?.map((node) => node.type)).toEqual([
+      "table_header",
+      "table_row",
+    ]);
   });
 });
 

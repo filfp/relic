@@ -12,6 +12,7 @@
     "build:binary": "bun run build:templates && bun build packages/cli-node/src/bin.ts --compile --outfile dist/relic --define 'INSTALL_CHANNEL=\"npm\"'",
     "build:npm": "bun run build:templates && bun build packages/cli-node/src/bin.ts --target node --outfile packages/cli-node/dist/relic.js --define 'INSTALL_CHANNEL=\"npm\"' && node scripts/fix-shebang.mjs",
     "dev": "bun run packages/cli-node/src/bin.ts",
+    "dev:viewer:fixture": "bun run build:viewer && bun run scripts/serve-relic-2-fixture.ts",
     "typecheck": "tsc --noEmit",
     "publish": "bun run scripts/publish.ts",
     "publish:npm": "bun run build:npm && cd packages/cli-node && npm publish --access public",
