@@ -82,6 +82,16 @@ execute in sequence. Required mode selection, ambient routing machinery, automat
 documentation, hidden session state, and a mandatory pause between reasoning and
 implementation are classified **remove**.
 
+The four-command CLI, its mutation boundary, engine reconciliation behavior, removal of
+a standalone validation surface, and read-model diagnostic ownership are accepted in
+[`relic-2.0.md`](relic-2.0.md#minimal-cli-contract). `init`, `search`, and `serve` are
+classified **replace/adapt** against the new contracts. Engine hook installation is
+absorbed into `install`; `install --engine <engine>` updates desired configuration and
+installs that engine idempotently. The current `validate`, `use`, `scan`, `context`,
+`scaffold`, `write`, `toon-migrate`, `mode`, `snippet`, `external`, `viewer-migrate`,
+`html-sync`, workflow commands, and self-upgrade behavior are classified **remove**. MCP
+is excluded from the minimal surface pending distribution evidence.
+
 For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
 **remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,
 templates, MCP surface, packaging, and tests.
@@ -131,7 +141,8 @@ Connect the knowledge read model to the two retained product surfaces:
 - visible orphan, duplicate-ID, unsupported-content, and broken-link diagnostics;
 - semantic rendering for flows, charts, tables, callouts, and existing reusable
   components that still satisfy the 2.0 HTML contract;
-- read-only validation and useful diagnostics for malformed content.
+- tolerant read-model diagnostics for malformed content without a separate validation
+  command.
 
 Reuse `fragment`, `view-data`, `serve`, search, and viewer code only where tests show
 that their behavior is independent from 1.x modes, manifests, sessions, and fix pages.
@@ -196,15 +207,18 @@ superseded files in active documentation.
 
 ## 5. Replace the CLI Surface
 
-Implement only the capabilities approved in Stage 1. The CLI should provide deterministic
-filesystem, search, validation, and viewer operations that skills benefit from; it must
-not orchestrate how the agent thinks.
+Implement only the four commands approved in Stage 1. The CLI provides deterministic
+initialization, engine-skill installation, search, and frontend operations; it must not
+orchestrate how the agent thinks or expose diagnostics as a separate validation
+workflow.
 
 At this stage:
 
-- initialize the Relic-owned files and roots declared by `RELIC.md` without modifying
-  `AGENTS.md`;
-- expose the accepted search and read-only validation behavior;
+- implement `relic init` without modifying `AGENTS.md`, creating governance documents,
+  or overwriting an existing `RELIC.md` or `config.yaml`;
+- implement `relic install` to reconcile configured engines, and
+  `relic install --engine <engine>` to add one desired engine and install its skill;
+- expose exhaustive current-corpus search with human and JSON projections;
 - serve the frontend and its knowledge API;
 - do not require a CLI command for record creation or numbering;
 - remove any new dependency on session selection, model conversation history, workflow
@@ -215,10 +229,17 @@ available through the new surface.
 
 ### Gate
 
-- A clean fixture can be initialized, read, searched, validated, and viewed.
+- A clean fixture can be initialized, searched, and viewed.
 - Initialization leaves an existing `AGENTS.md` byte-for-byte unchanged.
+- Initialization refuses to overwrite existing Relic project files.
+- Installation without `--engine` reconciles the declared engine list, while
+  `--engine` updates `config.yaml` without duplicates and installs the selected skill.
+- A failed engine installation leaves desired configuration explicit and produces a
+  repairable mismatch rather than rolling back project initialization.
 - CLI output contracts are tested and do not depend on one AI engine.
-- The accepted command surface contains no cognitive workflow stages.
+- `search` and `serve` do not mutate project knowledge.
+- The accepted command surface contains no validation command or cognitive workflow
+  stages.
 
 ## 6. Rebuild Distribution Around Skills
 

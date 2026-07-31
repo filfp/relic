@@ -493,6 +493,68 @@ incomplete corpus when stale. Broken links, duplicate IDs, unsupported content, 
 orphaned nodes remain visible, non-blocking maintenance evidence in both the read model
 and frontend.
 
+## Minimal CLI Contract
+
+The Relic 2.0 CLI has four product commands:
+
+```text
+relic init
+relic install [--engine <engine>]
+relic search <query>
+relic serve
+```
+
+Ordinary help and version output are executable conventions rather than additional
+product workflows. The CLI does not create or number knowledge documents, select active
+context, maintain sessions, invoke models, execute prompts, choose a specification mode,
+write changelogs, migrate Relic 1.x, or determine how an agent reasons.
+
+`relic init` creates the smallest project foundation: `.relic/RELIC.md`,
+`.relic/config.yaml`, `.relic/specs/`, and `.relic/shared/`. The initial engine list is
+empty and the generated `RELIC.md` uses the documented default topology. Initialization
+does not create project governance documents, write `AGENTS.md`, or overwrite an
+existing `RELIC.md` or `config.yaml`. There is no force-reinitialization path.
+
+`relic install` reconciles the engine integrations already declared in `config.yaml`.
+With `--engine <engine>`, it first validates the engine and existing configuration,
+adds the engine to the declared list without duplication, and installs or refreshes that
+engine's Relic skill. The configuration is desired project state; engine-native skill
+directories are observed installation state. If installation fails after the desired
+engine is recorded, the declaration remains and the mismatch is reported so the same
+command can repair it later. An engine removed from the configuration is not
+automatically deleted from its native directory. The command never modifies `AGENTS.md`
+or updates the Relic binary itself.
+
+`relic search` queries the complete currently discovered corpus rather than the Relic
+1.x manifest, fix, or active-spec indexes. IDs, paths, labels, metadata, memberships, and
+supported text content participate in discovery. Human-readable output is the default
+and `--json` exposes the same result model for agents and automation. Search has no
+`--deep` distinction that can silently omit part of the corpus.
+
+`relic serve` starts the local read-only frontend and knowledge API. It accepts an
+optional port override and otherwise chooses an available local port, but stores no
+viewer preference or process state in the project. When topology or content is partially
+readable, the frontend remains available and presents focused global or document
+chiplets for broken paths, duplicate IDs, malformed native documents, unsupported
+content, and other read-model diagnostics.
+
+Relic 2.0 has no `validate` command. Removing that command does not remove parsing or
+diagnostics: the read model detects structural problems for every consumer, the frontend
+is their primary presentation surface, and the central skill inspects knowledge it
+writes against the active contracts. Search and the frontend preserve usable knowledge
+when diagnostics are local; a command fails only when its requested operation cannot be
+performed, such as when no Relic project can be found or topology cannot be read enough
+to discover a corpus. Diagnostics are evidence for maintenance, not a second enforcement
+system.
+
+Only `init` and `install` mutate project or engine state. `search` and `serve` are
+read-only. The legacy `add-engine` and prompt-refresh part of `upgrade` are absorbed by
+`install`; self-upgrade remains the responsibility of the package distribution channel.
+The workflow, session, context, scaffold, write, mode, migration, external-integration,
+snippet, and active-fix commands are removed. MCP is not part of the minimal CLI and may
+return only if distribution work demonstrates a material knowledge-access benefit not
+provided by files, search, and the frontend.
+
 ## Relic 1.x Constraints Removed
 
 Relic 2.0 does not preserve the following requirements:
@@ -519,7 +581,6 @@ mandatory development methodology.
 
 The following decisions are intentionally outside this conceptual baseline:
 
-- the reduced CLI command surface;
 - plugin and multi-engine distribution;
 - frontend and local-server implementation;
 - migration or removal of the Relic 1.x codebase.
