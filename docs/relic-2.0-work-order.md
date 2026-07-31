@@ -60,8 +60,27 @@ Exhaustive catalog, full-text discovery, multiple corpus memberships, orphan vis
 deterministic display fallbacks, and derived-cache authority boundaries are accepted in
 [`relic-2.0.md`](relic-2.0.md#consultability-contract). The current manifest-based search
 and spec/session-oriented `view-data` read model are classified **replace**. Reusable
-presentation components may still be classified **adapt** after satisfying the semantic
-HTML contract.
+presentation components may still be classified **adapt** after satisfying the accepted
+[`semantic HTML contract`](relic-2.0.md#semantic-html-contract).
+
+The canonical specification fragment, native-first authoring vocabulary, minimal
+progressive component set, tolerant rendering, and frontend authority boundary are
+accepted in the semantic HTML contract. The single `relic-body` root, tolerant
+diagnostics, callouts, textual flows, and presentation components whose knowledge
+remains in child content are classified **adapt**. JSON-attribute tables and charts,
+derived spec metadata, tasks, artifacts, changelog components, interpreted status
+vocabulary, fixed specification sections, embedded chrome, and dual-format
+synchronization are classified **remove/replace**.
+
+The central skill's generic reasoning protocol, proportional depth, progressive context
+discovery, recommendation-first behavior, persistence boundary, temporary decision
+ledger, and objective stopping condition are accepted in
+[`relic-2.0.md`](relic-2.0.md#central-skill-contract). The
+[`architecture-roast` evaluation](evidence/architecture-roast-evaluation.md) remains the
+primary behavioral evidence: its applications are not separate workflows to expose or
+execute in sequence. Required mode selection, ambient routing machinery, automatic
+documentation, hidden session state, and a mandatory pause between reasoning and
+implementation are classified **remove**.
 
 For every current subsystem, record one disposition: **keep**, **adapt**, **replace**, or
 **remove**. This inventory must cover the core commands, viewer, engine adapters, plugin,
@@ -132,8 +151,13 @@ Turn the successful architecture-roast practice documented in the
 [`architecture-roast` evaluation](evidence/architecture-roast-evaluation.md) into the
 central Relic skill:
 
-- use discovery, readiness, compliance, operational, and decomposition as internal
-  reasoning modes rather than user-facing commands or required selectors;
+- preserve one generic reasoning protocol across discovery, readiness, compliance,
+  operational, decomposition, fixes, and implementation rather than encoding a separate
+  workflow for each application;
+- treat those applications as optional internal lenses rather than user-facing commands,
+  required selectors, or ordered phases;
+- scale analysis to uncertainty, impact, and reversibility and continue into code and
+  validation when they are part of the request;
 - distinguish contradictions, blocking forks, derivable solutions, accepted risks,
   implementation details, future improvements, and non-problems;
 - require evidence and recommendation before asking the developer to decide;
@@ -142,7 +166,14 @@ central Relic skill:
 - maintain a temporary decision ledger during long roasts;
 - define objective completion and handoff criteria;
 - read `.relic/RELIC.md` first when `AGENTS.md` does not already route through it;
-- suggest specs and typed records without silently creating them;
+- explore from the current target through relevant links and whichever native search
+  mechanisms fit the task instead of loading the whole corpus or mandating Relic search;
+- prefer updating existing knowledge before suggesting a new independently identified
+  document;
+- suggest specs, shared knowledge, and typed records at a natural boundary without
+  interrupting work or silently creating them;
+- treat decision agreement and authorization to persist as distinct unless the
+  immediately preceding proposal made the resulting writes explicit;
 - update current knowledge only after developer authorization.
 
 Absorb the minimal record-writing behavior into the central skill and `RELIC.md`: read
@@ -154,12 +185,14 @@ superseded files in active documentation.
 ### Gate
 
 - Scenario tests or documented agent trials cover idea discovery, spec isolation, record
-  extraction, implementation compliance, and a fix that intentionally creates no new
-  document.
+  extraction, implementation compliance, implementation after derivable decisions, and
+  a fix that intentionally creates no new document.
 - Every persisted artifact in those trials was explicitly requested or confirmed by the
   developer.
 - A handoff can continue in another session from repository knowledge rather than hidden
   conversation state.
+- No trial requires a mode selector, second prompt, or separate command to continue from
+  reasoning into requested implementation.
 
 ## 5. Replace the CLI Surface
 

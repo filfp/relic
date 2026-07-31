@@ -37,6 +37,71 @@ the knowledge base and the roast process to implement a fix without producing a 
 document. Existing documentation is updated only when the current knowledge itself
 changes or becomes inaccurate.
 
+### Central skill contract
+
+The central skill is derived from the behavior evaluated in
+[`architecture-roast-evaluation.md`](evidence/architecture-roast-evaluation.md). That
+evaluation is behavioral evidence, not a workflow to reproduce step by step. Its value
+comes from one generic reasoning protocol being useful during idea discovery,
+specification readiness, architecture decomposition, implementation compliance,
+operational analysis, fixes, and ordinary development without requiring a different
+command or ceremony for each situation.
+
+The skill surrounds the developer's current task instead of becoming a mandatory stage
+before it. When asked to implement or fix something, it may consult knowledge, resolve
+derivable questions, expose a material contradiction, and continue through code and
+validation. When asked only for a roast, the analysis itself is the requested result.
+Discovery, readiness, compliance, operational, and decomposition are optional internal
+lenses, not modes the developer selects, ordered phases, or fixed output formats. The
+skill may combine or omit them according to the target.
+
+The amount of analysis is proportional to uncertainty, consequence, and reversibility.
+A local change with clear intent should not receive a full architecture interrogation.
+A change to authority, persistence, a public contract, security, or irreversible state
+justifies deeper scrutiny. If established constraints leave only one coherent solution,
+the skill derives and recommends it instead of turning it into a question. It stops for
+the developer only when several valid choices materially change behavior, ownership,
+authority, or scope.
+
+The skill uses project knowledge progressively. It follows an existing `AGENTS.md`
+route to Relic when present; otherwise it reads `.relic/RELIC.md` as its first Relic
+context step. It then starts from the current target, follows relevant links, and uses
+the frontend, Relic search, filesystem search, symbol search, or other engine-native
+exploration according to need. It neither loads the entire corpus for every task nor
+requires one exploration tool.
+
+When a conversation creates or changes durable behavior, constraints, architecture,
+responsibility boundaries, coordinated delivery scope, or reusable knowledge, the skill
+may suggest persistence at a natural boundary. It first looks for an existing document
+that should be corrected or extended and prefers that over creating duplicate
+knowledge. A new specification, shared document, FR, NFR, ADR, or EPIC is suggested only
+when the knowledge has a useful independent identity. A declined suggestion is not
+repeated without new evidence. Investigations, discarded hypotheses, local
+implementation details, and fixes that merely restore an already documented contract do
+not automatically justify a record.
+
+Persistence remains developer-owned. Explicit requests such as create, document,
+record, or update authorize the named knowledge change. A confirmation also authorizes
+the change when the skill's immediately preceding proposal stated the specific
+documents it would create or update after confirmation. Agreement with a decision alone
+does not otherwise authorize an unspecified write. Creating a requested numbered record
+includes advancing its cooperative high-water mark. Authorization to change code does
+not silently authorize new documentation; when implementation changes the current
+knowledge frontier, the skill surfaces the affected documents and proposes their update.
+
+The skill may keep a temporary decision ledger in the conversation during a long
+analysis, covering confirmed and derived decisions, open forks, accepted risks,
+deferrals, and affected documents. That ledger is not a Relic file, cache, session, or
+source of truth. Cross-session continuity comes from developer-authorized living
+knowledge or an explicitly requested handoff, never hidden conversation state.
+
+A roast is complete when no remaining question changes the current contract or blocks
+the requested scope. Future improvements, equivalent preferences, consciously accepted
+risks, and implementation details do not keep it open. The central skill reduces the
+decision space and helps the coding agent complete the requested work; it does not
+replace the coding agent, orchestrate another prompt, own `AGENTS.md`, or require a
+second invocation to proceed.
+
 ## Authority and Drift
 
 The current prompt and explicit developer intent define the work being performed. The
@@ -218,6 +283,59 @@ document structure. Essential knowledge may not exist only in JavaScript, canvas
 private component attributes, or a visual shape without textual content. Scripts,
 styling, and progressive interaction belong to the frontend, keeping canonical HTML
 readable to agents, search, accessibility tools, and code review.
+
+### Semantic HTML contract
+
+The canonical specification file is an HTML fragment with one required root whose `id`
+matches the specification identity:
+
+```html
+<relic-body id="012-spec-viewer">
+  <!-- free specification content -->
+</relic-body>
+```
+
+No title, lifecycle field, or fixed section is required. Optional project metadata may
+be carried as ordinary `data-*` attributes and remains opaque to Relic. The fragment
+does not contain document chrome, navigation, scripts, styles, event handlers, iframes,
+inline SVG, or canvas behavior. Those concerns belong to the frontend. A canonical
+fragment is not required to render as a styled standalone web page when opened outside
+Relic.
+
+Standard semantic HTML is the default authoring vocabulary. Sections, headings, tables,
+lists, links, figures, captions, details, definitions, blockquotes, images with
+alternative text, code, and native progress elements do not require Relic wrappers.
+Relic-specific elements exist only for useful progressive enhancement:
+
+- `<relic-callout>` highlights a semantic note, risk, warning, or other project-defined
+  concern;
+- `<relic-flow>` turns readable textual flow notation into a visual flow;
+- `<relic-chart>` enhances a child semantic table or list into a visualization;
+- `<relic-chip>` presents a short neutral marker without imposing a status lifecycle.
+
+Component attributes may provide rendering hints but may not be the only copy of
+knowledge. In particular, tables are authored as HTML rather than JSON attributes, and
+chart values remain present in a child table or list. Flow source remains textual and
+indexable. A visual connection contributes a knowledge-web edge only when its document
+structure also contains an ordinary link.
+
+Callout kinds and other visual hints are open project vocabulary. The frontend may give
+known values specialized presentation and must render unknown values neutrally. It does
+not infer lifecycle, validity, completion, or authority from status-like text.
+
+Rendering is tolerant and security-bounded. Safe semantic HTML renders normally. Known
+Relic components receive enhanced presentation. An unknown or malformed `relic-*`
+component preserves readable child content and produces a focused diagnostic instead of
+breaking the page. Unsafe executable or presentation-owned content is not executed and
+also produces a diagnostic. The same fragment interpretation feeds indexing,
+validation, and frontend rendering so a component cannot silently expose different
+knowledge to each surface.
+
+The frontend derives catalog metadata, backlinks, diagnostics, related documents, and
+supporting-file navigation outside the authored fragment. Canonical HTML therefore has
+no generated `spec-meta`, tasks, artifacts, changelog, backlink, or relation-index
+components. It also has no mandatory overview, requirements, plan, tasks, or artifacts
+anatomy.
 
 HTML is the only Relic specification mode. Relic 2.0 has no Markdown/HTML mode selector
 and no dual-format synchronization lifecycle.
@@ -401,10 +519,6 @@ mandatory development methodology.
 
 The following decisions are intentionally outside this conceptual baseline:
 
-- the final repository and configurable directory layout;
-- the semantic HTML component contract;
-- search indexing and freshness behavior;
-- the boundary and modes of the central Relic skill;
 - the reduced CLI command surface;
 - plugin and multi-engine distribution;
 - frontend and local-server implementation;
