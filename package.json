@@ -26,11 +26,12 @@
     "test": "bun run build:assets && bun run test:source",
     "test:source": "bun run --filter '*' test",
     "test:distribution": "bun run scripts/test-distribution.ts",
+    "test:node-runtime": "bun run scripts/test-distribution.ts --node-runtime-only",
     "build:viewer": "bun run scripts/embed-viewer.ts"
   },
   "devDependencies": {
     "@types/bun": "1.3.12",
     "typescript": "6.0.2",
-    "@types/node": "25.6.0"
+    "@types/node": "24.13.3"
   }
 }

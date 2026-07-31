@@ -17,6 +17,7 @@ const NODE_BUNDLE = join(ROOT, "packages", "cli-node", "dist", "relic.js");
 const BUN_BINARY = join(ROOT, "dist", "relic");
 const SKILL_ROOT = join(ROOT, "skills", "relic");
 const TEMPORARY_PROJECTS = new Set<string>();
+const NODE_RUNTIME_ONLY = process.argv.includes("--node-runtime-only");
 
 function fail(message: string): never {
   throw new Error(`distribution test failed: ${message}`);
@@ -186,45 +187,54 @@ function verifyInstalledSkill(
 }
 
 try {
-  console.log("Building self-contained npm and Bun artifacts...");
-  run("bun", ["run", "build:npm"]);
-  run("bun", [
-    "build",
-    "packages/cli-node/src/bin.ts",
-    "--compile",
-    "--outfile",
-    "dist/relic",
-  ]);
+  if (!NODE_RUNTIME_ONLY) {
+    console.log("Building self-contained npm and Bun artifacts...");
+    run("bun", ["run", "build:npm"]);
+    run("bun", [
+      "build",
+      "packages/cli-node/src/bin.ts",
+      "--compile",
+      "--outfile",
+      "dist/relic",
+    ]);
+  } else {
+    console.log(
+      `Exercising the existing npm bundle with ${run("node", ["--version"]).trim()}...`,
+    );
+  }
 
   const nodeProject = verifyInstalledSkill(
     "node",
     [NODE_BUNDLE],
     "node-bundle",
   );
-  verifyInstalledSkill(BUN_BINARY, [], "bun-binary");
   await verifyViewer(nodeProject);
 
-  const pack = JSON.parse(
-    run("npm", ["pack", "--dry-run", "--json"], {
-      cwd: join(ROOT, "packages", "cli-node"),
-    }),
-  ) as Array<{ files: Array<{ path: string }> }>;
-  const packagedFiles = pack[0]?.files.map((file) => file.path).sort();
-  expectEqual(
-    packagedFiles,
-    [
-      "LICENSE",
-      "README.md",
-      "THIRD_PARTY_NOTICES.md",
-      "dist/relic.js",
-      "package.json",
-    ],
-    "npm package contains an unexpected file set",
-  );
+  if (!NODE_RUNTIME_ONLY) {
+    verifyInstalledSkill(BUN_BINARY, [], "bun-binary");
 
-  const bundle = readFileSync(NODE_BUNDLE, "utf8");
-  if (bundle.includes(join(ROOT, "skills", "relic"))) {
-    fail("npm bundle still depends on the source checkout skill path");
+    const pack = JSON.parse(
+      run("npm", ["pack", "--dry-run", "--json"], {
+        cwd: join(ROOT, "packages", "cli-node"),
+      }),
+    ) as Array<{ files: Array<{ path: string }> }>;
+    const packagedFiles = pack[0]?.files.map((file) => file.path).sort();
+    expectEqual(
+      packagedFiles,
+      [
+        "LICENSE",
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "dist/relic.js",
+        "package.json",
+      ],
+      "npm package contains an unexpected file set",
+    );
+
+    const bundle = readFileSync(NODE_BUNDLE, "utf8");
+    if (bundle.includes(join(ROOT, "skills", "relic"))) {
+      fail("npm bundle still depends on the source checkout skill path");
+    }
   }
 } finally {
   for (const projectDir of TEMPORARY_PROJECTS) {
@@ -233,5 +243,7 @@ try {
 }
 
 console.log(
-  "Distribution verified: npm bundle, Bun binary, viewer, native engine discovery, and package contents.",
+  NODE_RUNTIME_ONLY
+    ? "Node runtime verified: npm bundle, viewer, search, and native engine installation."
+    : "Distribution verified: npm bundle, Bun binary, viewer, native engine discovery, and package contents.",
 );
