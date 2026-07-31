@@ -10,7 +10,7 @@ import { runInstall } from "./commands/install.ts";
 import { runSearch } from "./commands/search.ts";
 import { runServe } from "./commands/serve.ts";
 
-const VERSION = "2.0.0";
+const VERSION = "2.0.1";
 
 function port(value: string): number {
   const parsed = Number(value);
