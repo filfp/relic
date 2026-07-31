@@ -1,9 +1,13 @@
 import {
   existsSync,
   lstatSync,
+  mkdtempSync,
   mkdirSync,
+  renameSync,
   readdirSync,
   realpathSync,
+  rmSync,
+  rmdirSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -35,7 +39,7 @@ This file maps the current Relic knowledge corpus. Add project-specific guidance
 without turning this map into a project-governance schema.
 
 When creating numbered knowledge, follow the current topology, inspect current canonical
-identities of that kind, and write directly at the next available value.
+identities of that kind, and use one greater than the greatest valid current identity.
 `;
 
 function existingEntries(path: string): string[] {
@@ -69,14 +73,27 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     );
   }
 
-  const specsDir = join(relicDir, "specs");
-  const sharedDir = join(relicDir, "shared");
-  mkdirSync(specsDir, { recursive: true });
-  mkdirSync(sharedDir, { recursive: true });
-  writeFileSync(join(relicDir, "RELIC.md"), RELIC_PROJECT_FILE, {
-    encoding: "utf8",
-    flag: "wx",
-  });
+  const stagingDir = mkdtempSync(join(projectDir, ".relic-init-"));
+  let removedEmptyTarget = false;
+  try {
+    mkdirSync(join(stagingDir, "specs"));
+    mkdirSync(join(stagingDir, "shared"));
+    writeFileSync(join(stagingDir, "RELIC.md"), RELIC_PROJECT_FILE, {
+      encoding: "utf8",
+      flag: "wx",
+    });
+
+    if (existsSync(relicDir)) {
+      rmdirSync(relicDir);
+      removedEmptyTarget = true;
+    }
+    renameSync(stagingDir, relicDir);
+  } catch (error) {
+    if (removedEmptyTarget && !existsSync(relicDir)) mkdirSync(relicDir);
+    throw error;
+  } finally {
+    rmSync(stagingDir, { recursive: true, force: true });
+  }
 
   const result = {
     projectDir,

@@ -65,8 +65,10 @@ describe("Relic 2.0 init", () => {
       },
     });
     expect(readFileSync(join(dir, ".relic", "RELIC.md"), "utf8")).toContain(
-      "inspect current canonical",
+      "one greater than the greatest valid current identity",
     );
+    expect(project.diagnostics.some((item) => item.code === "missing-corpus-root"))
+      .toBe(false);
   });
 
   test("leaves project-owned AGENTS.md byte-for-byte unchanged", async () => {
@@ -97,6 +99,8 @@ describe("Relic 2.0 init", () => {
     mkdirSync(join(dir, ".relic"));
     await runInit({ dir });
     expect(existsSync(join(dir, ".relic", "RELIC.md"))).toBe(true);
+    expect(readdirSync(dir).some((entry) => entry.startsWith(".relic-init-")))
+      .toBe(false);
   });
 
   test("refuses to merge with or overwrite existing Relic files", async () => {

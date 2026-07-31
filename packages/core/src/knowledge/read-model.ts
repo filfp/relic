@@ -243,6 +243,7 @@ function discoverMarkdownRoot(
   diagnostics: KnowledgeDiagnostic[],
 ): void {
   const requested = resolve(projectRoot, rootPath);
+  if (!existsSync(requested)) return;
   const realRoot = resolveExistingInside(projectRoot, requested, diagnostics, rootPath);
   if (!realRoot || !statSync(realRoot).isDirectory()) {
     diagnostics.push({
@@ -268,6 +269,7 @@ function discoverSpecs(
   diagnostics: KnowledgeDiagnostic[],
 ): void {
   const requested = resolve(projectRoot, rootPath);
+  if (!existsSync(requested)) return;
   const realRoot = resolveExistingInside(projectRoot, requested, diagnostics, rootPath);
   if (!realRoot || !statSync(realRoot).isDirectory()) {
     diagnostics.push({

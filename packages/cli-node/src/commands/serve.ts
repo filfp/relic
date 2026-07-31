@@ -6,7 +6,6 @@ import {
 } from "node:fs";
 import {
   basename,
-  dirname,
   extname,
   relative,
   resolve,
@@ -19,10 +18,11 @@ import {
   loadKnowledgeProject,
   projectView,
   searchView,
+  type KnowledgeProject,
 } from "@relic/core";
 
 import { VIEWER_ASSETS } from "../generated/viewer-assets.ts";
-import { findRelicDir } from "../project.ts";
+import { resolveRelicProjectDir } from "../project.ts";
 
 export interface ServeOptions {
   port?: number;
@@ -39,6 +39,9 @@ export interface ViewerResponse {
 
 const FIRST_AVAILABLE_PORT = 4747;
 const AVAILABLE_PORT_ATTEMPTS = 100;
+const PROJECT_CACHE_TTL_MS = 1_000;
+
+type ProjectReader = () => KnowledgeProject;
 
 const INLINE_ARTIFACT_TYPES: Record<string, string> = {
   ".gif": "image/gif",
@@ -79,10 +82,10 @@ function isInside(root: string, target: string): boolean {
 
 function artifactContent(
   projectDir: string,
+  project: KnowledgeProject,
   path: string,
   forceDownload: boolean,
 ): ViewerResponse {
-  const project = loadKnowledgeProject(projectDir);
   if (!project.artifacts.some((artifact) => artifact.path === path)) {
     return jsonResponse(404, { error: `artifact "${path}" not found` });
   }
@@ -116,6 +119,7 @@ export function resolveViewerRequest(
   version: string,
   method: string,
   requestUrl: string,
+  readProject: ProjectReader = () => loadKnowledgeProject(projectDir),
 ): ViewerResponse | undefined {
   if (method !== "GET" && method !== "HEAD") {
     return jsonResponse(405, { error: "read-only server — GET and HEAD only" });
@@ -132,7 +136,7 @@ export function resolveViewerRequest(
     });
   }
 
-  const project = loadKnowledgeProject(projectDir);
+  const project = readProject();
   if (url.pathname === "/api/project") {
     return jsonResponse(200, projectView(projectDir, project));
   }
@@ -159,11 +163,29 @@ export function resolveViewerRequest(
   if (url.pathname === "/api/content") {
     return artifactContent(
       projectDir,
+      project,
       url.searchParams.get("path") ?? "",
       url.searchParams.get("download") === "1",
     );
   }
   return jsonResponse(404, { error: "unknown API route" });
+}
+
+export function createProjectReader(
+  projectDir: string,
+  ttlMs = PROJECT_CACHE_TTL_MS,
+  now: () => number = Date.now,
+): ProjectReader {
+  let cached: KnowledgeProject | undefined;
+  let expiresAt = 0;
+  return () => {
+    const currentTime = now();
+    if (cached === undefined || currentTime >= expiresAt) {
+      cached = loadKnowledgeProject(projectDir);
+      expiresAt = currentTime + ttlMs;
+    }
+    return cached;
+  };
 }
 
 function send(
@@ -198,14 +220,17 @@ function serveAsset(res: ServerResponse, key: string, headOnly: boolean): boolea
 }
 
 export function createViewerServer(projectDir: string, version: string) {
+  const resolvedProjectDir = resolveRelicProjectDir(projectDir);
+  const readProject = createProjectReader(resolvedProjectDir);
   return createServer((req: IncomingMessage, res: ServerResponse) => {
     try {
       const method = req.method ?? "GET";
       const response = resolveViewerRequest(
-        projectDir,
+        resolvedProjectDir,
         version,
         method,
         req.url ?? "/",
+        readProject,
       );
       if (response) {
         send(res, response, method === "HEAD");
@@ -261,14 +286,7 @@ function isAddressInUse(error: unknown): boolean {
 }
 
 export async function runServe(options: ServeOptions) {
-  let projectDir = options.projectDir;
-  if (!projectDir) {
-    const relicDir = findRelicDir(process.cwd());
-    if (relicDir) projectDir = dirname(relicDir);
-  }
-  if (!projectDir) {
-    throw new Error("Not in a Relic project. Run: relic init");
-  }
+  const projectDir = resolveRelicProjectDir(options.projectDir);
 
   const version = options.version ?? "dev";
   let server;

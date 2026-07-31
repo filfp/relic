@@ -1,6 +1,3 @@
-import { existsSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-
 import {
   discoverEngines,
   installRelicSkill,
@@ -9,7 +6,7 @@ import {
   type Engine,
   type InstalledSkill,
 } from "@relic/engines";
-import { findRelicDir } from "../project.ts";
+import { resolveRelicProjectDir } from "../project.ts";
 
 export interface InstallOptions {
   engine?: string;
@@ -21,24 +18,10 @@ export interface InstallResult {
   installed: InstalledSkill[];
 }
 
-function resolveProjectDir(projectDir?: string): string {
-  if (projectDir) return resolve(projectDir);
-  const relicDir = findRelicDir(process.cwd());
-  if (!relicDir) throw new Error("Not in a Relic project. Run: relic init");
-  return dirname(relicDir);
-}
-
-function fileExists(path: string): boolean {
-  return existsSync(path) && statSync(path).isFile();
-}
-
 export async function runInstall(
   options: InstallOptions = {},
 ): Promise<InstallResult> {
-  const projectDir = resolveProjectDir(options.projectDir);
-  if (!fileExists(join(projectDir, ".relic", "RELIC.md"))) {
-    throw new Error("Missing .relic/RELIC.md. Run: relic init");
-  }
+  const projectDir = resolveRelicProjectDir(options.projectDir);
 
   let engines: Engine[];
   if (options.engine !== undefined) {

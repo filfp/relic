@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   cpSync,
   mkdtempSync,
+  mkdirSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -11,8 +12,11 @@ import {
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
+import { loadKnowledgeProject } from "@relic/core";
+
 import {
   createViewerServer,
+  createProjectReader,
   resolveViewerRequest,
 } from "../commands/serve.ts";
 
@@ -232,6 +236,46 @@ describe("Relic 2.0 read-only viewer API", () => {
       await new Promise<void>((resolveClose, reject) => {
         server.close((error) => error ? reject(error) : resolveClose());
       });
+    }
+  });
+
+  test("reuses one derived read model inside the cache window", () => {
+    let time = 1_000;
+    const readProject = createProjectReader(fixture, 500, () => time);
+    const first = readProject();
+    expect(readProject()).toBe(first);
+
+    time += 501;
+    expect(readProject()).not.toBe(first);
+  });
+
+  test("loads the corpus only once when serving artifact content", () => {
+    const project = loadKnowledgeProject(fixture);
+    let reads = 0;
+    const response = resolveViewerRequest(
+      fixture,
+      "test-2.0",
+      "GET",
+      `/api/content?path=${encodeURIComponent("knowledge/specs/001-auth/notes.md")}`,
+      () => {
+        reads += 1;
+        return project;
+      },
+    );
+
+    expect(response?.status).toBe(200);
+    expect(reads).toBe(1);
+  });
+
+  test("refuses to start for a legacy directory without RELIC.md", () => {
+    const legacy = mkdtempSync(join(tmpdir(), "relic-serve-legacy-"));
+    try {
+      mkdirSync(join(legacy, ".relic"));
+      expect(() => createViewerServer(legacy, "test-2.0")).toThrow(
+        /Missing \.relic\/RELIC\.md/,
+      );
+    } finally {
+      rmSync(legacy, { recursive: true, force: true });
     }
   });
 

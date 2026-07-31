@@ -1,5 +1,3 @@
-import { dirname, resolve } from "node:path";
-
 import {
   loadKnowledgeProject,
   searchKnowledge,
@@ -7,7 +5,7 @@ import {
   type KnowledgeSearchResult,
 } from "@relic/core";
 
-import { findRelicDir } from "../project.ts";
+import { resolveRelicProjectDir } from "../project.ts";
 
 export interface SearchOptions {
   query: string;
@@ -18,13 +16,6 @@ export interface SearchOptions {
 export interface SearchOutput {
   query: string;
   results: KnowledgeSearchResult[];
-}
-
-function resolveProjectDir(projectDir?: string): string {
-  if (projectDir) return resolve(projectDir);
-  const relicDir = findRelicDir(process.cwd());
-  if (!relicDir) throw new Error("Not in a Relic project. Run: relic init");
-  return dirname(relicDir);
 }
 
 function diagnosticSummary(diagnostics: KnowledgeDiagnostic[]): string {
@@ -55,7 +46,7 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   const query = options.query.trim();
   if (query === "") throw new Error("Search query cannot be empty");
 
-  const projectDir = resolveProjectDir(options.projectDir);
+  const projectDir = resolveRelicProjectDir(options.projectDir);
   const project = loadKnowledgeProject(projectDir);
   if (!project.topology) {
     const details = diagnosticSummary(project.diagnostics);
