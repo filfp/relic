@@ -93,6 +93,22 @@ describe("Relic viewer content rendering", () => {
     expect(td).not.toBe(bt);
   });
 
+  test("enhances a readable natural-language flow chain", () => {
+    const markup = renderToStaticMarkup(
+      <Flow
+        source={
+          "Developer request -> relevant project knowledge -> proportional roast ->\n" +
+          "requested analysis or code -> validation -> optional developer-approved persistence"
+        }
+      />,
+    );
+
+    expect(markup).toContain("<svg");
+    expect(markup).not.toContain("<pre>");
+    expect(markup.match(/<rect /g)?.length).toBe(6);
+    expect(markup.match(/<line /g)?.length).toBe(5);
+  });
+
   test("renders malformed repository image paths as local evidence", () => {
     expect(resolveRelativePath("knowledge/specs/001/index.html", "%")).toBeUndefined();
 

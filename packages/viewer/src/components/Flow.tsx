@@ -19,6 +19,7 @@ function parseFlow(src: string) {
   let dir = "LR";
   const dm = lines[0]?.match(/^(?:graph|flowchart)\s+(LR|TD|RL|BT)/i);
   if (dm) dir = dm[1]!.toUpperCase();
+  const bodyLines = dm ? lines.slice(1) : lines;
 
   const nodes = new Map<string, FlowNode>();
   const edges: FlowEdge[] = [];
@@ -28,7 +29,7 @@ function parseFlow(src: string) {
     else if (label) existing.label = label;
   };
 
-  for (const line of dm ? lines.slice(1) : lines) {
+  for (const line of bodyLines) {
     const em = line.match(EDGE);
     if (em) {
       const [, fId, fBox, fDiam, fCirc, label, tId, tBox, tDiam, tCirc] = em;
@@ -39,6 +40,24 @@ function parseFlow(src: string) {
     }
     const nm = line.match(NODE);
     if (nm) addNode(nm[1]!, nm[2] ?? nm[3] ?? nm[4], nm[3] ? "diamond" : nm[4] ? "circle" : "box");
+  }
+
+  if (!nodes.size) {
+    const steps = bodyLines
+      .join(" ")
+      .split(/\s*(?:-+>|→)\s*/)
+      .map((step) => step.trim())
+      .filter(Boolean);
+    if (steps.length > 1) {
+      steps.forEach((label, index) => addNode(`step_${index}`, label));
+      for (let index = 1; index < steps.length; index += 1) {
+        edges.push({
+          from: `step_${index - 1}`,
+          to: `step_${index}`,
+          label: "",
+        });
+      }
+    }
   }
   return { dir, nodes, edges };
 }
