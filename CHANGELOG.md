@@ -9,6 +9,25 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Canonical Markdown now supports the same allowlisted semantic HTML vocabulary as
+  specification HTML, so authored disclosures such as `<details>` render as structure
+  instead of literal markup. Unbalanced blocks are paired back together and the Markdown
+  between them is nested inside the element.
+- Recursive, shape-aware rendering of project metadata: short facts stay in the summary
+  row, collections become chips, and nested objects and arrays expand as readable blocks.
+
+### Changed
+- HTML anchors authored in Markdown are ordinary knowledge links, so they now create
+  graph edges, backlinks, and broken-link diagnostics like their Markdown equivalents.
+- Markdown search text derives from the sanitized document AST, so removed markup and
+  unsafe content no longer reach the index.
+
+### Removed
+- The blanket `markdown-raw-html` diagnostic, replaced by the vocabulary's precise
+  `unsafe-html`, `unsupported-html`, `unsafe-html-attribute`, and `unbalanced-html`
+  evidence.
+
 ## [2.0.1] — 2026-07-31
 
 ### Added

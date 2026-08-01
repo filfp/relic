@@ -31,6 +31,9 @@ export interface MarkdownAstNode {
   start?: number;
   checked?: boolean;
   align?: "left" | "center" | "right";
+  /** Set on "html_element" nodes produced by the safe embedded HTML vocabulary. */
+  tag?: string;
+  attributes?: Record<string, string>;
   children?: MarkdownAstNode[];
 }
 
