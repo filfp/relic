@@ -20,6 +20,12 @@ Canonical nodes are:
 - one semantic index.html inside each numbered specification folder;
 - Markdown documents recursively found under declared shared and record roots.
 
+Both canonical grammars read HTML through one allowlisted semantic vocabulary. A
+Markdown record may embed the standard subset, including a disclosure that keeps a long
+flow readable; the `relic-*` progressive-enhancement components stay specification-only.
+An anchor authored in HTML is an ordinary relative link with the same edges, backlinks,
+and diagnostics as its Markdown equivalent.
+
 Only id is required metadata for native knowledge. Other metadata is optional and
 opaque. Status values have no Relic-defined lifecycle. Identities compare
 case-insensitively, while paths remain the navigation authority. Duplicate identities
@@ -45,5 +51,6 @@ agents remain free to use filesystem traversal, grep, ripgrep, symbol search, an
 native exploration.
 
 See the [topology and link decision](../records/decisions/ADR-002-topology-and-relative-links.md),
+the [shared safe HTML vocabulary](../records/decisions/ADR-003-shared-safe-html-vocabulary.md),
 the [read-only access requirement](../records/requirements/functional/FR-002-read-only-knowledge-access.md),
 and the [consultability requirement](../records/requirements/non-functional/NFR-002-safe-consultability.md).
