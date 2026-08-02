@@ -1,13 +1,21 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { HtmlAstNode, KnowledgeLink, MarkdownAstNode } from "../api";
+import type {
+  DocumentSummary,
+  HtmlAstNode,
+  KnowledgeLink,
+  MarkdownAstNode,
+  ProjectView,
+} from "../api";
 import { pathFromRoute, resolveRelativePath } from "../api";
+import { catalogGroups, membershipOptions } from "../catalog";
 import { Callout } from "../components/bits";
 import { Flow } from "../components/Flow";
 import { Fragment } from "../components/Fragment";
 import { Markdown } from "../components/Markdown";
 import { Metadata } from "../components/Metadata";
+import { CatalogGroups } from "../pages/Catalog";
 
 function renderFragment(nodes: HtmlAstNode[]): string {
   return renderToStaticMarkup(
@@ -25,7 +33,70 @@ function rectanglePositions(markup: string): number[] {
   return [...markup.matchAll(/<rect x="([0-9.]+)"/g)].map((match) => Number(match[1]));
 }
 
+function documentSummary(
+  path: string,
+  memberships: string[],
+  id = path,
+): DocumentSummary {
+  return {
+    path,
+    format: "markdown",
+    memberships,
+    id,
+    label: `${id} label`,
+    metadata: {},
+    outgoing: 0,
+    backlinks: 0,
+    diagnostics: [],
+  };
+}
+
 describe("Relic viewer content rendering", () => {
+  test("derives membership filters from project topology without a fixed taxonomy", () => {
+    const project: ProjectView = {
+      project: { name: "fixture", path: "/fixture" },
+      topology: {
+        specs: ".relic/specs",
+        shared: ".relic/shared",
+        records: { risk: "knowledge/risks", br: "knowledge/rules" },
+      },
+      documents: [
+        documentSummary("spec.md", ["spec"]),
+        documentSummary("risk.md", ["risk"]),
+        documentSummary("custom.md", ["custom"]),
+      ],
+      artifacts: [],
+      diagnostics: [],
+      counts: {
+        documents: 3,
+        artifacts: 0,
+        diagnostics: 0,
+        errors: 0,
+        warnings: 0,
+        orphans: 0,
+      },
+    };
+
+    expect(membershipOptions(project)).toEqual(["spec", "risk", "custom"]);
+  });
+
+  test("filters and groups the catalog by exact membership shape without duplicates", () => {
+    const documents = [
+      documentSummary("one.md", ["fr"], "FR-001"),
+      documentSummary("two.md", ["spec", "fr"], "FR-002"),
+      documentSummary("three.md", ["adr"], "ADR-001"),
+    ];
+    const groups = catalogGroups(documents, ["spec", "fr", "adr"], "fr");
+    const markup = renderToStaticMarkup(<CatalogGroups groups={groups} />);
+
+    expect(groups.map((group) => group.key)).toEqual(["spec+fr", "fr"]);
+    expect(groups.flatMap((group) => group.documents)).toHaveLength(2);
+    expect(markup).toContain("<details class=\"rl-catalog-group\" open=\"\"");
+    expect(markup).toContain("FR-001");
+    expect(markup).toContain("FR-002");
+    expect(markup).not.toContain("ADR-001");
+  });
+
   test("derives chart values from semantic lists", () => {
     const markup = renderFragment([
       {

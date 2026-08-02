@@ -9,26 +9,50 @@ import {
   type ProjectView,
   type SearchResult,
 } from "../api";
+import { catalogGroups, membershipOptions, type CatalogGroup } from "../catalog";
 import { Callout, Chip } from "../components/bits";
 
-function DocumentCard({ document }: { document: DocumentSummary }) {
+function CatalogItem({ document }: { document: DocumentSummary }) {
   return (
-    <a href={documentRoute(document.path)} className="rl-document-card">
-      <div className="row">
+    <a href={documentRoute(document.path)} className="rl-catalog-item">
+      <div className="rl-catalog-identity">
         {document.id && <Chip color="blue">{document.id}</Chip>}
-        {document.memberships.map((membership) => (
-          <Chip key={membership}>{membership}</Chip>
-        ))}
+        <strong>{document.label}</strong>
+        <code className="rl-path">{document.path}</code>
+      </div>
+      <div className="rl-catalog-signals">
+        <span className="subtle">
+          {document.outgoing} outgoing · {document.backlinks} backlinks
+        </span>
         {document.diagnostics.length > 0 && (
           <Chip color="amber">{document.diagnostics.length} diagnostic(s)</Chip>
         )}
       </div>
-      <strong>{document.label}</strong>
-      <code className="rl-path">{document.path}</code>
-      <span className="subtle">
-        {document.outgoing} outgoing · {document.backlinks} backlinks
-      </span>
     </a>
+  );
+}
+
+export function CatalogGroups({ groups }: { groups: CatalogGroup[] }) {
+  return (
+    <div className="rl-catalog-groups">
+      {groups.map((group) => (
+        <details className="rl-catalog-group" key={group.key} open>
+          <summary>
+            <span className="rl-catalog-group-title">
+              {group.memberships.length > 0
+                ? group.memberships.map((membership) => <Chip key={membership}>{membership}</Chip>)
+                : <span>unclassified</span>}
+            </span>
+            <span className="subtle">{group.documents.length} document(s)</span>
+          </summary>
+          <div className="rl-catalog-list">
+            {group.documents.map((document) => (
+              <CatalogItem key={document.path} document={document} />
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
   );
 }
 
@@ -54,6 +78,7 @@ export function Catalog() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[] | null>(null);
+  const [activeMembership, setActiveMembership] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProject().then(setProject).catch((reason) => setError(String(reason)));
@@ -75,6 +100,13 @@ export function Catalog() {
   if (error) return <Callout type="risk">Failed to load knowledge: {error}</Callout>;
   if (!project) return <p className="muted">Loading knowledge frontier…</p>;
 
+  const memberships = membershipOptions(project);
+  const counts = new Map(memberships.map((membership) => [
+    membership,
+    project.documents.filter((document) => document.memberships.includes(membership)).length,
+  ]));
+  const groups = catalogGroups(project.documents, memberships, activeMembership);
+
   return (
     <>
       <div className="rl-page-heading">
@@ -90,15 +122,43 @@ export function Catalog() {
         </div>
       </div>
 
-      <form className="rl-search" onSubmit={submit}>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search IDs, knowledge, paths, and spec artifacts"
-          aria-label="Search project knowledge"
-        />
-        <button className="rl-btn" type="submit">search</button>
-      </form>
+      <div className="rl-catalog-controls">
+        <form className="rl-search" onSubmit={submit}>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search IDs, knowledge, paths, and spec artifacts"
+            aria-label="Search project knowledge"
+          />
+          <button className="rl-btn" type="submit">search</button>
+        </form>
+        <div
+          className="rl-membership-filters"
+          role="group"
+          aria-label="Filter catalog by membership"
+        >
+          <span className="subtle">Focus</span>
+          <button
+            className={`rl-filter-chip${activeMembership === null ? " active" : ""}`}
+            type="button"
+            aria-pressed={activeMembership === null}
+            onClick={() => setActiveMembership(null)}
+          >
+            all <span>{project.documents.length}</span>
+          </button>
+          {memberships.map((membership) => (
+            <button
+              className={`rl-filter-chip${activeMembership === membership ? " active" : ""}`}
+              key={membership}
+              type="button"
+              aria-pressed={activeMembership === membership}
+              onClick={() => setActiveMembership(membership)}
+            >
+              {membership} <span>{counts.get(membership)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {results !== null && (
         <section className="rl-section">
@@ -115,13 +175,11 @@ export function Catalog() {
       <section className="rl-section">
         <div className="rl-section-heading">
           <h2>Canonical catalog</h2>
-          <span className="subtle">Every canonical node, including orphans</span>
+          <span className="subtle">
+            {activeMembership ? `${counts.get(activeMembership)} focused` : "Every canonical node, including orphans"}
+          </span>
         </div>
-        <div className="rl-catalog">
-          {project.documents.map((document) => (
-            <DocumentCard key={document.path} document={document} />
-          ))}
-        </div>
+        <CatalogGroups key={activeMembership ?? "all"} groups={groups} />
       </section>
     </>
   );
