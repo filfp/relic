@@ -189,6 +189,7 @@ describe("Relic viewer content rendering", () => {
           id: "FR-0004",
           supersedes: [],
           see_also: ["BR-0004", "GL-0003"],
+          nested: [["alpha", "beta"]],
           acceptance_criteria: [
             { id: 1, priority: "must", text: `A ${"long ".repeat(20)}criterion.` },
           ],
@@ -201,15 +202,22 @@ describe("Relic viewer content rendering", () => {
     expect(markup).toContain(">GL-0003<");
     expect(markup).toContain("rl-meta-empty");
     expect(markup).toContain("<dt>priority</dt>");
-    expect(markup).toContain("rl-meta-text");
+    expect(markup).toContain("rl-meta-collection");
+    expect(markup).toContain("rl-chip tone-slate");
+    expect(markup).toContain("criterion.");
   });
 
-  test("keeps deeply nested metadata bounded without losing it", () => {
-    const deep = { a: { b: { c: { d: { e: { f: { g: { h: "too deep" } } } } } } } };
+  test("keeps deeply nested metadata bounded, formatted, and available on demand", () => {
+    let deep: Record<string, unknown> = { m: "too deep" };
+    for (const key of ["l", "k", "j", "i", "h", "g", "f", "e", "d", "c", "b", "a"]) {
+      deep = { [key]: deep };
+    }
     const markup = renderToStaticMarkup(<Metadata metadata={deep} />);
 
-    expect(markup).toContain("<dt>f</dt>");
-    expect(markup).toContain("<code class=\"rl-meta-text\">");
+    expect(markup).toContain("<dt>l</dt>");
+    expect(markup).toContain("<details class=\"rl-meta-overflow\">");
+    expect(markup).toContain("Show deeply nested value");
+    expect(markup).toContain("&quot;m&quot;: &quot;too deep&quot;");
     expect(markup).toContain("too deep");
   });
 

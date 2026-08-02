@@ -14,8 +14,9 @@ Versions follow [Semantic Versioning](https://semver.org/).
   specification HTML, so authored disclosures such as `<details>` render as structure
   instead of literal markup. Unbalanced blocks are paired back together and the Markdown
   between them is nested inside the element.
-- Recursive, shape-aware rendering of project metadata: short facts stay in the summary
-  row, collections become chips, and nested objects and arrays expand as readable blocks.
+- Recursive, shape-aware rendering of project metadata: scalar collections use the
+  viewer's existing chips, while nested objects and arrays remain readable key-value
+  structures without assigning meaning to project-defined fields.
 
 ### Changed
 - HTML anchors authored in Markdown are ordinary knowledge links, so they now create
