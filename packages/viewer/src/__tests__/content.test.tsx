@@ -1,16 +1,23 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { HtmlAstNode, MarkdownAstNode } from "../api";
+import type { HtmlAstNode, KnowledgeLink, MarkdownAstNode } from "../api";
 import { pathFromRoute, resolveRelativePath } from "../api";
 import { Callout } from "../components/bits";
 import { Flow } from "../components/Flow";
 import { Fragment } from "../components/Fragment";
 import { Markdown } from "../components/Markdown";
+import { Metadata } from "../components/Metadata";
 
 function renderFragment(nodes: HtmlAstNode[]): string {
   return renderToStaticMarkup(
     <Fragment nodes={nodes} links={[]} sourcePath="knowledge/specs/001/index.html" />,
+  );
+}
+
+function renderMarkdown(ast: MarkdownAstNode[], links: KnowledgeLink[] = []): string {
+  return renderToStaticMarkup(
+    <Markdown ast={ast} links={links} sourcePath="records/FR-001.md" />,
   );
 }
 
@@ -120,6 +127,109 @@ describe("Relic viewer content rendering", () => {
     );
     expect(markup).toContain("image unavailable: broken image");
     expect(markup).not.toContain("<img");
+  });
+
+  test("identifies an unavailable embedded HTML image when alt text is empty", () => {
+    const markup = renderMarkdown([{
+      type: "html_element",
+      tag: "img",
+      attributes: { src: "%", alt: "" },
+      children: [],
+    }]);
+
+    expect(markup).toContain("image unavailable: %");
+  });
+
+  test("renders embedded HTML disclosures with their Markdown content", () => {
+    const markup = renderMarkdown([
+      {
+        type: "html_element",
+        tag: "details",
+        attributes: { open: "" },
+        children: [
+          {
+            type: "html_element",
+            tag: "summary",
+            attributes: {},
+            children: [{ type: "text", text: "Import" }],
+          },
+          {
+            type: "list",
+            ordered: true,
+            children: [
+              {
+                type: "list_item",
+                children: [{ type: "text", text: "An admin opens the catalog." }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    expect(markup).toContain("<details open=\"\"");
+    expect(markup).toContain("<summary>Import</summary>");
+    expect(markup).toContain("<ol><li>");
+    expect(markup).not.toContain("&lt;details&gt;");
+  });
+
+  test("routes embedded HTML anchors through knowledge navigation", () => {
+    const markup = renderMarkdown([
+      {
+        type: "html_element",
+        tag: "a",
+        attributes: { href: "../decisions/ADR-001.md" },
+        children: [{ type: "text", text: "the decision" }],
+      },
+    ], [
+      {
+        sourcePath: "records/FR-001.md",
+        href: "../decisions/ADR-001.md",
+        text: "the decision",
+        status: "missing",
+      },
+    ]);
+
+    expect(markup).toContain("rl-broken-link");
+  });
+
+  test("renders project metadata by shape instead of as encoded JSON", () => {
+    const markup = renderToStaticMarkup(
+      <Metadata
+        metadata={{
+          id: "FR-0004",
+          supersedes: [],
+          see_also: ["BR-0004", "GL-0003"],
+          nested: [["alpha", "beta"]],
+          acceptance_criteria: [
+            { id: 1, priority: "must", text: `A ${"long ".repeat(20)}criterion.` },
+          ],
+        }}
+      />,
+    );
+
+    expect(markup).not.toContain("[{&quot;");
+    expect(markup).toContain(">BR-0004<");
+    expect(markup).toContain(">GL-0003<");
+    expect(markup).toContain("rl-meta-empty");
+    expect(markup).toContain("<dt>priority</dt>");
+    expect(markup).toContain("rl-meta-collection");
+    expect(markup).toContain("rl-chip tone-slate");
+    expect(markup).toContain("criterion.");
+  });
+
+  test("keeps deeply nested metadata bounded, formatted, and available on demand", () => {
+    let deep: Record<string, unknown> = { m: "too deep" };
+    for (const key of ["l", "k", "j", "i", "h", "g", "f", "e", "d", "c", "b", "a"]) {
+      deep = { [key]: deep };
+    }
+    const markup = renderToStaticMarkup(<Metadata metadata={deep} />);
+
+    expect(markup).toContain("<dt>l</dt>");
+    expect(markup).toContain("<details class=\"rl-meta-overflow\">");
+    expect(markup).toContain("Show deeply nested value");
+    expect(markup).toContain("&quot;m&quot;: &quot;too deep&quot;");
+    expect(markup).toContain("too deep");
   });
 
   test("decodes shareable knowledge routes without throwing", () => {

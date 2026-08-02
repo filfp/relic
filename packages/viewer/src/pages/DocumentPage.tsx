@@ -12,6 +12,7 @@ import { Callout, Chip } from "../components/bits";
 import { Fragment } from "../components/Fragment";
 import { KnowledgeAnchor } from "../components/KnowledgeAnchor";
 import { Markdown } from "../components/Markdown";
+import { Metadata } from "../components/Metadata";
 import { diagnosticTone } from "../diagnostics";
 
 function DiagnosticList({ diagnostics }: { diagnostics: Diagnostic[] }) {
@@ -71,16 +72,7 @@ export function DocumentPage({ path }: { path: string }) {
         </div>
       </div>
 
-      {Object.keys(document.metadata).length > 0 && (
-        <section className="rl-metadata">
-          {Object.entries(document.metadata).map(([key, value]) => (
-            <span key={key}>
-              <strong>{key}</strong>{" "}
-              {typeof value === "string" ? value : JSON.stringify(value)}
-            </span>
-          ))}
-        </section>
-      )}
+      <Metadata metadata={document.metadata} />
 
       <DiagnosticList diagnostics={document.diagnostics} />
 

@@ -406,6 +406,95 @@ describe("Relic 2.0 Markdown parser", () => {
       "right",
     ]);
   });
+
+  test("pairs unbalanced HTML blocks so Markdown nests inside the element", () => {
+    const parsed = parseMarkdown(
+      [
+        "## Flows",
+        "",
+        "<details>",
+        "<summary><strong>Import</strong> — admin uploads the catalog</summary>",
+        "",
+        "1. An admin opens the catalog.",
+        "",
+        "</details>",
+        "",
+        "After the disclosure.",
+        "",
+      ].join("\n"),
+      "records/FR-001.md",
+    );
+
+    const details = parsed.ast.find((node) => node.type === "html_element");
+    expect(details).toMatchObject({ type: "html_element", tag: "details" });
+    expect(details?.children?.map((child) => child.type)).toContain("list");
+    const summary = details?.children?.find((child) => child.tag === "summary");
+    expect(summary?.children?.[0]).toMatchObject({ tag: "strong" });
+    expect(parsed.ast.at(-1)).toMatchObject({ type: "paragraph" });
+    expect(parsed.diagnostics).toEqual([]);
+  });
+
+  test("nests a disclosure inside another disclosure", () => {
+    const parsed = parseMarkdown(
+      "<details>\n<summary>Outer</summary>\n\n<details>\n<summary>Inner</summary>\n\nDeep.\n\n</details>\n\n</details>\n",
+      "records/FR-001.md",
+    );
+
+    const outer = parsed.ast[0];
+    const inner = outer?.children?.find((child) => child.tag === "details");
+    expect(outer).toMatchObject({ tag: "details" });
+    expect(inner?.children?.map((child) => child.type)).toContain("paragraph");
+    expect(parsed.ast).toHaveLength(1);
+  });
+
+  test("applies the safe vocabulary to embedded HTML", () => {
+    const parsed = parseMarkdown(
+      '<iframe src="http://example.test"></iframe>\n\n<img src="x.png" onerror="alert(1)" alt="a">\n\nAfter.\n',
+      "records/FR-001.md",
+    );
+
+    const codes = parsed.diagnostics.map((diagnostic) => diagnostic.code);
+    expect(codes).toContain("unsafe-html");
+    expect(codes).toContain("unsafe-html-attribute");
+    expect(parsed.ast.some((node) => node.tag === "iframe")).toBe(false);
+    expect(parsed.ast.find((node) => node.tag === "img")?.attributes)
+      .toEqual({ src: "x.png", alt: "a" });
+    expect(parsed.ast.at(-1)).toMatchObject({ type: "paragraph" });
+  });
+
+  test("discards content nested inside an unsafe element", () => {
+    const parsed = parseMarkdown(
+      "Before <script>alert(1)</script> after.\n",
+      "records/FR-001.md",
+    );
+
+    expect(parsed.searchableText).not.toContain("alert(1)");
+    const paragraph = parsed.ast[0];
+    expect(JSON.stringify(paragraph)).not.toContain("alert(1)");
+  });
+
+  test("keeps unsupported wrappers readable and reports stray end tags", () => {
+    const parsed = parseMarkdown(
+      "<custom-thing>\n\nKept **content**.\n\n</custom-thing>\n\n</span>\n",
+      "records/FR-001.md",
+    );
+
+    const codes = parsed.diagnostics.map((diagnostic) => diagnostic.code);
+    expect(codes).toContain("unsupported-html");
+    expect(codes).toContain("unbalanced-html");
+    expect(parsed.ast.some((node) => node.type === "paragraph")).toBe(true);
+  });
+
+  test("treats an HTML anchor as an ordinary knowledge link", () => {
+    const parsed = parseMarkdown(
+      '<p>See <a href="../decisions/ADR-001.md">the decision</a>.</p>\n',
+      "records/FR-001.md",
+    );
+
+    expect(parsed.links).toEqual([
+      { href: "../decisions/ADR-001.md", text: "the decision" },
+    ]);
+  });
 });
 
 describe("Relic 2.0 frontmatter parser", () => {

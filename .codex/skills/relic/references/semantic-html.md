@@ -1,7 +1,7 @@
-# Semantic Specification HTML
+# Semantic Relic HTML
 
 Read this reference when authoring or reviewing a specification's canonical
-`index.html`.
+`index.html`, or when embedding HTML in a canonical Markdown record.
 
 ## Canonical Fragment
 
@@ -32,6 +32,27 @@ Use Relic elements only for progressive enhancement:
 All knowledge must remain readable and indexable in child text and ordinary links. Keep
 chart values in a semantic table or list and flow source as text. A visual relationship
 becomes a knowledge-web edge only through an ordinary link.
+
+## Embedded Markdown HTML
+
+A Markdown record stays Markdown. Reach for HTML only where Markdown has no equivalent,
+most often a `<details>` disclosure that keeps a long flow readable:
+
+```markdown
+<details>
+<summary><strong>Approval</strong> — admin clears a pending user</summary>
+
+1. A user registers and their account starts unapproved.
+2. An admin marks the account as approved.
+
+</details>
+```
+
+The same standard vocabulary, attribute rules, and URL rules apply. The `relic-*`
+components do not; they belong to specification HTML. Keep a blank line around embedded
+Markdown so it is still read as Markdown, and balance every tag you open. An anchor
+authored in HTML is an ordinary relative link, so it carries the same edges, backlinks,
+and broken-link evidence as its Markdown equivalent.
 
 ## Presentation Boundary
 

@@ -6,12 +6,11 @@ import {
   type HtmlAstNode,
   type KnowledgeLink,
 } from "../api";
+import { reactAttributes, VOID_TAGS } from "./attributes";
 import { Callout, Chip } from "./bits";
 import { Chart } from "./Chart";
 import { Flow } from "./Flow";
 import { KnowledgeAnchor } from "./KnowledgeAnchor";
-
-const VOID_TAGS = new Set(["br", "hr", "img"]);
 
 function textOf(nodes: HtmlAstNode[]): string {
   return nodes
@@ -58,20 +57,6 @@ function chartData(node: Extract<HtmlAstNode, { type: "element" }>) {
 
 function relationFor(links: KnowledgeLink[], href: string | undefined) {
   return href === undefined ? undefined : links.find((link) => link.href === href);
-}
-
-function reactAttributes(attributes: Record<string, string>): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const [name, value] of Object.entries(attributes)) {
-    if (name === "href" || name === "src") continue;
-    if (name === "colspan") result.colSpan = Number(value);
-    else if (name === "rowspan") result.rowSpan = Number(value);
-    else if (name === "datetime") result.dateTime = value;
-    else if (name === "class") result.className = value;
-    else if (name === "open" || name === "reversed") result[name] = true;
-    else result[name] = value;
-  }
-  return result;
 }
 
 function Element({

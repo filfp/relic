@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 
 import {
   artifactContentUrl,
@@ -6,6 +6,7 @@ import {
   type KnowledgeLink,
   type MarkdownAstNode,
 } from "../api";
+import { reactAttributes, VOID_TAGS } from "./attributes";
 import { KnowledgeAnchor } from "./KnowledgeAnchor";
 
 function relationFor(links: KnowledgeLink[], href: string | undefined) {
@@ -168,8 +169,42 @@ function Node({
       );
     case "table_cell":
       return children;
-    case "html":
-      return <pre className="rl-raw-html">{node.text}</pre>;
+    case "html_element": {
+      const tag = node.tag ?? "span";
+      const attributes = node.attributes ?? {};
+      if (tag === "a") {
+        return (
+          <KnowledgeAnchor
+            href={attributes.href}
+            relation={relationFor(links, attributes.href)}
+            title={attributes.title}
+          >
+            {children}
+          </KnowledgeAnchor>
+        );
+      }
+      if (tag === "img") {
+        const resolved = attributes.src
+          ? resolveRelativePath(sourcePath, attributes.src)
+          : undefined;
+        return resolved ? (
+          <img
+            {...reactAttributes(attributes)}
+            src={artifactContentUrl(resolved)}
+            alt={attributes.alt ?? ""}
+          />
+        ) : (
+          <span className="rl-warning">
+            image unavailable: {attributes.alt?.trim() || attributes.src}
+          </span>
+        );
+      }
+      return createElement(
+        tag,
+        reactAttributes(attributes),
+        VOID_TAGS.has(tag) ? undefined : children,
+      );
+    }
     default:
       return children;
   }

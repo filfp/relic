@@ -1,121 +1,16 @@
-import {
-  parseFragment,
-  type DefaultTreeAdapterTypes,
-  type ParserError,
-} from "parse5";
+import { parseFragment, type ParserError } from "parse5";
 
+import {
+  isElement,
+  isText,
+  nodeText,
+  sanitizeChildren,
+  type SanitizeContext,
+} from "./html-vocabulary.ts";
 import type {
   HtmlAstNode,
   KnowledgeDiagnostic,
 } from "./types.ts";
-
-const RELIC_TAGS = new Set([
-  "relic-body",
-  "relic-callout",
-  "relic-flow",
-  "relic-chart",
-  "relic-chip",
-]);
-
-const SAFE_TAGS = new Set([
-  "a",
-  "abbr",
-  "article",
-  "aside",
-  "b",
-  "blockquote",
-  "br",
-  "caption",
-  "cite",
-  "code",
-  "dd",
-  "del",
-  "details",
-  "dfn",
-  "div",
-  "dl",
-  "dt",
-  "em",
-  "figcaption",
-  "figure",
-  "footer",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "header",
-  "hr",
-  "i",
-  "img",
-  "ins",
-  "kbd",
-  "li",
-  "main",
-  "mark",
-  "ol",
-  "p",
-  "pre",
-  "progress",
-  "q",
-  "s",
-  "samp",
-  "section",
-  "small",
-  "span",
-  "strong",
-  "sub",
-  "summary",
-  "sup",
-  "table",
-  "tbody",
-  "td",
-  "tfoot",
-  "th",
-  "thead",
-  "time",
-  "tr",
-  "u",
-  "ul",
-  "var",
-]);
-
-const UNSAFE_TAGS = new Set([
-  "applet",
-  "audio",
-  "canvas",
-  "embed",
-  "form",
-  "iframe",
-  "input",
-  "link",
-  "meta",
-  "object",
-  "script",
-  "source",
-  "style",
-  "svg",
-  "template",
-  "textarea",
-  "video",
-]);
-
-const GLOBAL_ATTRIBUTES = new Set(["id", "title", "lang", "dir", "role"]);
-const TAG_ATTRIBUTES: Record<string, Set<string>> = {
-  a: new Set(["href", "title"]),
-  blockquote: new Set(["cite"]),
-  details: new Set(["open"]),
-  img: new Set(["src", "alt", "width", "height"]),
-  ins: new Set(["cite", "datetime"]),
-  del: new Set(["cite", "datetime"]),
-  ol: new Set(["start", "reversed", "type"]),
-  progress: new Set(["max", "value"]),
-  q: new Set(["cite"]),
-  td: new Set(["colspan", "rowspan", "headers"]),
-  th: new Set(["colspan", "rowspan", "headers", "scope"]),
-  time: new Set(["datetime"]),
-};
 
 export interface ParsedSpecHtml {
   id?: string;
@@ -125,47 +20,6 @@ export interface ParsedSpecHtml {
   searchableText: string;
   links: Array<{ href: string; text: string }>;
   diagnostics: KnowledgeDiagnostic[];
-}
-
-function isElement(
-  node: DefaultTreeAdapterTypes.ChildNode,
-): node is DefaultTreeAdapterTypes.Element {
-  return "tagName" in node;
-}
-
-function isText(
-  node: DefaultTreeAdapterTypes.ChildNode,
-): node is DefaultTreeAdapterTypes.TextNode {
-  return node.nodeName === "#text";
-}
-
-function isSafeNavigationUrl(value: string): boolean {
-  const trimmed = value.trim();
-  if (trimmed === "" || trimmed.startsWith("#")) return true;
-  if (/^https?:\/\//i.test(trimmed)) return true;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return false;
-  if (trimmed.startsWith("//") || trimmed.startsWith("/")) return false;
-  return true;
-}
-
-function isSafeLocalMediaUrl(value: string): boolean {
-  const trimmed = value.trim();
-  if (trimmed === "" || trimmed.startsWith("#")) return false;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return false;
-  return !trimmed.startsWith("//") && !trimmed.startsWith("/");
-}
-
-function nodeText(nodes: HtmlAstNode[]): string {
-  const parts: string[] = [];
-  const visit = (node: HtmlAstNode) => {
-    if (node.type === "text") {
-      parts.push(node.value);
-      return;
-    }
-    for (const child of node.children) visit(child);
-  };
-  for (const node of nodes) visit(node);
-  return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
 export function parseSpecHtml(source: string, path: string): ParsedSpecHtml {
@@ -183,99 +37,11 @@ export function parseSpecHtml(source: string, path: string): ParsedSpecHtml {
     },
   });
 
-  const convertChildren = (
-    children: DefaultTreeAdapterTypes.ChildNode[],
-  ): HtmlAstNode[] => {
-    const converted: HtmlAstNode[] = [];
-    for (const child of children) {
-      if (isText(child)) {
-        if (child.value !== "") converted.push({ type: "text", value: child.value });
-        continue;
-      }
-      if (!isElement(child)) continue;
-
-      const tag = child.tagName.toLowerCase();
-      if (UNSAFE_TAGS.has(tag)) {
-        diagnostics.push({
-          code: "unsafe-html",
-          severity: "warning",
-          message: `Unsafe <${tag}> content was removed`,
-          path,
-        });
-        continue;
-      }
-
-      const known = SAFE_TAGS.has(tag) || RELIC_TAGS.has(tag);
-      const nested = convertChildren(child.childNodes);
-      if (!known) {
-        diagnostics.push({
-          code: tag.startsWith("relic-") ? "unknown-relic-component" : "unsupported-html",
-          severity: "warning",
-          message: `Unsupported <${tag}> wrapper was removed while preserving its content`,
-          path,
-        });
-        converted.push(...nested);
-        continue;
-      }
-
-      const attributes: Record<string, string> = {};
-      for (const attribute of child.attrs) {
-        const name = attribute.name.toLowerCase();
-        if (
-          name === "style" ||
-          name === "srcdoc" ||
-          name.startsWith("on")
-        ) {
-          diagnostics.push({
-            code: "unsafe-html-attribute",
-            severity: "warning",
-            message: `Unsafe attribute "${name}" was removed from <${tag}>`,
-            path,
-          });
-          continue;
-        }
-
-        const isProjectMetadata = name.startsWith("data-");
-        const isAccessibility = name.startsWith("aria-");
-        const isRelicHint = tag.startsWith("relic-") && /^[a-z][a-z0-9-]*$/.test(name);
-        const allowed =
-          GLOBAL_ATTRIBUTES.has(name) ||
-          TAG_ATTRIBUTES[tag]?.has(name) === true ||
-          isProjectMetadata ||
-          isAccessibility ||
-          isRelicHint;
-        if (!allowed) continue;
-
-        if ((name === "href" || name === "cite") && !isSafeNavigationUrl(attribute.value)) {
-          diagnostics.push({
-            code: "unsafe-url",
-            severity: "warning",
-            message: `Unsafe link URL was removed from <${tag}>`,
-            path,
-            href: attribute.value,
-          });
-          continue;
-        }
-        if (name === "src" && !isSafeLocalMediaUrl(attribute.value)) {
-          diagnostics.push({
-            code: "unsafe-media-url",
-            severity: "warning",
-            message: "Only repository-relative media is loaded automatically",
-            path,
-            href: attribute.value,
-          });
-          continue;
-        }
-        attributes[name] = attribute.value;
-      }
-
-      const node: HtmlAstNode = { type: "element", tag, attributes, children: nested };
-      converted.push(node);
-      if (tag === "a" && attributes.href) {
-        links.push({ href: attributes.href, text: nodeText(nested) });
-      }
-    }
-    return converted;
+  const context: SanitizeContext = {
+    path,
+    allowRelicComponents: true,
+    diagnostics,
+    links,
   };
 
   const topLevelElements = fragment.childNodes.filter(isElement);
@@ -307,7 +73,9 @@ export function parseSpecHtml(source: string, path: string): ParsedSpecHtml {
     });
   }
 
-  const ast = root ? convertChildren(root.childNodes) : convertChildren(fragment.childNodes);
+  const ast = root
+    ? sanitizeChildren(root.childNodes, context)
+    : sanitizeChildren(fragment.childNodes, context);
   const rootAttributes = root
     ? Object.fromEntries(root.attrs.map((attribute) => [attribute.name, attribute.value]))
     : {};
