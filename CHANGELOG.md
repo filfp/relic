@@ -9,6 +9,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.2] — 2026-08-02
+
 ### Added
 - Canonical Markdown now supports the same allowlisted semantic HTML vocabulary as
   specification HTML, so authored disclosures such as `<details>` render as structure
