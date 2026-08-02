@@ -129,6 +129,17 @@ describe("Relic viewer content rendering", () => {
     expect(markup).not.toContain("<img");
   });
 
+  test("identifies an unavailable embedded HTML image when alt text is empty", () => {
+    const markup = renderMarkdown([{
+      type: "html_element",
+      tag: "img",
+      attributes: { src: "%", alt: "" },
+      children: [],
+    }]);
+
+    expect(markup).toContain("image unavailable: %");
+  });
+
   test("renders embedded HTML disclosures with their Markdown content", () => {
     const markup = renderMarkdown([
       {

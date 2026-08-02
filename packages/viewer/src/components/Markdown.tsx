@@ -194,7 +194,9 @@ function Node({
             alt={attributes.alt ?? ""}
           />
         ) : (
-          <span className="rl-warning">image unavailable: {attributes.alt ?? attributes.src}</span>
+          <span className="rl-warning">
+            image unavailable: {attributes.alt?.trim() || attributes.src}
+          </span>
         );
       }
       return createElement(
