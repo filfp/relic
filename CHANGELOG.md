@@ -19,6 +19,9 @@ Versions follow [Semantic Versioning](https://semver.org/).
   structures without assigning meaning to project-defined fields.
 
 ### Changed
+- The canonical catalog now groups documents by topology-derived memberships, uses
+  compact rows for large corpora, and provides membership tags beside search for quick
+  focused access without defining a fixed record taxonomy.
 - HTML anchors authored in Markdown are ordinary knowledge links, so they now create
   graph edges, backlinks, and broken-link diagnostics like their Markdown equivalents.
 - Markdown search text derives from the sanitized document AST, so removed markup and

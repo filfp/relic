@@ -193,10 +193,14 @@ table.rl-table tr:last-child td { border-bottom: none; }
   font-size: 0.74rem;
 }
 .rl-counts strong { color: var(--text); font-size: 1.1rem; }
+.rl-catalog-controls {
+  margin-bottom: var(--space-5); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
 .rl-search {
-  display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
+  display: flex; gap: var(--space-2);
   padding: 0.7rem; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px;
+  border-width: 0 0 1px; border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .rl-search input {
   flex: 1; min-width: 0; padding: 0.55rem 0.7rem;
@@ -216,10 +220,72 @@ table.rl-table tr:last-child td { border-bottom: none; }
   border-bottom: 1px solid var(--border);
 }
 .rl-section-heading h2 { margin: 0; }
-.rl-catalog {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 0.65rem;
+.rl-membership-filters {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
 }
+.rl-membership-filters > .subtle { margin-right: var(--space-1); }
+.rl-filter-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 2px 7px; color: var(--text-2); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font: 600 var(--font-size-xs) var(--font-mono); text-transform: uppercase; cursor: pointer;
+}
+.rl-filter-chip > span { color: var(--text-3); font-weight: 500; }
+.rl-filter-chip:hover, .rl-filter-chip.active {
+  color: var(--accent); background: var(--accent-bg); border-color: var(--accent);
+}
+.rl-filter-chip.active > span { color: inherit; }
+.rl-catalog-groups { display: grid; gap: var(--space-2); }
+.rl-catalog-group {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.rl-catalog-group > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); cursor: pointer; list-style: none;
+}
+.rl-catalog-group > summary::-webkit-details-marker { display: none; }
+.rl-catalog-group > summary::before {
+  content: "›"; color: var(--text-3); font-weight: 700;
+  transition: transform 0.15s ease;
+}
+.rl-catalog-group[open] > summary::before { transform: rotate(90deg); }
+.rl-catalog-group[open] > summary { border-bottom: 1px solid var(--border); }
+.rl-catalog-group-title {
+  display: inline-flex; align-items: center; flex: 1; gap: var(--space-1);
+}
+.rl-catalog-group-title .rl-chip { text-transform: uppercase; }
+.rl-catalog-list { display: grid; }
+.rl-catalog-item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3);
+  align-items: center; padding: var(--space-2) var(--space-3);
+  color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border);
+}
+.rl-catalog-item:last-child { border-bottom: 0; }
+.rl-catalog-item:hover { background: var(--accent-bg); }
+.rl-catalog-identity {
+  display: grid;
+  grid-template-columns: fit-content(100%) minmax(0, max-content) minmax(0, 1fr);
+  align-items: center; gap: var(--space-2); min-width: 0;
+}
+.rl-catalog-identity > .rl-chip {
+  max-width: 100%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.rl-catalog-identity > strong {
+  min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.rl-catalog-identity > .rl-path {
+  justify-self: start; width: fit-content; max-width: 100%; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.rl-catalog-signals {
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2);
+  white-space: nowrap;
+}
+.rl-catalog-signals > * { flex-shrink: 0; }
 .rl-document-card, .rl-search-result {
   display: flex; flex-direction: column; gap: 0.42rem;
   padding: 0.8rem 0.9rem; color: var(--text); text-decoration: none;
@@ -334,4 +400,8 @@ table.rl-table tr:last-child td { border-bottom: none; }
   .rl-counts { width: 100%; }
   .rl-grid-two { grid-template-columns: 1fr; }
   .rl-meta-property { grid-template-columns: 1fr; gap: var(--space-1); }
+  .rl-catalog-item { grid-template-columns: 1fr; }
+  .rl-catalog-identity { grid-template-columns: fit-content(100%) minmax(0, 1fr); }
+  .rl-catalog-identity > .rl-path { grid-column: 1 / -1; }
+  .rl-catalog-signals { justify-content: flex-start; }
 }
