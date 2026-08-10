@@ -109,6 +109,37 @@ describe("Relic 2.0 knowledge read model", () => {
     );
   });
 
+  test("discovers hyphenated record kinds with their full uppercase ID prefix", () => {
+    const copied = copyFixture();
+    const postmortems = join(copied, "knowledge/records/backend-postmortems");
+    mkdirSync(postmortems);
+    writeFileSync(
+      join(postmortems, "BACKEND-POSTMORTEM-001-provider-outage.md"),
+      "---\nid: BACKEND-POSTMORTEM-001\n---\n\n# Provider outage\n",
+      "utf8",
+    );
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}    backend-postmortem: knowledge/records/backend-postmortems\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology?.records["backend-postmortem"]).toBe(
+      "knowledge/records/backend-postmortems",
+    );
+    expect(
+      project.documents.find((document) => document.id === "BACKEND-POSTMORTEM-001"),
+    ).toMatchObject({ memberships: ["backend-postmortem"] });
+    expect(project.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "invalid-record-kind" }),
+    );
+    expect(project.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "invalid-document-id" }),
+    );
+  });
+
   test("deduplicates overlapping canonical roots into memberships", () => {
     const project = loadKnowledgeProject(fixture);
     const nfr = project.documents.find((document) => document.id === "NFR-001");
@@ -268,20 +299,48 @@ describe("Relic 2.0 knowledge read model", () => {
     );
   });
 
-  test("rejects record keys that cannot define an unambiguous ID prefix", () => {
+  test("isolates invalid record keys without hiding the valid topology", () => {
     const copied = copyFixture();
     const relicPath = join(copied, "relic.yaml");
     writeFileSync(
       relicPath,
-      `${readFileSync(relicPath, "utf8")}    business-rule: knowledge/records/business-rules\n`,
+      `${readFileSync(relicPath, "utf8")}    Backend_Note: knowledge/records/business-rules\n`,
       "utf8",
     );
 
     const project = loadKnowledgeProject(copied);
-    expect(project.topology).toBeUndefined();
+    expect(project.topology).toBeDefined();
+    expect(project.topology?.records).not.toHaveProperty("Backend_Note");
+    expect(project.documents.find((document) => document.id === "BR-001"))
+      .toMatchObject({ memberships: ["br"] });
     expect(project.diagnostics).toContainEqual(
       expect.objectContaining({
         code: "invalid-record-kind",
+        message:
+          'topology.records key "Backend_Note" must start with a lowercase letter and contain only lowercase letters, digits, and single hyphens between segments',
+        path: "relic.yaml",
+      }),
+    );
+  });
+
+  test("isolates invalid record paths without hiding the valid topology", () => {
+    const copied = copyFixture();
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}    backend-note: ../../outside\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+    expect(project.topology).toBeDefined();
+    expect(project.topology?.records).not.toHaveProperty("backend-note");
+    expect(project.documents.find((document) => document.id === "BR-001"))
+      .toMatchObject({ memberships: ["br"] });
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-topology-path",
+        message: "topology.records.backend-note escapes the repository boundary",
         path: "relic.yaml",
       }),
     );

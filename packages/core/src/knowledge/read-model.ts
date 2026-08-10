@@ -30,7 +30,7 @@ import type {
   KnowledgeTopology,
 } from "./types.ts";
 
-const RECORD_KIND_PATTERN = /^[a-z][a-z0-9]*$/;
+const RECORD_KIND_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const RESERVED_RECORD_KINDS = new Set(["spec", "shared"]);
 
 const TEXT_ARTIFACT_EXTENSIONS = new Set([
@@ -165,16 +165,23 @@ function readTopology(
   const specs = validateTopologyPath(raw.specs, "specs", projectRoot, diagnostics);
   const shared = validateTopologyPath(raw.shared, "shared", projectRoot, diagnostics);
   const records: Record<string, string> = {};
-  let recordsValid = true;
   for (const [kind, value] of Object.entries(raw.records)) {
-    if (!RECORD_KIND_PATTERN.test(kind) || RESERVED_RECORD_KINDS.has(kind)) {
+    if (RESERVED_RECORD_KINDS.has(kind)) {
       diagnostics.push({
         code: "invalid-record-kind",
         severity: "error",
-        message: `topology.records key "${kind}" must be a lowercase record prefix and cannot be spec or shared`,
+        message: `topology.records key "${kind}" is reserved; use a project-defined record prefix`,
         path: "relic.yaml",
       });
-      recordsValid = false;
+      continue;
+    }
+    if (!RECORD_KIND_PATTERN.test(kind)) {
+      diagnostics.push({
+        code: "invalid-record-kind",
+        severity: "error",
+        message: `topology.records key "${kind}" must start with a lowercase letter and contain only lowercase letters, digits, and single hyphens between segments`,
+        path: "relic.yaml",
+      });
       continue;
     }
     const path = validateTopologyPath(
@@ -184,12 +191,11 @@ function readTopology(
       diagnostics,
     );
     if (!path) {
-      recordsValid = false;
       continue;
     }
     records[kind] = path;
   }
-  if (!specs || !shared || !recordsValid) return undefined;
+  if (!specs || !shared) return undefined;
   return { specs, shared, records };
 }
 
