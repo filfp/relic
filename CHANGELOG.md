@@ -9,6 +9,20 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.3] — 2026-08-10
+
+### Fixed
+- Project-defined record kinds now accept lowercase kebab-case prefixes such as
+  `backend-postmortem`, with the full uppercase prefix used for numbered document IDs.
+- Invalid individual record keys and paths remain focused diagnostics without hiding
+  valid specifications, shared knowledge, or other record roots.
+- Record-kind diagnostics now distinguish reserved keys from malformed prefixes and
+  describe the accepted syntax directly.
+
+### Security
+- Updated the transitive PostCSS and nanoid resolutions to include the fix for
+  `GHSA-2v37-7h3g-55p8`.
+
 ## [2.0.2] — 2026-08-02
 
 ### Added
