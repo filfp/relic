@@ -3,19 +3,29 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
   DocumentSummary,
+  FederatedKnowledgeProjectView,
   HtmlAstNode,
   KnowledgeLink,
   MarkdownAstNode,
+  ProjectAddress,
   ProjectView,
 } from "../api";
-import { pathFromRoute, resolveRelativePath } from "../api";
+import {
+  artifactContentUrl,
+  documentRoute,
+  pathFromRoute,
+  projectFromLocation,
+  resolveRelativePath,
+} from "../api";
 import { catalogGroups, membershipOptions } from "../catalog";
 import { Callout } from "../components/bits";
 import { Flow } from "../components/Flow";
 import { Fragment } from "../components/Fragment";
+import { KnowledgeAnchor } from "../components/KnowledgeAnchor";
 import { Markdown } from "../components/Markdown";
 import { Metadata } from "../components/Metadata";
-import { CatalogGroups } from "../pages/Catalog";
+import { ProjectChip } from "../components/ProjectChip";
+import { CatalogGroups, ProjectTree } from "../pages/Catalog";
 
 function renderFragment(nodes: HtmlAstNode[]): string {
   return renderToStaticMarkup(
@@ -95,6 +105,69 @@ describe("Relic viewer content rendering", () => {
     expect(markup).toContain("FR-001");
     expect(markup).toContain("FR-002");
     expect(markup).not.toContain("ADR-001");
+  });
+
+  test("keeps colliding federated catalog identities and routes distinct", () => {
+    const root = {
+      ...documentSummary("same.md", ["note"], "NOTE-001"),
+      project: ["root"] as ProjectAddress,
+    };
+    const backend = {
+      ...documentSummary("same.md", ["note"], "NOTE-001"),
+      project: ["root", "backend"] as ProjectAddress,
+    };
+    const groups = catalogGroups([root, backend], ["note"], null);
+    const markup = renderToStaticMarkup(<CatalogGroups groups={groups} />);
+
+    expect(markup).toContain("/document/same.md?project=root");
+    expect(markup).toContain("/document/same.md?project=root%2Fbackend");
+    expect(markup).toContain("tone-slate\">backend</span>");
+    expect(markup).not.toContain("tone-slate\">root</span>");
+  });
+
+  test("presents project ownership relative to the selected federation root", () => {
+    expect(renderToStaticMarkup(<ProjectChip address={["root"]} />)).toBe("");
+    expect(renderToStaticMarkup(
+      <ProjectChip address={["root", "backend"]} />,
+    )).toContain(">backend</span>");
+    expect(renderToStaticMarkup(
+      <ProjectChip address={["root", "backend", "domain"]} />,
+    )).toContain("backend/domain");
+  });
+
+  test("presents hierarchical federation projects as a tree", () => {
+    const counts = {
+      documents: 1,
+      artifacts: 0,
+      diagnostics: 0,
+      errors: 0,
+      warnings: 0,
+      orphans: 1,
+    };
+    const project: FederatedKnowledgeProjectView = {
+      project: { name: "root", path: "/root" },
+      documents: [],
+      artifacts: [],
+      diagnostics: [],
+      counts,
+      federation: {
+        projects: [
+          { address: ["root"], counts },
+          { address: ["root", "product"], counts },
+          { address: ["root", "product", "api"], counts },
+        ],
+        edges: [],
+      },
+    };
+    const markup = renderToStaticMarkup(
+      <ProjectTree project={project} active="root/product" onSelect={() => {}} />,
+    );
+
+    expect(markup).toContain("aria-label=\"Federated projects\"");
+    expect(markup).toContain(">root</code>");
+    expect(markup).toContain(">product</code>");
+    expect(markup).toContain(">api</code>");
+    expect(markup).toContain("rl-project-node active");
   });
 
   test("derives chart values from semantic lists", () => {
@@ -262,6 +335,48 @@ describe("Relic viewer content rendering", () => {
     ]);
 
     expect(markup).toContain("rl-broken-link");
+  });
+
+  test("routes federated links and artifact content with structured ownership", () => {
+    const project: ProjectAddress = ["root", "backend"];
+    const source = { project: ["root"] as ProjectAddress, path: "root.md" };
+    const target = { project, path: "knowledge/notes/NOTE-001.md" };
+    const anchor = renderToStaticMarkup(
+      <KnowledgeAnchor
+        href="../backend/knowledge/notes/NOTE-001.md#impact"
+        relation={{
+          source,
+          target,
+          resolved: target,
+          href: "../backend/knowledge/notes/NOTE-001.md#impact",
+          text: "Backend note",
+          fragment: "impact",
+          status: "canonical",
+        }}
+      >
+        Backend note
+      </KnowledgeAnchor>,
+    );
+    const image = renderToStaticMarkup(
+      <Markdown
+        ast={[{ type: "image", href: "diagram.png", text: "Diagram" }]}
+        links={[]}
+        sourcePath="knowledge/specs/001/index.html"
+        project={project}
+      />,
+    );
+
+    expect(anchor).toContain(
+      "/document/knowledge/notes/NOTE-001.md?project=root%2Fbackend#impact",
+    );
+    expect(image).toContain("project=root%2Fbackend");
+    expect(artifactContentUrl("evidence.txt", true, project)).toBe(
+      "/api/content?path=evidence.txt&project=root%2Fbackend&download=1",
+    );
+    expect(documentRoute("note.md", project)).toBe(
+      "/document/note.md?project=root%2Fbackend",
+    );
+    expect(projectFromLocation("?project=root%2Fbackend")).toBe("root/backend");
   });
 
   test("renders project metadata by shape instead of as encoded JSON", () => {

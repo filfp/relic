@@ -1,4 +1,5 @@
-import type { DocumentSummary, ProjectView } from "./api";
+import type { DocumentSummary } from "./api";
+import type { KnowledgeTopology } from "@relic/core";
 
 export interface CatalogGroup {
   key: string;
@@ -6,7 +7,10 @@ export interface CatalogGroup {
   documents: DocumentSummary[];
 }
 
-export function membershipOptions(project: ProjectView): string[] {
+export function membershipOptions(project: {
+  topology?: KnowledgeTopology;
+  documents: DocumentSummary[];
+}): string[] {
   const declared = ["spec", "shared", ...Object.keys(project.topology?.records ?? {})];
   const present = project.documents.flatMap((document) => document.memberships);
   return [...new Set([...declared, ...present])]

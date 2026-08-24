@@ -5,6 +5,7 @@ import {
   resolveRelativePath,
   type HtmlAstNode,
   type KnowledgeLink,
+  type ProjectAddress,
 } from "../api";
 import { reactAttributes, VOID_TAGS } from "./attributes";
 import { Callout, Chip } from "./bits";
@@ -63,12 +64,14 @@ function Element({
   node,
   links,
   sourcePath,
+  project,
 }: {
   node: Extract<HtmlAstNode, { type: "element" }>;
   links: KnowledgeLink[];
   sourcePath: string;
+  project?: ProjectAddress;
 }): ReactNode {
-  const children = <Nodes nodes={node.children} links={links} sourcePath={sourcePath} />;
+  const children = <Nodes nodes={node.children} links={links} sourcePath={sourcePath} project={project} />;
   const attributes = reactAttributes(node.attributes);
 
   if (node.tag === "relic-callout") {
@@ -120,7 +123,7 @@ function Element({
     return (
       <img
         {...attributes}
-        src={artifactContentUrl(resolved)}
+        src={artifactContentUrl(resolved, false, project)}
         alt={node.attributes.alt ?? ""}
       />
     );
@@ -137,17 +140,19 @@ function Nodes({
   nodes,
   links,
   sourcePath,
+  project,
 }: {
   nodes: HtmlAstNode[];
   links: KnowledgeLink[];
   sourcePath: string;
+  project?: ProjectAddress;
 }) {
   return (
     <>
       {nodes.map((node, index) =>
         node.type === "text"
           ? node.value
-          : <Element key={index} node={node} links={links} sourcePath={sourcePath} />,
+          : <Element key={index} node={node} links={links} sourcePath={sourcePath} project={project} />,
       )}
     </>
   );
@@ -157,10 +162,12 @@ export function Fragment({
   nodes,
   links,
   sourcePath,
+  project,
 }: {
   nodes: HtmlAstNode[];
   links: KnowledgeLink[];
   sourcePath: string;
+  project?: ProjectAddress;
 }) {
-  return <div className="rl-spec"><Nodes nodes={nodes} links={links} sourcePath={sourcePath} /></div>;
+  return <div className="rl-spec"><Nodes nodes={nodes} links={links} sourcePath={sourcePath} project={project} /></div>;
 }

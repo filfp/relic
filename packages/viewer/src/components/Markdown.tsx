@@ -5,6 +5,7 @@ import {
   resolveRelativePath,
   type KnowledgeLink,
   type MarkdownAstNode,
+  type ProjectAddress,
 } from "../api";
 import { reactAttributes, VOID_TAGS } from "./attributes";
 import { KnowledgeAnchor } from "./KnowledgeAnchor";
@@ -33,13 +34,15 @@ function Nodes({
   nodes,
   links,
   sourcePath,
+  project,
 }: {
   nodes: MarkdownAstNode[];
   links: KnowledgeLink[];
   sourcePath: string;
+  project?: ProjectAddress;
 }) {
   return nodes.map((node, index) => (
-    <Node key={index} node={node} links={links} sourcePath={sourcePath} />
+    <Node key={index} node={node} links={links} sourcePath={sourcePath} project={project} />
   ));
 }
 
@@ -47,13 +50,15 @@ function Node({
   node,
   links,
   sourcePath,
+  project,
 }: {
   node: MarkdownAstNode;
   links: KnowledgeLink[];
   sourcePath: string;
+  project?: ProjectAddress;
 }): ReactNode {
   const children = node.children
-    ? <Nodes nodes={node.children} links={links} sourcePath={sourcePath} />
+    ? <Nodes nodes={node.children} links={links} sourcePath={sourcePath} project={project} />
     : node.text;
 
   switch (node.type) {
@@ -106,7 +111,7 @@ function Node({
       const resolved = resolveRelativePath(sourcePath, node.href);
       return resolved ? (
         <img
-          src={artifactContentUrl(resolved)}
+          src={artifactContentUrl(resolved, false, project)}
           alt={node.text ?? ""}
           title={node.title ?? undefined}
         />
@@ -135,14 +140,14 @@ function Node({
             {node.children
               ?.filter((child) => child.type === "table_header")
               .map((child, index) => (
-                <Node key={index} node={child} links={links} sourcePath={sourcePath} />
+                <Node key={index} node={child} links={links} sourcePath={sourcePath} project={project} />
               ))}
           </thead>
           <tbody>
             {node.children
               ?.filter((child) => child.type === "table_row")
               .map((child, index) => (
-                <Node key={index} node={child} links={links} sourcePath={sourcePath} />
+                <Node key={index} node={child} links={links} sourcePath={sourcePath} project={project} />
               ))}
           </tbody>
         </table>
@@ -152,7 +157,7 @@ function Node({
         <tr>
           {node.children?.map((cell, index) => (
             <th key={index} style={{ textAlign: cell.align }}>
-              <Node node={cell} links={links} sourcePath={sourcePath} />
+              <Node node={cell} links={links} sourcePath={sourcePath} project={project} />
             </th>
           ))}
         </tr>
@@ -162,7 +167,7 @@ function Node({
         <tr>
           {node.children?.map((cell, index) => (
             <td key={index} style={{ textAlign: cell.align }}>
-              <Node node={cell} links={links} sourcePath={sourcePath} />
+              <Node node={cell} links={links} sourcePath={sourcePath} project={project} />
             </td>
           ))}
         </tr>
@@ -190,7 +195,7 @@ function Node({
         return resolved ? (
           <img
             {...reactAttributes(attributes)}
-            src={artifactContentUrl(resolved)}
+            src={artifactContentUrl(resolved, false, project)}
             alt={attributes.alt ?? ""}
           />
         ) : (
@@ -214,14 +219,16 @@ export function Markdown({
   ast,
   links,
   sourcePath,
+  project,
 }: {
   ast: MarkdownAstNode[];
   links: KnowledgeLink[];
   sourcePath: string;
+  project?: ProjectAddress;
 }) {
   return (
     <div className="rl-md">
-      <Nodes nodes={ast} links={links} sourcePath={sourcePath} />
+      <Nodes nodes={ast} links={links} sourcePath={sourcePath} project={project} />
     </div>
   );
 }

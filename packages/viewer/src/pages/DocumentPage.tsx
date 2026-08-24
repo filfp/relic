@@ -6,13 +6,16 @@ import {
   fetchDocument,
   type Diagnostic,
   type DocumentView,
+  type KnowledgeBacklink,
   type KnowledgeLink,
+  type ProjectAddress,
 } from "../api";
 import { Callout, Chip } from "../components/bits";
 import { Fragment } from "../components/Fragment";
 import { KnowledgeAnchor } from "../components/KnowledgeAnchor";
 import { Markdown } from "../components/Markdown";
 import { Metadata } from "../components/Metadata";
+import { ProjectChip } from "../components/ProjectChip";
 import { diagnosticTone } from "../diagnostics";
 
 function DiagnosticList({ diagnostics }: { diagnostics: Diagnostic[] }) {
@@ -43,20 +46,42 @@ function Outgoing({ link }: { link: KnowledgeLink }) {
   );
 }
 
-export function DocumentPage({ path }: { path: string }) {
+function Backlink({ backlink }: { backlink: KnowledgeBacklink }) {
+  const source = "source" in backlink
+    ? backlink.source
+    : { path: backlink.sourcePath, project: undefined };
+  return (
+    <li>
+      <a href={documentRoute(source.path, source.project)}>
+        {backlink.text || source.path}
+      </a>
+      <ProjectChip address={source.project} />
+      <code className="rl-path">{source.path}</code>
+    </li>
+  );
+}
+
+function addressedProject<T extends { path: string }>(
+  value: T | (T & { project: ProjectAddress }),
+): ProjectAddress | undefined {
+  return "project" in value ? value.project as ProjectAddress : undefined;
+}
+
+export function DocumentPage({ path, project }: { path: string; project?: string }) {
   const [view, setView] = useState<DocumentView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setView(null);
     setError(null);
-    fetchDocument(path).then(setView).catch((reason) => setError(String(reason)));
-  }, [path]);
+    fetchDocument(path, project).then(setView).catch((reason) => setError(String(reason)));
+  }, [path, project]);
 
   if (error) return <Callout type="risk">Failed to load {path}: {error}</Callout>;
   if (!view) return <p className="muted">Loading document…</p>;
 
   const { document } = view;
+  const documentProject = "project" in document ? document.project : undefined;
   return (
     <>
       <a href="/" className="rl-back">← catalog</a>
@@ -68,6 +93,7 @@ export function DocumentPage({ path }: { path: string }) {
         </div>
         <div className="row">
           {document.id && <Chip color="blue">{document.id}</Chip>}
+          <ProjectChip address={documentProject} />
           {document.memberships.map((membership) => <Chip key={membership}>{membership}</Chip>)}
         </div>
       </div>
@@ -78,10 +104,10 @@ export function DocumentPage({ path }: { path: string }) {
 
       <article className="rl-document">
         {document.format === "spec-html" && document.htmlAst && (
-          <Fragment nodes={document.htmlAst} links={document.links} sourcePath={document.path} />
+          <Fragment nodes={document.htmlAst} links={document.links} sourcePath={document.path} project={documentProject} />
         )}
         {document.format === "markdown" && document.markdownAst && (
-          <Markdown ast={document.markdownAst} links={document.links} sourcePath={document.path} />
+          <Markdown ast={document.markdownAst} links={document.links} sourcePath={document.path} project={documentProject} />
         )}
       </article>
 
@@ -97,11 +123,8 @@ export function DocumentPage({ path }: { path: string }) {
           {document.backlinks.length > 0
             ? (
               <ul>
-                {document.backlinks.map((backlink) => (
-                  <li key={backlink.sourcePath}>
-                    <a href={documentRoute(backlink.sourcePath)}>{backlink.text || backlink.sourcePath}</a>
-                    <code className="rl-path">{backlink.sourcePath}</code>
-                  </li>
+                {document.backlinks.map((backlink, index) => (
+                  <Backlink key={`${backlink.href}:${index}`} backlink={backlink} />
                 ))}
               </ul>
             )
@@ -114,8 +137,13 @@ export function DocumentPage({ path }: { path: string }) {
           <h2>Related knowledge</h2>
           <div className="rl-catalog">
             {view.related.map((related) => (
-              <a key={related.path} href={documentRoute(related.path)} className="rl-document-card">
+              <a
+                key={`${addressedProject(related)?.join("/") ?? "local"}:${related.path}`}
+                href={documentRoute(related.path, addressedProject(related))}
+                className="rl-document-card"
+              >
                 <div className="row">
+                  <ProjectChip address={addressedProject(related)} />
                   {related.id && <Chip color="blue">{related.id}</Chip>}
                   {related.memberships.map((membership) => (
                     <Chip key={membership}>{membership}</Chip>
@@ -134,9 +162,14 @@ export function DocumentPage({ path }: { path: string }) {
           <h2>Specification artifacts</h2>
           <div className="rl-catalog">
             {view.artifacts.map((artifact) => (
-              <a key={artifact.path} href={artifactRoute(artifact.path)} className="rl-document-card">
+              <a
+                key={`${addressedProject(artifact)?.join("/") ?? "local"}:${artifact.path}`}
+                href={artifactRoute(artifact.path, addressedProject(artifact))}
+                className="rl-document-card"
+              >
                 <div className="row">
                   <Chip color="purple">artifact</Chip>
+                  <ProjectChip address={addressedProject(artifact)} />
                   <Chip>{artifact.mediaType}</Chip>
                 </div>
                 <code className="rl-path">{artifact.path}</code>

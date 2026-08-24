@@ -7,19 +7,23 @@ import {
   type ArtifactView,
 } from "../api";
 import { Callout, Chip } from "../components/bits";
+import { ProjectChip } from "../components/ProjectChip";
 
-export function ArtifactPage({ path }: { path: string }) {
+export function ArtifactPage({ path, project }: { path: string; project?: string }) {
   const [view, setView] = useState<ArtifactView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setView(null);
     setError(null);
-    fetchArtifact(path).then(setView).catch((reason) => setError(String(reason)));
-  }, [path]);
+    fetchArtifact(path, project).then(setView).catch((reason) => setError(String(reason)));
+  }, [path, project]);
 
   if (error) return <Callout type="risk">Failed to load {path}: {error}</Callout>;
   if (!view) return <p className="muted">Loading artifact…</p>;
+  const artifactProject = "project" in view.artifact
+    ? view.artifact.project
+    : undefined;
 
   return (
     <>
@@ -36,7 +40,10 @@ export function ArtifactPage({ path }: { path: string }) {
           <h1 className="rl-page-title">{path.split("/").at(-1)}</h1>
           <code>{path}</code>
         </div>
-        <Chip color="purple">{view.artifact.mediaType}</Chip>
+        <div className="row">
+          <ProjectChip address={artifactProject} />
+          <Chip color="purple">{view.artifact.mediaType}</Chip>
+        </div>
       </div>
 
       <Callout type="info">
@@ -47,7 +54,13 @@ export function ArtifactPage({ path }: { path: string }) {
         <h2>Parent specifications</h2>
         <ul>
           {view.parents.map((parent) => (
-            <li key={parent.path}><a href={documentRoute(parent.path)}>{parent.label}</a></li>
+            <li key={`${"project" in parent ? parent.project.join("/") : "local"}:${parent.path}`}>
+              <a href={documentRoute(
+                parent.path,
+                "project" in parent ? parent.project : undefined,
+              )}>{parent.label}</a>
+              <ProjectChip address={"project" in parent ? parent.project : undefined} />
+            </li>
           ))}
         </ul>
       </section>
@@ -57,7 +70,7 @@ export function ArtifactPage({ path }: { path: string }) {
       ) : (
         <a
           className="rl-btn"
-          href={artifactContentUrl(path, true)}
+          href={artifactContentUrl(path, true, artifactProject)}
           download={path.split("/").at(-1)}
         >
           download artifact
