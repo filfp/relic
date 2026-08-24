@@ -1,6 +1,5 @@
 import {
   existsSync,
-  lstatSync,
   readFileSync,
   readdirSync,
   realpathSync,
@@ -10,13 +9,15 @@ import {
   basename,
   dirname,
   extname,
-  isAbsolute,
   relative,
   resolve,
   sep,
 } from "node:path";
-import { parseDocument } from "yaml";
 
+import {
+  readRelicProjectConfiguration,
+  type RelicProjectConfigurationRead,
+} from "./config.ts";
 import { parseSpecHtml } from "./html.ts";
 import { parseMarkdown } from "./markdown.ts";
 import type {
@@ -27,11 +28,7 @@ import type {
   KnowledgeDiagnostic,
   KnowledgeLink,
   KnowledgeProject,
-  KnowledgeTopology,
 } from "./types.ts";
-
-const RECORD_KIND_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
-const RESERVED_RECORD_KINDS = new Set(["spec", "shared"]);
 
 const TEXT_ARTIFACT_EXTENSIONS = new Set([
   ".css",
@@ -74,10 +71,6 @@ interface ArtifactCandidate {
   diagnostics: KnowledgeDiagnostic[];
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
 function repoPath(projectRoot: string, absolutePath: string): string {
   return relative(projectRoot, absolutePath).split(sep).join("/");
 }
@@ -106,155 +99,6 @@ function resolveExistingInside(
     return real;
   } catch {
     return null;
-  }
-}
-
-function validateTopologyPath(
-  value: unknown,
-  key: string,
-  projectRoot: string,
-  diagnostics: KnowledgeDiagnostic[],
-): string | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    diagnostics.push({
-      code: "invalid-topology",
-      severity: "error",
-      message: `topology.${key} must be a non-empty repository-relative path`,
-      path: "relic.yaml",
-    });
-    return null;
-  }
-  if (value.includes("\\") || isAbsolute(value)) {
-    diagnostics.push({
-      code: "invalid-topology-path",
-      severity: "error",
-      message: `topology.${key} must use "/" and be repository-relative`,
-      path: "relic.yaml",
-    });
-    return null;
-  }
-  const absolute = resolve(projectRoot, value);
-  if (!isInside(projectRoot, absolute)) {
-    diagnostics.push({
-      code: "invalid-topology-path",
-      severity: "error",
-      message: `topology.${key} escapes the repository boundary`,
-      path: "relic.yaml",
-    });
-    return null;
-  }
-  return value.replace(/^\.\//, "").replace(/\/+$/, "");
-}
-
-function readTopology(
-  metadata: Record<string, unknown>,
-  projectRoot: string,
-  diagnostics: KnowledgeDiagnostic[],
-): KnowledgeTopology | undefined {
-  const raw = metadata.topology;
-  if (!isRecord(raw) || !isRecord(raw.records)) {
-    diagnostics.push({
-      code: "invalid-topology",
-      severity: "error",
-      message: "relic.yaml requires topology with specs, shared, and records",
-      path: "relic.yaml",
-    });
-    return undefined;
-  }
-
-  const specs = validateTopologyPath(raw.specs, "specs", projectRoot, diagnostics);
-  const shared = validateTopologyPath(raw.shared, "shared", projectRoot, diagnostics);
-  const records: Record<string, string> = {};
-  for (const [kind, value] of Object.entries(raw.records)) {
-    if (RESERVED_RECORD_KINDS.has(kind)) {
-      diagnostics.push({
-        code: "invalid-record-kind",
-        severity: "error",
-        message: `topology.records key "${kind}" is reserved; use a project-defined record prefix`,
-        path: "relic.yaml",
-      });
-      continue;
-    }
-    if (!RECORD_KIND_PATTERN.test(kind)) {
-      diagnostics.push({
-        code: "invalid-record-kind",
-        severity: "error",
-        message: `topology.records key "${kind}" must start with a lowercase letter and contain only lowercase letters, digits, and single hyphens between segments`,
-        path: "relic.yaml",
-      });
-      continue;
-    }
-    const path = validateTopologyPath(
-      value,
-      `records.${kind}`,
-      projectRoot,
-      diagnostics,
-    );
-    if (!path) {
-      continue;
-    }
-    records[kind] = path;
-  }
-  if (!specs || !shared) return undefined;
-  return { specs, shared, records };
-}
-
-function parseTopologyFile(
-  source: string,
-  projectRoot: string,
-  diagnostics: KnowledgeDiagnostic[],
-): KnowledgeTopology | undefined {
-  const document = parseDocument(source.replace(/^\uFEFF/, ""), {
-    prettyErrors: true,
-    strict: true,
-    version: "1.2",
-  });
-  diagnostics.push(
-    ...document.errors.map((error) => ({
-      code: "invalid-relic-yaml",
-      severity: "error" as const,
-      message: error.message,
-      path: "relic.yaml",
-    })),
-    ...document.warnings.map((warning) => ({
-      code: "relic-yaml-warning",
-      severity: "warning" as const,
-      message: warning.message,
-      path: "relic.yaml",
-    })),
-  );
-  if (document.errors.length > 0) return undefined;
-
-  try {
-    const value = document.toJS({ maxAliasCount: 0 });
-    if (!isRecord(value)) {
-      diagnostics.push({
-        code: "invalid-relic-config",
-        severity: "error",
-        message: "relic.yaml must contain a YAML mapping with topology",
-        path: "relic.yaml",
-      });
-      return undefined;
-    }
-    const unknownKeys = Object.keys(value).filter((key) => key !== "topology");
-    if (unknownKeys.length > 0) {
-      diagnostics.push({
-        code: "invalid-relic-config",
-        severity: "error",
-        message: `relic.yaml supports only topology; remove: ${unknownKeys.join(", ")}`,
-        path: "relic.yaml",
-      });
-      return undefined;
-    }
-    return readTopology(value, projectRoot, diagnostics);
-  } catch (error) {
-    diagnostics.push({
-      code: "unsafe-relic-yaml-alias",
-      severity: "error",
-      message: error instanceof Error ? error.message : "YAML aliases are not supported",
-      path: "relic.yaml",
-    });
-    return undefined;
   }
 }
 
@@ -584,64 +428,17 @@ function resolveLink(
   };
 }
 
-export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
-  const diagnostics: KnowledgeDiagnostic[] = [];
-  let projectRoot: string;
-  try {
-    projectRoot = realpathSync(projectPath);
-  } catch {
-    return {
-      documents: [],
-      artifacts: [],
-      diagnostics: [{
-        code: "missing-project-root",
-        severity: "error",
-        message: "Project root does not exist",
-        path: projectPath,
-      }],
-    };
-  }
-
-  const relicPath = resolve(projectRoot, "relic.yaml");
-  if (!existsSync(relicPath)) {
-    return {
-      documents: [],
-      artifacts: [],
-      diagnostics: [{
-        code: "missing-relic-config",
-        severity: "error",
-        message: "Missing relic.yaml",
-        path: "relic.yaml",
-      }],
-    };
-  }
-
-  const relicStat = lstatSync(relicPath);
-  if (!relicStat.isFile() || relicStat.isSymbolicLink()) {
-    return {
-      documents: [],
-      artifacts: [],
-      diagnostics: [{
-        code: "invalid-relic-config",
-        severity: "error",
-        message: "relic.yaml must be a project-local regular file",
-        path: "relic.yaml",
-      }],
-    };
-  }
-
-  const relicRealPath = resolveExistingInside(
-    projectRoot,
-    relicPath,
-    diagnostics,
-    "relic.yaml",
-  );
-  if (!relicRealPath) {
+export function loadKnowledgeProjectFromConfiguration(
+  read: RelicProjectConfigurationRead,
+): KnowledgeProject {
+  const diagnostics = [...read.diagnostics];
+  const projectRoot = read.projectRoot;
+  const configuration = read.configuration;
+  if (!projectRoot || !configuration) {
     return { documents: [], artifacts: [], diagnostics };
   }
-
-  const relicSource = readFileSync(relicRealPath, "utf8");
-  const topology = parseTopologyFile(relicSource, projectRoot, diagnostics);
+  const topology = configuration?.topology;
+  const federation = configuration?.federation;
 
   const candidates = new Map<string, Candidate>();
   const artifactCandidates = new Map<string, ArtifactCandidate>();
@@ -846,5 +643,17 @@ export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
     ...documents.flatMap((document) => document.diagnostics),
     ...artifacts.flatMap((artifact) => artifact.diagnostics),
   );
-  return { ...(topology !== undefined && { topology }), documents, artifacts, diagnostics };
+  return {
+    ...(topology !== undefined && { topology }),
+    ...(federation !== undefined && { federation }),
+    documents,
+    artifacts,
+    diagnostics,
+  };
+}
+
+export function loadKnowledgeProject(projectPath: string): KnowledgeProject {
+  return loadKnowledgeProjectFromConfiguration(
+    readRelicProjectConfiguration(projectPath),
+  );
 }

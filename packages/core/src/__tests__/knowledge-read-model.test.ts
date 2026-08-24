@@ -33,6 +33,17 @@ function copyFixture(): string {
   return temporary;
 }
 
+function createRelicMember(projectRoot: string, memberPath: string): string {
+  const memberRoot = join(projectRoot, memberPath);
+  mkdirSync(memberRoot, { recursive: true });
+  writeFileSync(
+    join(memberRoot, "relic.yaml"),
+    "topology:\n  specs: .relic/specs\n  shared: .relic/shared\n  records: {}\n",
+    "utf8",
+  );
+  return memberRoot;
+}
+
 afterEach(() => {
   while (temporaryDirectories.length > 0) {
     rmSync(temporaryDirectories.pop()!, { recursive: true, force: true });
@@ -55,6 +66,7 @@ describe("Relic 2.0 knowledge read model", () => {
         epic: "knowledge/records/epics",
       },
     });
+    expect(project.federation).toBeUndefined();
     expect(project.documents).toHaveLength(10);
     expect(project.documents.map((document) => document.path)).not.toContain(
       "relic.yaml",
@@ -346,7 +358,195 @@ describe("Relic 2.0 knowledge read model", () => {
     );
   });
 
-  test("rejects non-topology state in relic.yaml", () => {
+  test("parses explicit federation members without loading their corpora", () => {
+    const copied = copyFixture();
+    const backendRoot = createRelicMember(copied, "services/backend");
+    writeFileSync(join(backendRoot, "relic.yaml"), "topology: [", "utf8");
+    createRelicMember(copied, "apps/frontend");
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}federation:\n  members:\n    backend-api: ./services/backend/\n    frontend: apps/frontend\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+
+    expect(project.federation).toEqual({
+      members: [
+        {
+          key: "backend-api",
+          declaredPath: "./services/backend/",
+          normalizedPath: "services/backend",
+          diagnostics: [],
+        },
+        {
+          key: "frontend",
+          declaredPath: "apps/frontend",
+          normalizedPath: "apps/frontend",
+          diagnostics: [],
+        },
+      ],
+    });
+    expect(project.documents).toHaveLength(10);
+    expect(project.documents.every((document) => !document.path.startsWith("services/")))
+      .toBe(true);
+  });
+
+  test("isolates invalid federation entries without hiding valid members or topology", () => {
+    const copied = copyFixture();
+    createRelicMember(copied, "services/backend");
+    mkdirSync(join(copied, "services/no-config"), { recursive: true });
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}federation:\n  members:\n    backend: services/backend\n    root: services/backend\n    Backend_API: services/backend\n    escaped: ../../outside\n    missing: services/missing\n    no-config: services/no-config\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+
+    expect(project.topology).toBeDefined();
+    expect(project.federation?.members).toHaveLength(6);
+    expect(project.federation?.members.filter((member) =>
+      member.diagnostics.length === 0
+    )).toEqual([{
+      key: "backend",
+      declaredPath: "services/backend",
+      normalizedPath: "services/backend",
+      diagnostics: [],
+    }]);
+    expect(project.documents).toHaveLength(10);
+    expect(project.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "invalid-federation-member-key" }),
+        expect.objectContaining({ code: "invalid-federation-member-path" }),
+        expect.objectContaining({ code: "invalid-federation-member" }),
+      ]),
+    );
+  });
+
+  test("keeps federation readable when local topology is invalid", () => {
+    const copied = copyFixture();
+    createRelicMember(copied, "services/backend");
+    writeFileSync(
+      join(copied, "relic.yaml"),
+      "topology:\n  specs: ../../outside\nfederation:\n  members:\n    backend: services/backend\n",
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+
+    expect(project.topology).toBeUndefined();
+    expect(project.federation).toEqual({
+      members: [{
+        key: "backend",
+        declaredPath: "services/backend",
+        normalizedPath: "services/backend",
+        diagnostics: [],
+      }],
+    });
+    expect(project.documents).toEqual([]);
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "invalid-topology" }),
+    );
+  });
+
+  test("keeps local topology readable when federation is malformed", () => {
+    const copied = copyFixture();
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}federation:\n  members: []\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+
+    expect(project.topology).toBeDefined();
+    expect(project.federation).toBeUndefined();
+    expect(project.documents).toHaveLength(10);
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "invalid-federation" }),
+    );
+  });
+
+  test("rejects federation members whose project authority is symlinked", () => {
+    if (process.platform === "win32") return;
+    const copied = copyFixture();
+    const memberRoot = createRelicMember(copied, "services/backend");
+    const outside = mkdtempSync(join(tmpdir(), "relic-member-config-outside-"));
+    temporaryDirectories.push(outside);
+    const externalConfig = join(outside, "relic.yaml");
+    writeFileSync(
+      externalConfig,
+      readFileSync(join(memberRoot, "relic.yaml"), "utf8"),
+      "utf8",
+    );
+    rmSync(join(memberRoot, "relic.yaml"));
+    symlinkSync(externalConfig, join(memberRoot, "relic.yaml"));
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}federation:\n  members:\n    backend: services/backend\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+
+    expect(project.topology).toBeDefined();
+    expect(project.federation?.members).toHaveLength(1);
+    expect(project.federation?.members[0]).toMatchObject({
+      key: "backend",
+      declaredPath: "services/backend",
+    });
+    expect(project.federation?.members[0]?.normalizedPath).toBeUndefined();
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-federation-member",
+        message:
+          "federation.members.backend must contain a regular, non-symlinked relic.yaml",
+      }),
+    );
+  });
+
+  test("rejects federation member directories that resolve outside the project", () => {
+    if (process.platform === "win32") return;
+    const copied = copyFixture();
+    const outside = mkdtempSync(join(tmpdir(), "relic-member-outside-"));
+    temporaryDirectories.push(outside);
+    writeFileSync(
+      join(outside, "relic.yaml"),
+      "topology:\n  specs: specs\n  shared: shared\n  records: {}\n",
+      "utf8",
+    );
+    mkdirSync(join(copied, "services"), { recursive: true });
+    symlinkSync(outside, join(copied, "services/external"));
+    const relicPath = join(copied, "relic.yaml");
+    writeFileSync(
+      relicPath,
+      `${readFileSync(relicPath, "utf8")}federation:\n  members:\n    external: services/external\n`,
+      "utf8",
+    );
+
+    const project = loadKnowledgeProject(copied);
+
+    expect(project.federation?.members).toHaveLength(1);
+    expect(project.federation?.members[0]).toMatchObject({
+      key: "external",
+      declaredPath: "services/external",
+    });
+    expect(project.federation?.members[0]?.normalizedPath).toBeUndefined();
+    expect(project.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-federation-member-path",
+        message:
+          "federation.members.external resolves outside the declaring project boundary",
+      }),
+    );
+  });
+
+  test("rejects unsupported top-level state in relic.yaml", () => {
     const copied = copyFixture();
     writeFileSync(
       join(copied, "relic.yaml"),

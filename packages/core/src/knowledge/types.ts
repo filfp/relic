@@ -20,6 +20,22 @@ export interface KnowledgeTopology {
   records: Record<RecordKind, string>;
 }
 
+export interface FederationConfiguration {
+  members: FederationMemberDeclaration[];
+}
+
+export interface FederationMemberDeclaration {
+  key: string;
+  declaredPath?: string;
+  normalizedPath?: string;
+  diagnostics: KnowledgeDiagnostic[];
+}
+
+export interface RelicProjectConfiguration {
+  topology?: KnowledgeTopology;
+  federation?: FederationConfiguration;
+}
+
 export interface MarkdownAstNode {
   type: string;
   text?: string;
@@ -100,9 +116,83 @@ export interface KnowledgeArtifact {
 
 export interface KnowledgeProject {
   topology?: KnowledgeTopology;
+  federation?: FederationConfiguration;
   documents: CanonicalDocument[];
   artifacts: KnowledgeArtifact[];
   diagnostics: KnowledgeDiagnostic[];
+}
+
+export type ProjectAddress = readonly ["root", ...string[]];
+
+export type FederationEdgeStatus =
+  | "valid"
+  | "invalid"
+  | "unavailable"
+  | "repeated"
+  | "noncanonical-alias";
+
+export interface FederationProjectNode {
+  address: ProjectAddress;
+  knowledge: KnowledgeProject;
+}
+
+export interface FederationEdge {
+  parent: ProjectAddress;
+  key: string;
+  declaredPath?: string;
+  child?: ProjectAddress;
+  status: FederationEdgeStatus;
+  diagnostics: KnowledgeDiagnostic[];
+}
+
+export interface FederatedKnowledgeDiagnostic {
+  project: ProjectAddress;
+  edge?: { parent: ProjectAddress; key: string };
+  diagnostic: KnowledgeDiagnostic;
+}
+
+export interface FederatedKnowledgeReference {
+  project: ProjectAddress;
+  path: string;
+}
+
+export interface FederatedKnowledgeLink {
+  source: FederatedKnowledgeReference;
+  href: string;
+  text: string;
+  fragment?: string;
+  resolved?: FederatedKnowledgeReference;
+  target?: FederatedKnowledgeReference;
+  status: LinkStatus;
+}
+
+export interface FederatedKnowledgeBacklink {
+  source: FederatedKnowledgeReference;
+  target: FederatedKnowledgeReference;
+  href: string;
+  text: string;
+  fragment?: string;
+}
+
+export interface FederatedDocument {
+  project: ProjectAddress;
+  document: CanonicalDocument;
+  links: FederatedKnowledgeLink[];
+  backlinks: FederatedKnowledgeBacklink[];
+}
+
+export interface FederatedArtifact {
+  project: ProjectAddress;
+  artifact: KnowledgeArtifact;
+  specifications: FederatedKnowledgeReference[];
+}
+
+export interface FederatedKnowledgeProject {
+  projects: FederationProjectNode[];
+  edges: FederationEdge[];
+  documents: FederatedDocument[];
+  artifacts: FederatedArtifact[];
+  diagnostics: FederatedKnowledgeDiagnostic[];
 }
 
 export type KnowledgeSearchResult =
@@ -122,3 +212,12 @@ export type KnowledgeSearchResult =
       snippet: string;
       score: number;
     };
+
+export type FederatedKnowledgeSearchResult =
+  | (Extract<KnowledgeSearchResult, { type: "document" }> & {
+      project: ProjectAddress;
+    })
+  | (Omit<Extract<KnowledgeSearchResult, { type: "artifact" }>, "specificationPaths"> & {
+      project: ProjectAddress;
+      specifications: FederatedKnowledgeReference[];
+    });
