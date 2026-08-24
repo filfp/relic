@@ -15,10 +15,18 @@ import {
 import {
   artifactView,
   documentView,
-  loadKnowledgeProject,
+  federatedArtifactView,
+  federatedDocumentView,
+  federatedProjectView,
+  federatedSearchView,
+  loadFederatedKnowledgeProject,
   projectView,
+  resolveFederatedArtifactAuthority,
   searchView,
+  type FederatedKnowledgeProject,
+  type KnowledgeArtifact,
   type KnowledgeProject,
+  type ProjectAddress,
 } from "@relic/core";
 
 import { VIEWER_ASSETS } from "../generated/viewer-assets.ts";
@@ -41,7 +49,10 @@ const FIRST_AVAILABLE_PORT = 4747;
 const AVAILABLE_PORT_ATTEMPTS = 100;
 const PROJECT_CACHE_TTL_MS = 1_000;
 
-type ProjectReader = () => KnowledgeProject;
+type ProjectReader = () => FederatedKnowledgeProject;
+
+const PROJECT_ADDRESS_SEGMENT = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+const ROOT_PROJECT_ADDRESS: ProjectAddress = ["root"];
 
 const INLINE_ARTIFACT_TYPES: Record<string, string> = {
   ".gif": "image/gif",
@@ -82,11 +93,11 @@ function isInside(root: string, target: string): boolean {
 
 function artifactContent(
   projectDir: string,
-  project: KnowledgeProject,
+  artifact: KnowledgeArtifact | undefined,
   path: string,
   forceDownload: boolean,
 ): ViewerResponse {
-  if (!project.artifacts.some((artifact) => artifact.path === path)) {
+  if (!artifact || artifact.path !== path) {
     return jsonResponse(404, { error: `artifact "${path}" not found` });
   }
 
@@ -114,12 +125,66 @@ function artifactContent(
   }
 }
 
+function rootProject(
+  aggregate: FederatedKnowledgeProject,
+): KnowledgeProject | undefined {
+  return aggregate.projects.find((node) => node.address.length === 1)?.knowledge;
+}
+
+function isFederated(aggregate: FederatedKnowledgeProject): boolean {
+  return rootProject(aggregate)?.federation !== undefined;
+}
+
+function parseProjectAddress(value: string | null): ProjectAddress | undefined {
+  if (value === null) return ROOT_PROJECT_ADDRESS;
+  const segments = value.split("/");
+  if (
+    segments[0] !== "root" ||
+    segments.some((segment, index) =>
+      segment === "" || (index > 0 && !PROJECT_ADDRESS_SEGMENT.test(segment))
+    )
+  ) {
+    return undefined;
+  }
+  return ["root", ...segments.slice(1)] as ProjectAddress;
+}
+
+function hasProjectAddress(
+  aggregate: FederatedKnowledgeProject,
+  address: ProjectAddress,
+): boolean {
+  return aggregate.projects.some((node) =>
+    node.address.length === address.length &&
+    node.address.every((segment, index) => segment === address[index])
+  );
+}
+
+function requestedProjectAddress(
+  aggregate: FederatedKnowledgeProject,
+  url: URL,
+): ProjectAddress | ViewerResponse {
+  const raw = url.searchParams.get("project");
+  const address = parseProjectAddress(raw);
+  if (!address || !hasProjectAddress(aggregate, address)) {
+    return jsonResponse(404, {
+      error: `project "${raw ?? "root"}" not found`,
+    });
+  }
+  return address;
+}
+
+function isViewerResponse(
+  value: ProjectAddress | ViewerResponse,
+): value is ViewerResponse {
+  return !Array.isArray(value);
+}
+
 export function resolveViewerRequest(
   projectDir: string,
   version: string,
   method: string,
   requestUrl: string,
-  readProject: ProjectReader = () => loadKnowledgeProject(projectDir),
+  readProject: ProjectReader = () => loadFederatedKnowledgeProject(projectDir),
 ): ViewerResponse | undefined {
   if (method !== "GET" && method !== "HEAD") {
     return jsonResponse(405, { error: "read-only server — GET and HEAD only" });
@@ -136,20 +201,38 @@ export function resolveViewerRequest(
     });
   }
 
-  const project = readProject();
+  const aggregate = readProject();
+  const project = rootProject(aggregate);
+  if (!project) {
+    return jsonResponse(503, { error: "Relic topology is unavailable" });
+  }
+  const federation = isFederated(aggregate);
   if (url.pathname === "/api/project") {
-    return jsonResponse(200, projectView(projectDir, project));
+    const view = federation
+      ? federatedProjectView(projectDir, aggregate)
+      : projectView(projectDir, project);
+    return view
+      ? jsonResponse(200, view)
+      : jsonResponse(503, { error: "Relic topology is unavailable" });
   }
   if (url.pathname === "/api/document") {
     const path = url.searchParams.get("path") ?? "";
-    const view = documentView(project, path);
+    const address = requestedProjectAddress(aggregate, url);
+    if (isViewerResponse(address)) return address;
+    const view = federation
+      ? federatedDocumentView(aggregate, address, path)
+      : documentView(project, path);
     return view
       ? jsonResponse(200, view)
       : jsonResponse(404, { error: `document "${path}" not found` });
   }
   if (url.pathname === "/api/artifact") {
     const path = url.searchParams.get("path") ?? "";
-    const view = artifactView(project, path);
+    const address = requestedProjectAddress(aggregate, url);
+    if (isViewerResponse(address)) return address;
+    const view = federation
+      ? federatedArtifactView(aggregate, address, path)
+      : artifactView(project, path);
     return view
       ? jsonResponse(200, view)
       : jsonResponse(404, { error: `artifact "${path}" not found` });
@@ -157,14 +240,24 @@ export function resolveViewerRequest(
   if (url.pathname === "/api/search") {
     return jsonResponse(200, {
       query: url.searchParams.get("q") ?? "",
-      results: searchView(project, url.searchParams.get("q") ?? ""),
+      results: federation
+        ? federatedSearchView(aggregate, url.searchParams.get("q") ?? "")
+        : searchView(project, url.searchParams.get("q") ?? ""),
     });
   }
   if (url.pathname === "/api/content") {
+    const address = requestedProjectAddress(aggregate, url);
+    if (isViewerResponse(address)) return address;
+    const path = url.searchParams.get("path") ?? "";
+    const authority = federation
+      ? resolveFederatedArtifactAuthority(aggregate, address, path)
+      : undefined;
     return artifactContent(
-      projectDir,
-      project,
-      url.searchParams.get("path") ?? "",
+      authority?.projectRoot ?? projectDir,
+      authority?.artifact ?? (federation
+        ? undefined
+        : project.artifacts.find((artifact) => artifact.path === path)),
+      path,
       url.searchParams.get("download") === "1",
     );
   }
@@ -176,12 +269,12 @@ export function createProjectReader(
   ttlMs = PROJECT_CACHE_TTL_MS,
   now: () => number = Date.now,
 ): ProjectReader {
-  let cached: KnowledgeProject | undefined;
+  let cached: FederatedKnowledgeProject | undefined;
   let expiresAt = 0;
   return () => {
     const currentTime = now();
     if (cached === undefined || currentTime >= expiresAt) {
-      cached = loadKnowledgeProject(projectDir);
+      cached = loadFederatedKnowledgeProject(projectDir);
       expiresAt = currentTime + ttlMs;
     }
     return cached;
@@ -287,6 +380,16 @@ function isAddressInUse(error: unknown): boolean {
 
 export async function runServe(options: ServeOptions) {
   const projectDir = resolveRelicProjectDir(options.projectDir);
+  const initial = loadFederatedKnowledgeProject(projectDir);
+  if (!initial.projects.some((node) => node.knowledge.topology !== undefined)) {
+    const details = initial.diagnostics
+      .filter((item) => item.diagnostic.severity === "error")
+      .map((item) => item.diagnostic.message)
+      .join("; ");
+    throw new Error(
+      `Relic topology is unavailable${details ? `: ${details}` : ""}`,
+    );
+  }
 
   const version = options.version ?? "dev";
   let server;

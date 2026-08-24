@@ -9,6 +9,34 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-08-24
+
+### Added
+- Explicit hierarchical project federation through `federation.members`. A selected
+  project now composes its own corpus with every transitively reached, explicitly
+  declared descendant while each member retains its own topology and authority.
+- Project-qualified search results, HTTP resources, relationships, backlinks, and
+  artifacts, including safe routing for colliding document paths and identities across
+  independent projects.
+- A federated viewer tree with project filtering, aggregate maintenance evidence, and
+  conditional central-skill guidance for cross-project confrontation and authorized
+  authoring.
+
+### Changed
+- Federation traversal is bounded by the selected `relic.yaml`: Relic never searches
+  ancestors or discovers undeclared projects, and a failing member edge no longer hides
+  independently readable projects.
+- Ancestor-authored relative links may resolve into one unambiguous descendant project;
+  upward and cross-branch links remain outside the federated graph.
+- Viewer ownership labels are relative to the selected federation root: root documents
+  need no qualifier, while descendants render as `backend` or `backend/package` without
+  changing their absolute API identity.
+
+### Fixed
+- Native Python wheels now force-include only the binary selected by the target platform
+  instead of allowing the wheel artifact configuration to collect another platform's
+  executable.
+
 ## [2.0.3] — 2026-08-10
 
 ### Fixed

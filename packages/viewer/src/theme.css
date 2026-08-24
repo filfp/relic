@@ -286,6 +286,34 @@ table.rl-table tr:last-child td { border-bottom: none; }
   white-space: nowrap;
 }
 .rl-catalog-signals > * { flex-shrink: 0; }
+.rl-project-tree {
+  margin: 0 0 var(--space-5); padding: var(--space-4);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.rl-project-tree > ul, .rl-project-tree li > ul {
+  margin: 0; padding-left: var(--space-4); list-style: none;
+}
+.rl-project-tree > ul { padding-left: 0; }
+.rl-project-tree li > ul {
+  margin-left: var(--space-3); border-left: 1px solid var(--border-2);
+}
+.rl-project-node {
+  display: flex; align-items: center; justify-content: space-between;
+  width: min(30rem, 100%); margin: var(--space-1) 0; padding: var(--space-2);
+  color: var(--text-2); background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-sm); cursor: pointer;
+}
+.rl-project-node:hover, .rl-project-node.active {
+  color: var(--accent); background: var(--accent-bg); border-color: var(--accent);
+}
+.rl-project-node span { font-size: var(--font-size-xs); }
+.rl-federation-edges { display: grid; gap: var(--space-2); }
+.rl-federation-edge {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2);
+  padding: var(--space-2); background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
 .rl-document-card, .rl-search-result {
   display: flex; flex-direction: column; gap: 0.42rem;
   padding: 0.8rem 0.9rem; color: var(--text); text-decoration: none;

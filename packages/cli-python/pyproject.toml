@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "relic-cli"
-version = "2.0.3"
+version = "2.1.0"
 description = "Shared project knowledge for coding agents"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -26,7 +26,6 @@ Repository = "https://github.com/filfp/relic"
 
 [tool.hatch.build.targets.wheel]
 packages = ["relic"]
-artifacts = ["relic/relic", "relic/relic.exe"]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "hatch_build.py"

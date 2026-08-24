@@ -4,16 +4,22 @@ id: SHARED-knowledge-model
 
 # Relic knowledge model
 
-The root relic.yaml is the single topology authority. It contains only the
-specification root, shared root, and a map of project-declared record prefixes to
-Markdown roots. It is configuration, not a canonical document. No engine registry, ID
-counter, manifest, session file, or hidden state participates in knowledge discovery.
+Each selected project's root relic.yaml is its single topology authority. Its required
+topology contains the specification root, shared root, and a map of project-declared
+record prefixes to Markdown roots. Federation adds an optional
+sibling federation map of explicitly selected Relic projects. The file is configuration,
+not a canonical document. No engine registry, ID counter, manifest, session file, or
+hidden state participates in knowledge discovery.
 
 Record kinds are open rather than compiled into Relic. Conventional topology may use
 FR, NFR, ADR, BR, GL, and EPIC; a project may add or omit kinds. Each lowercase topology
 key defines the corresponding uppercase numbered identity prefix, so `br` accepts
 `BR-001` and a project-defined `risk` accepts `RISK-001`. Definitions, authorship, and
 lifecycle remain project-owned metadata and governance.
+
+Specifications remain durable anchors for system and feature knowledge without imposing
+a specification-driven workflow. Notes, postmortems, incidents, runbooks, discussions,
+and compound kinds such as `backend-postmortem` remain ordinary project-declared records.
 
 Canonical nodes are:
 
@@ -46,6 +52,33 @@ other project-chosen location. The project that contains the code owns relic.yam
 declares how it consumes the corpus; a storage repository needs no Relic configuration
 of its own.
 
+## Federation model
+
+When the selected relic.yaml declares `federation.members`, its read model composes with
+each valid member and continues through
+the explicit federation declarations of every reached member. The nearest relic.yaml
+still selects the entire invocation boundary: Relic does not inspect ancestors for
+another federation or discover undeclared descendant projects. A member may be an
+independently governed package without being a Git repository or submodule.
+
+Every member retains its own topology, record kinds, graph, diagnostics, governance, and
+filesystem boundary. Root membership controls visibility only; it grants no semantic
+precedence and no automatic mutation authority. Intentional overlap between corpus roots
+owned by different projects remains visible under each project and is not treated as a
+global ownership error.
+
+Federated addresses keep a hierarchical project path, project-relative document path,
+and optional document identity as separate fields. The project path begins with the
+reserved `root` segment and appends each local member key traversed from the selected
+project. It is a view-local address, never a prefix written into document IDs. A project
+realpath reached through multiple branches is loaded once; the shortest valid address
+wins, with lexical ordering as the equal-depth tie-breaker, and repeated edges receive
+localized configuration diagnostics.
+
+Ordinary relative links may resolve from an ancestor project into any reachable
+descendant. Their cross-project backlinks exist only in a composed view containing both
+projects. Descendant links do not federate upward or across branches.
+
 The frontend and CLI consume the same exhaustive read model. Search is supplementary:
 agents remain free to use filesystem traversal, grep, ripgrep, symbol search, and other
 native exploration.
@@ -53,4 +86,5 @@ native exploration.
 See the [topology and link decision](../records/decisions/ADR-002-topology-and-relative-links.md),
 the [shared safe HTML vocabulary](../records/decisions/ADR-003-shared-safe-html-vocabulary.md),
 the [read-only access requirement](../records/requirements/functional/FR-002-read-only-knowledge-access.md),
-and the [consultability requirement](../records/requirements/non-functional/NFR-002-safe-consultability.md).
+the [consultability requirement](../records/requirements/non-functional/NFR-002-safe-consultability.md),
+and the [federation specification](../specs/002-relic-federation/index.html).

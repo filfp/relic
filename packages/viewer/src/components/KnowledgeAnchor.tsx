@@ -19,9 +19,18 @@ export function KnowledgeAnchor({
 }) {
   if (!relation) return href ? <a href={href} title={title}>{children}</a> : <>{children}</>;
 
+  const federated = "source" in relation;
+
   switch (relation.status) {
     case "canonical":
-      return relation.targetPath ? (
+      return federated && relation.target ? (
+        <a
+          href={`${documentRoute(relation.target.path, relation.target.project)}${relation.fragment ? `#${relation.fragment}` : ""}`}
+          title={title}
+        >
+          {children}
+        </a>
+      ) : !federated && relation.targetPath ? (
         <a
           href={`${documentRoute(relation.targetPath)}${relation.fragment ? `#${relation.fragment}` : ""}`}
           title={title}
@@ -30,7 +39,11 @@ export function KnowledgeAnchor({
         </a>
       ) : <>{children}</>;
     case "artifact":
-      return relation.resolvedPath ? (
+      return federated && relation.target ? (
+        <a href={artifactRoute(relation.target.path, relation.target.project)} title={title}>
+          {children}
+        </a>
+      ) : !federated && relation.resolvedPath ? (
         <a href={artifactRoute(relation.resolvedPath)} title={title}>{children}</a>
       ) : <>{children}</>;
     case "external":
@@ -43,7 +56,14 @@ export function KnowledgeAnchor({
       return <a href={relation.href} title={title}>{children}</a>;
     case "missing":
       return (
-        <span className="rl-broken-link" title={`Missing: ${relation.resolvedPath ?? relation.href}`}>
+        <span
+          className="rl-broken-link"
+          title={`Missing: ${
+            federated
+              ? relation.resolved?.path ?? relation.href
+              : relation.resolvedPath ?? relation.href
+          }`}
+        >
           {children} <span className="rl-link-chip">broken</span>
         </span>
       );

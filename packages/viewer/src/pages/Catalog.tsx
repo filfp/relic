@@ -1,22 +1,38 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import {
   artifactRoute,
   documentRoute,
   fetchProject,
+  isFederatedProjectView,
   searchProject,
   type DocumentSummary,
+  type FederatedKnowledgeProjectView,
+  type ProjectAddress,
   type ProjectView,
   type SearchResult,
 } from "../api";
 import { catalogGroups, membershipOptions, type CatalogGroup } from "../catalog";
 import { Callout, Chip } from "../components/bits";
+import { ProjectChip } from "../components/ProjectChip";
+
+function addressOf(value: DocumentSummary | SearchResult): ProjectAddress | undefined {
+  return "project" in value ? value.project : undefined;
+}
+
+function addressKey(address: ProjectAddress | undefined): string {
+  return address?.join("/") ?? "local";
+}
 
 function CatalogItem({ document }: { document: DocumentSummary }) {
+  const project = addressOf(document);
   return (
-    <a href={documentRoute(document.path)} className="rl-catalog-item">
+    <a href={documentRoute(document.path, project)} className="rl-catalog-item">
       <div className="rl-catalog-identity">
-        {document.id && <Chip color="blue">{document.id}</Chip>}
+        <div className="row">
+          {document.id && <Chip color="blue">{document.id}</Chip>}
+          <ProjectChip address={project} />
+        </div>
         <strong>{document.label}</strong>
         <code className="rl-path">{document.path}</code>
       </div>
@@ -47,7 +63,10 @@ export function CatalogGroups({ groups }: { groups: CatalogGroup[] }) {
           </summary>
           <div className="rl-catalog-list">
             {group.documents.map((document) => (
-              <CatalogItem key={document.path} document={document} />
+              <CatalogItem
+                key={`${addressKey(addressOf(document))}:${document.path}`}
+                document={document}
+              />
             ))}
           </div>
         </details>
@@ -57,13 +76,15 @@ export function CatalogGroups({ groups }: { groups: CatalogGroup[] }) {
 }
 
 function Result({ result }: { result: SearchResult }) {
+  const project = addressOf(result);
   const route = result.type === "document"
-    ? documentRoute(result.path)
-    : artifactRoute(result.path);
+    ? documentRoute(result.path, project)
+    : artifactRoute(result.path, project);
   return (
     <a href={route} className="rl-search-result">
       <div className="row">
         <Chip color={result.type === "document" ? "blue" : "purple"}>{result.type}</Chip>
+        <ProjectChip address={project} />
         {"id" in result && result.id && <Chip>{result.id}</Chip>}
         <code>{result.path}</code>
       </div>
@@ -73,12 +94,65 @@ function Result({ result }: { result: SearchResult }) {
   );
 }
 
+export function ProjectTree({
+  project,
+  active,
+  onSelect,
+}: {
+  project: FederatedKnowledgeProjectView;
+  active: string | null;
+  onSelect: (address: string | null) => void;
+}) {
+  const children = (parent: ProjectAddress) => project.federation.projects
+    .filter((candidate) =>
+      candidate.address.length === parent.length + 1 &&
+      parent.every((segment, index) => candidate.address[index] === segment)
+    );
+  const branch = (address: ProjectAddress): ReactNode => {
+    const key = address.join("/");
+    const node = project.federation.projects.find((candidate) =>
+      candidate.address.join("/") === key
+    );
+    return (
+      <li key={key}>
+        <button
+          type="button"
+          className={`rl-project-node${active === key ? " active" : ""}`}
+          onClick={() => onSelect(key)}
+        >
+          <code>{address.at(-1)}</code>
+          <span>{node?.counts.documents ?? 0} docs</span>
+        </button>
+        {children(address).length > 0 && (
+          <ul>{children(address).map((child) => branch(child.address))}</ul>
+        )}
+      </li>
+    );
+  };
+  return (
+    <section className="rl-project-tree" aria-label="Federated projects">
+      <div className="rl-section-heading">
+        <h2>Project federation</h2>
+        <button
+          type="button"
+          className={`rl-btn${active === null ? " active" : ""}`}
+          onClick={() => onSelect(null)}
+        >
+          all projects
+        </button>
+      </div>
+      <ul>{branch(["root"])}</ul>
+    </section>
+  );
+}
+
 export function Catalog() {
   const [project, setProject] = useState<ProjectView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [activeMembership, setActiveMembership] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProject().then(setProject).catch((reason) => setError(String(reason)));
@@ -100,12 +174,20 @@ export function Catalog() {
   if (error) return <Callout type="risk">Failed to load knowledge: {error}</Callout>;
   if (!project) return <p className="muted">Loading knowledge frontier…</p>;
 
-  const memberships = membershipOptions(project);
+  const documents = activeProject === null
+    ? project.documents
+    : project.documents.filter((document) =>
+      addressOf(document)?.join("/") === activeProject
+    );
+  const memberships = membershipOptions({
+    topology: project.topology,
+    documents,
+  });
   const counts = new Map(memberships.map((membership) => [
     membership,
-    project.documents.filter((document) => document.memberships.includes(membership)).length,
+    documents.filter((document) => document.memberships.includes(membership)).length,
   ]));
-  const groups = catalogGroups(project.documents, memberships, activeMembership);
+  const groups = catalogGroups(documents, memberships, activeMembership);
 
   return (
     <>
@@ -121,6 +203,17 @@ export function Catalog() {
           <span><strong>{project.counts.diagnostics}</strong> diagnostics</span>
         </div>
       </div>
+
+      {isFederatedProjectView(project) && (
+        <ProjectTree
+          project={project}
+          active={activeProject}
+          onSelect={(address) => {
+            setActiveProject(address);
+            setActiveMembership(null);
+          }}
+        />
+      )}
 
       <div className="rl-catalog-controls">
         <form className="rl-search" onSubmit={submit}>
@@ -144,7 +237,7 @@ export function Catalog() {
             aria-pressed={activeMembership === null}
             onClick={() => setActiveMembership(null)}
           >
-            all <span>{project.documents.length}</span>
+            all <span>{documents.length}</span>
           </button>
           {memberships.map((membership) => (
             <button
@@ -167,7 +260,12 @@ export function Catalog() {
             <span className="subtle">{results.length} match(es)</span>
           </div>
           {results.length > 0
-            ? results.map((result) => <Result key={`${result.type}:${result.path}`} result={result} />)
+            ? results.map((result) => (
+                <Result
+                  key={`${result.type}:${addressKey(addressOf(result))}:${result.path}`}
+                  result={result}
+                />
+              ))
             : <p className="muted">No knowledge matched this query.</p>}
         </section>
       )}

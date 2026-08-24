@@ -5,7 +5,8 @@ proposed write needs a concrete destination.
 
 ## Follow the Project Topology
 
-Read the root `relic.yaml`. It is the sole topology authority:
+Read the `relic.yaml` of the project that will own the knowledge write. Its topology is
+the sole authority for that project's destinations:
 
 ```yaml
 topology:
@@ -20,9 +21,15 @@ topology:
     epic: docs/epics
 ```
 
-The configuration contains topology only and is not a knowledge document. Every root is
-project-owned. Do not assume the example paths, reject overlapping roots, or copy
-topology into another file. Derive authored relative links from the current locations.
+The configuration is not a knowledge document. In addition to local topology it may
+declare explicit `federation.members`; federation does not replace or merge any member's
+topology. Every corpus root is project-owned. Do not assume the example paths, reject
+overlapping roots, or copy topology into another file. Derive authored relative links
+from the current locations.
+
+When an authorized change spans federated projects, read each owning project's
+`relic.yaml` and instructions before writing there. Do not redirect a member record into
+the selected root merely because the root can consult it.
 
 ## Choose the Smallest Useful Identity
 
@@ -108,6 +115,10 @@ Do not invent custom protocols, write backlink lists, maintain a reverse index, 
 on plain ID mentions as graph edges. If a file moves, search for its previous relative
 path and propose repairs. Broken links remain focused maintenance evidence and do not
 invalidate unrelated knowledge.
+
+Across federation boundaries, an ordinary ancestor-to-descendant relative link may join
+the composed graph. Do not author upward or cross-branch links expecting federation to
+make them canonical.
 
 ## Keep Current Knowledge Current
 

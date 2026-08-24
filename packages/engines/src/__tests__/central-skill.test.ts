@@ -13,6 +13,10 @@ const semanticHtml = readFileSync(
   resolve(skillRoot, "references/semantic-html.md"),
   "utf8",
 );
+const federation = readFileSync(
+  resolve(skillRoot, "references/federation.md"),
+  "utf8",
+);
 const openAiMetadata = readFileSync(
   resolve(skillRoot, "agents/openai.yaml"),
   "utf8",
@@ -51,10 +55,22 @@ describe("central Relic skill distribution source", () => {
   test("enters through project-owned instructions and progressive knowledge", () => {
     expect(skill).toContain("Honor the repository's `AGENTS.md`");
     expect(normalizedSkill).toContain(
-      "read `relic.yaml` as the first Relic context step",
+      "read that boundary's `relic.yaml` as the first Relic context step",
+    );
+    expect(normalizedSkill).toContain(
+      "Stop at that first boundary; never continue upward",
     );
     expect(skill).toContain("Do not load the whole corpus by default");
     expect(normalizedSkill).toContain("or require `relic search` as a gateway");
+  });
+
+  test("loads federation guidance only from an explicitly selected boundary", () => {
+    expect(skill).toContain("When the selected `relic.yaml` declares `federation.members`");
+    expect(skill).toContain("Ignore that reference when federation is absent");
+    expect(federation).toContain("do not scan the filesystem for undeclared");
+    expect(federation).toContain("global monorepo knowledge is intentionally absent");
+    expect(federation).toContain("does not forbid ordinary file edits");
+    expect(federation).toContain("Do not choose a project owner from path overlap");
   });
 
   test("covers discovery without a user-facing mode or second invocation", () => {
@@ -104,10 +120,10 @@ describe("central Relic skill distribution source", () => {
 
   test("authors living knowledge from topology without hidden state", () => {
     expect(authoring).toContain(
-      "It is the sole topology authority",
+      "sole authority for that project's destinations",
     );
     expect(authoring).toContain(
-      "The configuration contains topology only and is not a knowledge document",
+      "federation does not replace or merge any member's",
     );
     expect(authoring).toContain("Only `id` is required metadata");
     expect(authoring).toContain(

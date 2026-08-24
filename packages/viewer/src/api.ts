@@ -1,33 +1,48 @@
 import type {
-  CanonicalDocument,
+  CanonicalDocument as LocalCanonicalDocument,
   CorpusMembership,
+  FederatedCanonicalDocument,
+  FederatedKnowledgeArtifactSummary,
+  FederatedKnowledgeArtifactView,
+  FederatedKnowledgeBacklink,
+  FederatedKnowledgeDiagnostic,
+  FederatedKnowledgeDocumentSummary,
+  FederatedKnowledgeDocumentView,
+  FederatedKnowledgeLink,
+  FederatedKnowledgeProjectView,
+  FederatedKnowledgeSearchResult,
   HtmlAstNode,
-  KnowledgeArtifactSummary as ArtifactSummary,
-  KnowledgeArtifactView as ArtifactView,
-  KnowledgeBacklink,
-  KnowledgeDiagnostic as Diagnostic,
-  KnowledgeDocumentSummary as DocumentSummary,
-  KnowledgeDocumentView as DocumentView,
-  KnowledgeLink,
-  KnowledgeProjectView as ProjectView,
-  KnowledgeSearchResult as SearchResult,
+  KnowledgeArtifactSummary as LocalArtifactSummary,
+  KnowledgeArtifactView as LocalArtifactView,
+  KnowledgeBacklink as LocalKnowledgeBacklink,
+  KnowledgeDiagnostic,
+  KnowledgeDocumentSummary as LocalDocumentSummary,
+  KnowledgeDocumentView as LocalDocumentView,
+  KnowledgeLink as LocalKnowledgeLink,
+  KnowledgeProjectView as LocalProjectView,
+  KnowledgeSearchResult as LocalSearchResult,
   MarkdownAstNode,
+  ProjectAddress,
 } from "@relic/core";
 
+export type ArtifactSummary = LocalArtifactSummary | FederatedKnowledgeArtifactSummary;
+export type ArtifactView = LocalArtifactView | FederatedKnowledgeArtifactView;
+export type CanonicalDocument = LocalCanonicalDocument | FederatedCanonicalDocument;
+export type Diagnostic = KnowledgeDiagnostic;
+export type DocumentSummary = LocalDocumentSummary | FederatedKnowledgeDocumentSummary;
+export type DocumentView = LocalDocumentView | FederatedKnowledgeDocumentView;
+export type KnowledgeBacklink = LocalKnowledgeBacklink | FederatedKnowledgeBacklink;
+export type KnowledgeLink = LocalKnowledgeLink | FederatedKnowledgeLink;
+export type ProjectView = LocalProjectView | FederatedKnowledgeProjectView;
+export type SearchResult = LocalSearchResult | FederatedKnowledgeSearchResult;
+
 export type {
-  ArtifactSummary,
-  ArtifactView,
-  CanonicalDocument,
   CorpusMembership,
-  Diagnostic,
-  DocumentSummary,
-  DocumentView,
   HtmlAstNode,
-  KnowledgeBacklink,
-  KnowledgeLink,
   MarkdownAstNode,
-  ProjectView,
-  SearchResult,
+  FederatedKnowledgeDiagnostic,
+  FederatedKnowledgeProjectView,
+  ProjectAddress,
 };
 
 async function get<T>(path: string): Promise<T> {
@@ -39,16 +54,33 @@ async function get<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-function query(path: string): string {
-  return new URLSearchParams({ path }).toString();
+function serializedProject(project: ProjectAddress | string): string {
+  return typeof project === "string" ? project : project.join("/");
 }
 
-export function documentRoute(path: string): string {
-  return `/document/${path.split("/").map(encodeURIComponent).join("/")}`;
+function query(path: string, project?: ProjectAddress | string): string {
+  const parameters = new URLSearchParams({ path });
+  if (project) parameters.set("project", serializedProject(project));
+  return parameters.toString();
 }
 
-export function artifactRoute(path: string): string {
-  return `/artifact/${path.split("/").map(encodeURIComponent).join("/")}`;
+function knowledgeRoute(
+  kind: "document" | "artifact",
+  path: string,
+  project?: ProjectAddress,
+): string {
+  const pathname = `/${kind}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  return project
+    ? `${pathname}?${new URLSearchParams({ project: project.join("/") })}`
+    : pathname;
+}
+
+export function documentRoute(path: string, project?: ProjectAddress): string {
+  return knowledgeRoute("document", path, project);
+}
+
+export function artifactRoute(path: string, project?: ProjectAddress): string {
+  return knowledgeRoute("artifact", path, project);
 }
 
 export function pathFromRoute(
@@ -66,19 +98,34 @@ export function pathFromRoute(
 }
 
 export const fetchProject = () => get<ProjectView>("/api/project");
-export const fetchDocument = (path: string) =>
-  get<DocumentView>(`/api/document?${query(path)}`);
-export const fetchArtifact = (path: string) =>
-  get<ArtifactView>(`/api/artifact?${query(path)}`);
+export const fetchDocument = (path: string, project?: string) =>
+  get<DocumentView>(`/api/document?${query(path, project)}`);
+export const fetchArtifact = (path: string, project?: string) =>
+  get<ArtifactView>(`/api/artifact?${query(path, project)}`);
 export const searchProject = (value: string) =>
   get<{ query: string; results: SearchResult[] }>(
     `/api/search?${new URLSearchParams({ q: value }).toString()}`,
   );
 
-export function artifactContentUrl(path: string, download = false): string {
+export function artifactContentUrl(
+  path: string,
+  download = false,
+  project?: ProjectAddress,
+): string {
   const parameters = new URLSearchParams({ path });
+  if (project) parameters.set("project", project.join("/"));
   if (download) parameters.set("download", "1");
   return `/api/content?${parameters.toString()}`;
+}
+
+export function projectFromLocation(search: string): string | undefined {
+  return new URLSearchParams(search).get("project") ?? undefined;
+}
+
+export function isFederatedProjectView(
+  project: ProjectView,
+): project is FederatedKnowledgeProjectView {
+  return "federation" in project;
 }
 
 export function resolveRelativePath(

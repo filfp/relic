@@ -42,12 +42,15 @@ Code is evidence of behavior; documents express accepted intent. When they
 disagree, investigate and reconcile the affected boundary instead of declaring
 either side universally authoritative.
 
-### Topology is explicit and otherwise free
+### Project configuration is explicit and otherwise free
 
-The root `relic.yaml` is the sole topology authority and contains topology only.
-Its paths may use any project layout, including directories supplied through a
-submodule. Relic follows those paths without owning the external repository or
-requiring a `.relic` directory.
+The selected root `relic.yaml` is the sole project configuration authority. Its required
+`topology` object owns the local corpus; federation adds only an
+optional map of explicit member-project edges. Reached members may declare further
+explicit edges, but Relic never discovers undeclared projects by scanning the filesystem.
+Topology paths may use any project layout, including directories supplied through a
+submodule. Relic follows those paths without owning the external repository or requiring
+a `.relic` directory.
 
 Record kinds are declared by the project as lowercase identity prefixes mapped to
 Markdown roots. Relic may provide conventional defaults, but its core does not own a

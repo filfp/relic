@@ -12,12 +12,19 @@ workflow the developer must complete before work can continue.
 ## Enter Through Project Knowledge
 
 1. Honor the repository's `AGENTS.md` and other project instructions.
-2. If those instructions have not already routed the task through Relic, read
-   `relic.yaml` as the first Relic context step and use its topology to locate knowledge.
-3. Start from the target named by the developer. Follow only relevant links and expand
+2. Use the project boundary named by the developer, or the nearest ancestor containing
+   `relic.yaml` when no boundary was named. Stop at that first boundary; never continue
+   upward looking for broader Relic knowledge.
+3. If project instructions have not already routed the task through Relic, read that
+   boundary's `relic.yaml` as the first Relic context step and use its topology to locate
+   local knowledge.
+4. When the selected `relic.yaml` declares `federation.members`, read
+   [`references/federation.md`](references/federation.md) before deciding cross-project
+   scope. Ignore that reference when federation is absent.
+5. Start from the target named by the developer. Follow only relevant links and expand
    context with the frontend, Relic search, filesystem search, symbol search, or other
    native tools as the task requires.
-4. Treat code as evidence of present behavior and Relic documents as current best
+6. Treat code as evidence of present behavior and Relic documents as current best
    knowledge of intent, contracts, decisions, and structure. Investigate a divergence;
    do not give either source universal precedence.
 
