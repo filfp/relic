@@ -19,8 +19,15 @@ state, manifests, counters, locks, reservations, or ambient chat history. Search
 serve are read-only. A later session must recover current context from repository
 knowledge and code.
 
+Federation must preserve the same stateless boundary. Relic selects only the nearest
+project authority and never searches ancestors for a parent federation or descendants
+for undeclared members. Work is bounded by the selected root and its explicit direct
+members. Process-local derived caching is allowed, but no persisted or authoritative
+federation cache, registry, or synchronization state may participate in discovery.
+
 npm bundles, compiled Bun binaries, and platform Python wheels must embed the same skill
 and viewer without requiring the source checkout.
 
-See the [implementation map](../../../shared/SHARED-development.md) and
-[skill-first architecture](../../decisions/ADR-001-skill-first-stateless-architecture.md).
+See the [implementation map](../../../shared/SHARED-development.md),
+[skill-first architecture](../../decisions/ADR-001-skill-first-stateless-architecture.md),
+and the [federation specification](../../../specs/002-relic-federation/index.html).

@@ -24,6 +24,20 @@ The frontend must preserve readable child content for unknown project vocabulary
 present diagnostics according to their actual severity without assigning authority or a
 status lifecycle.
 
+Federated consultation must validate every member independently and preserve every safe
+valid project when another member fails. Invalid member entries, duplicate member
+realpaths, unsafe authorities, and unavailable member corpora produce project-qualified
+diagnostics. Duplicate membership is normalized once; intentional content overlap across
+independent project topologies is not an ownership error. Artifact delivery accepts only
+a validated member key and a discovered project-relative artifact path, so caller input
+cannot select an arbitrary filesystem root.
+
+The selected project cannot be its own federation member. Absolute member paths, project
+boundary escapes, unknown member keys, member-to-parent escapes, and unsafe cross-member
+artifact requests fail locally. Root-to-direct-member links may resolve only when their
+ordinary relative targets belong to validated member knowledge.
+
 See the [knowledge model](../../../shared/SHARED-knowledge-model.md),
-[read-only access](../functional/FR-002-read-only-knowledge-access.md), and the
-[shared safe HTML vocabulary](../../decisions/ADR-003-shared-safe-html-vocabulary.md).
+[read-only access](../functional/FR-002-read-only-knowledge-access.md),
+[shared safe HTML vocabulary](../../decisions/ADR-003-shared-safe-html-vocabulary.md),
+and the [federation specification](../../../specs/002-relic-federation/index.html).

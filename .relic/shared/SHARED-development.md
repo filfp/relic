@@ -15,6 +15,13 @@ Relic is a Bun workspace with four active implementation boundaries:
 - packages/viewer renders the core transport contract without independently parsing or
   interpreting project knowledge.
 
+For the accepted federation extension, core owns independent parsing of local topology
+and federation membership plus composed project addresses, relationships, search,
+normalization, and diagnostics. CLI selection still stops at the nearest project root
+and owns HTTP and safe artifact routing. The viewer presents the composed model, engines
+remain project-local, and the central skill owns federated confrontation and authorized
+authoring. Federation is specified but not yet implemented.
+
 skills/relic is the complete distribution source of truth. Its portable contract is
 shared by every target; optional host metadata is selected only for its owning target.
 Engine-native copies are installations, never independently maintained product sources.
@@ -38,5 +45,6 @@ Releases publish the same four-command product through npm and platform-specific
 wheels. The release workflow uses pinned actions, frozen dependency installation, and
 trusted PyPI publishing.
 
-See the [portability requirement](../records/requirements/non-functional/NFR-001-portable-stateless-operation.md)
-and the [release epic](../records/epics/EPIC-001-relic-2-release.md).
+See the [portability requirement](../records/requirements/non-functional/NFR-001-portable-stateless-operation.md),
+the [release epic](../records/epics/EPIC-001-relic-2-release.md), and the
+[federation specification](../specs/002-relic-federation/index.html).

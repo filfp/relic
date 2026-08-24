@@ -4,16 +4,22 @@ id: SHARED-knowledge-model
 
 # Relic knowledge model
 
-The root relic.yaml is the single topology authority. It contains only the
-specification root, shared root, and a map of project-declared record prefixes to
-Markdown roots. It is configuration, not a canonical document. No engine registry, ID
-counter, manifest, session file, or hidden state participates in knowledge discovery.
+Each selected project's root relic.yaml is its single topology authority. Its required
+topology contains the specification root, shared root, and a map of project-declared
+record prefixes to Markdown roots. The accepted federation extension adds an optional
+sibling federation map of explicitly selected Relic projects. The file is configuration,
+not a canonical document. No engine registry, ID counter, manifest, session file, or
+hidden state participates in knowledge discovery.
 
 Record kinds are open rather than compiled into Relic. Conventional topology may use
 FR, NFR, ADR, BR, GL, and EPIC; a project may add or omit kinds. Each lowercase topology
 key defines the corresponding uppercase numbered identity prefix, so `br` accepts
 `BR-001` and a project-defined `risk` accepts `RISK-001`. Definitions, authorship, and
 lifecycle remain project-owned metadata and governance.
+
+Specifications remain durable anchors for system and feature knowledge without imposing
+a specification-driven workflow. Notes, postmortems, incidents, runbooks, discussions,
+and compound kinds such as `backend-postmortem` remain ordinary project-declared records.
 
 Canonical nodes are:
 
@@ -46,6 +52,29 @@ other project-chosen location. The project that contains the code owns relic.yam
 declares how it consumes the corpus; a storage repository needs no Relic configuration
 of its own.
 
+## Accepted federation model
+
+Federation is specified but not yet implemented. When the selected relic.yaml declares
+`federation.members`, its root read model composes with the read models of those valid
+direct members. The nearest relic.yaml still selects the entire invocation boundary:
+Relic does not inspect ancestors for another federation, recursively discover descendant
+projects, or traverse a member's own federation.
+
+Every member retains its own topology, record kinds, graph, diagnostics, governance, and
+filesystem boundary. Root membership controls visibility only; it grants no semantic
+precedence and no automatic mutation authority. Intentional overlap between corpus roots
+owned by different projects remains visible under each project and is not treated as a
+global ownership error.
+
+Federated addresses keep project, project-relative path, and optional document identity
+as separate fields. Member keys are view-local addresses, never prefixes written into
+document IDs. Duplicate membership paths resolving to the same project are normalized
+once with localized configuration diagnostics.
+
+Ordinary relative links may resolve from the selected root into a direct member. Their
+cross-project backlinks exist only in the composed view. Member links remain contained
+by the member project and do not federate upward or sideways.
+
 The frontend and CLI consume the same exhaustive read model. Search is supplementary:
 agents remain free to use filesystem traversal, grep, ripgrep, symbol search, and other
 native exploration.
@@ -53,4 +82,5 @@ native exploration.
 See the [topology and link decision](../records/decisions/ADR-002-topology-and-relative-links.md),
 the [shared safe HTML vocabulary](../records/decisions/ADR-003-shared-safe-html-vocabulary.md),
 the [read-only access requirement](../records/requirements/functional/FR-002-read-only-knowledge-access.md),
-and the [consultability requirement](../records/requirements/non-functional/NFR-002-safe-consultability.md).
+the [consultability requirement](../records/requirements/non-functional/NFR-002-safe-consultability.md),
+and the [federation specification](../specs/002-relic-federation/index.html).

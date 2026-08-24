@@ -1,0 +1,329 @@
+<relic-body id="002-relic-federation" data-status="accepted-direction">
+  <header>
+    <relic-chip>Accepted direction</relic-chip>
+    <h1>Federated knowledge and confrontation across nested projects</h1>
+    <p>
+      Relic will let a monorepo consult and confront its own documentation together with
+      the independently owned knowledge of explicitly selected nested projects. Each
+      project remains a complete Relic boundary when used on its own.
+    </p>
+  </header>
+
+  <relic-callout type="delivery">
+    <strong>Not implemented:</strong> this specification records the accepted federation
+    contract. The current CLI and read model remain single-project until implementation,
+    tests, generated distributions, and the linked product contracts agree with it.
+  </relic-callout>
+
+  <section>
+    <h2>Problem</h2>
+    <p>
+      A monorepo may contain global specifications, notes, decisions, and operational
+      knowledge while nested repositories or submodules represent independently usable
+      products. A backend needs its own topology and knowledge when opened alone, but the
+      monorepo needs one aggregate view when work starts from the monorepo root.
+    </p>
+    <p>
+      Pointing the parent topology directly at every child corpus would reinterpret child
+      knowledge under parent-owned record kinds. Searching recursively for descendant
+      <code>relic.yaml</code> files would silently include fixtures, vendors, examples, or
+      unrelated checkouts. Federation therefore composes explicit project read models;
+      it does not absorb or autodiscover them.
+    </p>
+  </section>
+
+  <section>
+    <h2>Selected boundary</h2>
+    <p>
+      The nearest project-local, regular, non-symlinked <code>relic.yaml</code> found from
+      the working directory selects the complete Relic boundary for that invocation.
+      Relic never walks above it looking for a parent federation.
+    </p>
+    <table>
+      <thead>
+        <tr><th>Working directory</th><th>Knowledge boundary</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monorepo root</td>
+          <td>The root corpus plus valid direct members declared by that root.</td>
+        </tr>
+        <tr>
+          <td>Nested backend</td>
+          <td>Only the backend corpus and any federation declared by the backend itself.</td>
+        </tr>
+        <tr>
+          <td>Standalone clone of a member</td>
+          <td>Only that project's own selected boundary.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      This boundary is both an ownership rule and a level-of-work rule. Moving to the
+      monorepo root is the explicit act that selects global knowledge.
+    </p>
+  </section>
+
+  <section>
+    <h2>Configuration</h2>
+    <p>
+      A project's <code>topology</code> continues to declare its required specification,
+      shared, and record roots. The optional sibling <code>federation</code> object composes
+      independent Relic projects without turning them into corpus roots.
+    </p>
+    <pre><code>topology:
+  specs: .relic/specs
+  shared: .relic/shared
+  records:
+    note: docs/notes
+federation:
+  members:
+    backend: services/backend
+    frontend: apps/frontend
+    mobile: apps/mobile</code></pre>
+    <ul>
+      <li>Omitting <code>federation</code> preserves current single-project behavior.</li>
+      <li><code>members</code> is an explicit map of lowercase kebab-case keys to project directories.</li>
+      <li><code>root</code> is reserved as the selected federation root's transport key.</li>
+      <li>Each member path is relative to and contained by the selected project root.</li>
+      <li>Each member directory contains its own regular, non-symlinked <code>relic.yaml</code>.</li>
+      <li>Only direct members participate; nested member federations are not traversed.</li>
+      <li>An undeclared descendant <code>relic.yaml</code> has no effect.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Knowledge remains project-owned</h2>
+    <p>
+      Every project keeps the minimum Relic topology of specifications, shared knowledge,
+      and project-declared record kinds. Specifications remain important anchors without
+      imposing a specification-driven workflow. Notes, postmortems, incidents, runbooks,
+      discussions, and compound kinds such as <code>backend-postmortem</code> use the same
+      open record mechanism.
+    </p>
+    <ul>
+      <li>A member's <code>relic.yaml</code> alone defines that member's roots and record kinds.</li>
+      <li>Federation membership does not transfer document or governance ownership to the root.</li>
+      <li>Root knowledge has no automatic semantic precedence over member knowledge.</li>
+      <li>Contradictions across projects remain evidence for confrontation, not automatic reconciliation.</li>
+      <li>The same physical content may intentionally be consumed by multiple project topologies.</li>
+      <li>Content overlap across project topologies is not diagnosed, deduplicated, or assigned a global owner.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Federated skill behavior</h2>
+    <p>
+      The central skill reads its federation reference only when the selected
+      <code>relic.yaml</code> declares <code>federation</code>. It begins from the developer's
+      target and expands progressively through root or member knowledge as relevance
+      requires; it does not load every corpus as a precondition or require Relic search.
+    </p>
+    <ul>
+      <li>The skill may confront related or contradictory knowledge across visible projects.</li>
+      <li>Member keys identify context; they do not establish authority or document identity.</li>
+      <li>The skill recommends updates in the project that owns each affected document.</li>
+      <li>One developer authorization may name coordinated writes in the root and multiple members.</li>
+      <li>No command, agent, or root project silently synchronizes or mutates member knowledge.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Command behavior</h2>
+    <table>
+      <thead>
+        <tr><th>Operation</th><th>Behavior</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>relic search</code></td>
+          <td>Search the selected root corpus and every valid direct member when federation is declared.</td>
+        </tr>
+        <tr>
+          <td><code>relic serve</code></td>
+          <td>Present the same composed read model grouped by project.</td>
+        </tr>
+        <tr>
+          <td><code>relic init</code></td>
+          <td>Create only the selected project's minimal topology; never initialize members.</td>
+        </tr>
+        <tr>
+          <td><code>relic install</code></td>
+          <td>Install only for the selected project; never traverse federation membership.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Federation adds no command, mode, session, manifest, synchronization engine, or
+      persisted cache. Search, serve, and their HTTP API remain read-only; this does not
+      restrict developer-authorized skill authoring across project boundaries.
+    </p>
+  </section>
+
+  <section>
+    <h2>Composed read model and addressing</h2>
+    <p>
+      Federation composes separate project read models rather than flattening their
+      documents into one path or identity space. A federated address is structured and
+      never becomes authored document metadata.
+    </p>
+    <pre><code>{
+  "project": "backend",
+  "path": "docs/decisions/ADR-001-retry-policy.md",
+  "id": "ADR-001"
+}</code></pre>
+    <ul>
+      <li><code>id</code> remains the member-owned document identity.</li>
+      <li><code>path</code> remains relative to the owning project.</li>
+      <li><code>project</code> is a view-local address key and is never prepended to the ID.</li>
+      <li>Equal IDs or paths in different projects do not conflict.</li>
+      <li>Search results, summaries, routes, artifacts, and diagnostics retain the project key.</li>
+      <li>Federated document and content routes resolve the validated tuple <code>{project, path}</code>.</li>
+      <li>Unknown project keys do not become filesystem paths and return not found.</li>
+      <li>A project without federation retains existing single-project response shapes.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Configuration duplicates</h2>
+    <p>
+      Duplicate federation membership is configuration ambiguity, unlike intentional
+      overlap between independently owned corpus topologies.
+    </p>
+    <ul>
+      <li>The selected project cannot declare itself as a member.</li>
+      <li>Two member paths resolving to the same project realpath are loaded once.</li>
+      <li>The first valid declared key addresses that project; later aliases produce focused diagnostics.</li>
+      <li>Normalization prevents duplicate member entries in search and serve.</li>
+      <li>Diagnostics appear in the federation maintenance view without hiding valid knowledge.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Top-down links</h2>
+    <p>
+      Federation adds no custom link protocol. An ordinary relative link authored in the
+      selected root may resolve to a canonical document or artifact in a direct member.
+      The composed view derives its backlink without rewriting either source.
+    </p>
+    <ul>
+      <li>Root-to-direct-member links may become canonical in the federated view.</li>
+      <li>The derived cross-project backlink exists only in that federated view.</li>
+      <li>A member consulted alone retains its independent graph.</li>
+      <li>Member-to-root and member-to-sibling links are not federated and cannot escape the member boundary.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Failure isolation</h2>
+    <table>
+      <thead>
+        <tr><th>Failure</th><th>Result</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Selected <code>relic.yaml</code> has invalid YAML or an unsafe authority</td>
+          <td>The selected federation is unavailable and Relic does not fall back to an ancestor.</td>
+        </tr>
+        <tr>
+          <td>Local topology is invalid but federation membership is readable</td>
+          <td>The local corpus is unavailable while valid members remain consultable.</td>
+        </tr>
+        <tr>
+          <td>One member entry is invalid</td>
+          <td>The root and every other valid member remain available.</td>
+        </tr>
+        <tr>
+          <td>One member's <code>relic.yaml</code> is invalid</td>
+          <td>Only that member is unavailable, with a project-qualified diagnostic.</td>
+        </tr>
+        <tr>
+          <td>One member record entry is invalid</td>
+          <td>That member preserves every other valid topology root.</td>
+        </tr>
+        <tr>
+          <td>Knowledge changes while <code>serve</code> is running</td>
+          <td>A later derived refresh reflects current files without persisted state.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Safety and performance</h2>
+    <ul>
+      <li>Every project is parsed and contained against its own project root.</li>
+      <li>Artifact delivery resolves only through a validated member key and that member's discovered artifacts.</li>
+      <li>Absolute member paths, boundary escapes, unsafe authorities, and unsafe artifact resolution fail locally.</li>
+      <li>Only the selected root and explicit direct members are loaded.</li>
+      <li>Each valid project is loaded at most once per derived refresh.</li>
+      <li>Process-local derived caching is allowed; persisted or authoritative cache state is not.</li>
+      <li>Aggregate ordering is stable by score, project key, and project-relative path.</li>
+      <li>Federation remains localhost-only under the existing viewer security contract.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Implementation ownership</h2>
+    <table>
+      <thead>
+        <tr><th>Boundary</th><th>Federation responsibility</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Core</td><td>Parse topology and federation independently; compose read models, addresses, links, search, normalization, and diagnostics.</td></tr>
+        <tr><td>CLI</td><td>Select the nearest project boundary; expose HTTP transport and safe artifact routing.</td></tr>
+        <tr><td>Viewer</td><td>Present projects, aggregate results, relationships, and federation maintenance evidence.</td></tr>
+        <tr><td>Central skill</td><td>Use the conditional federation reference for confrontation and developer-owned authoring.</td></tr>
+        <tr><td>Engines</td><td>Remain project-local and never traverse federation membership during installation.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Acceptance evidence</h2>
+    <ol>
+      <li>A project without federation preserves current selection, search, API, viewer, init, and install behavior.</li>
+      <li>Running inside a member never consults an ancestor federation.</li>
+      <li>Running at a federation root exposes root and valid direct-member knowledge.</li>
+      <li>Fixtures retain the minimum specs and shared topology while exercising custom note and compound postmortem record kinds.</li>
+      <li>Equal IDs and paths across projects remain independently addressable without derived IDs.</li>
+      <li>Intentional corpus overlap across project topologies remains visible under each project without an ownership diagnostic.</li>
+      <li>Duplicate member realpaths load once and produce localized maintenance diagnostics.</li>
+      <li>The failure matrix preserves every safe valid corpus boundary.</li>
+      <li>Root-to-member links resolve canonically only in the composed view; reverse and sibling links remain bounded.</li>
+      <li>Unknown member keys, path escapes, symlinked authorities, and unsafe artifact requests cannot expose content.</li>
+      <li>Search, API, viewer, and the conditional skill reference agree on project ownership and addressing.</li>
+      <li>An explicitly authorized interaction can update named root and member documents without a federated mutation command.</li>
+      <li>Performance evidence shows work bounded by the selected root and declared direct members.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Deliberately deferred</h2>
+    <ul>
+      <li>Automatic discovery of descendant or ancestor <code>relic.yaml</code> files.</li>
+      <li>Transitive federation and cycle handling.</li>
+      <li>Projects outside the selected project boundary.</li>
+      <li>Member-to-root and member-to-sibling federated links.</li>
+      <li>Global or derived document IDs.</li>
+      <li>Automatic cross-project writes, synchronization, reconciliation, or lifecycle governance.</li>
+      <li>A fifth CLI command or a second Relic configuration file.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Linked contracts</h2>
+    <ul>
+      <li><a href="../001-relic-2/index.html">Relic 2 product specification</a></li>
+      <li><a href="../../shared/SHARED-product.md">Product boundary</a></li>
+      <li><a href="../../shared/SHARED-knowledge-model.md">Knowledge model</a></li>
+      <li><a href="../../shared/SHARED-development.md">Implementation and validation map</a></li>
+      <li><a href="../../records/requirements/functional/FR-001-skill-first-knowledge-workflow.md">FR-001 skill-first workflow</a></li>
+      <li><a href="../../records/requirements/functional/FR-002-read-only-knowledge-access.md">FR-002 read-only access</a></li>
+      <li><a href="../../records/requirements/non-functional/NFR-001-portable-stateless-operation.md">NFR-001 portable stateless operation</a></li>
+      <li><a href="../../records/requirements/non-functional/NFR-002-safe-consultability.md">NFR-002 safe consultability</a></li>
+      <li><a href="../../records/decisions/ADR-001-skill-first-stateless-architecture.md">ADR-001 skill-first architecture</a></li>
+      <li><a href="../../records/decisions/ADR-002-topology-and-relative-links.md">ADR-002 topology and links</a></li>
+    </ul>
+  </section>
+</relic-body>

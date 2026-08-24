@@ -3,15 +3,23 @@
     <relic-chip>Relic 2.0</relic-chip>
     <h1>Shared project knowledge without workflow ceremony</h1>
     <p>
-      Relic preserves the current project knowledge used by developers and coding
-      agents. It keeps specification-driven development as a useful practice while
-      removing the mandatory specify, clarify, plan, tasks, and implement pipeline.
+      Relic preserves the current project documentation used by developers and coding
+      agents for confrontation and development. Specifications remain important
+      knowledge anchors without restoring a mandatory specify, clarify, plan, tasks,
+      and implement pipeline.
     </p>
   </header>
 
   <relic-callout type="principle">
     <strong>Product center:</strong> durable shared knowledge is the product; SDD is one
     way to produce it. Persistence remains developer-owned.
+  </relic-callout>
+
+  <relic-callout type="delivery">
+    <strong>Accepted extension:</strong>
+    <a href="../002-relic-federation/index.html">explicit project federation</a>
+    will compose independently owned corpora when selected from a federation root. It is
+    specified but not implemented in the current release.
   </relic-callout>
 
   <section>
@@ -61,7 +69,7 @@
   <section>
     <h2>Knowledge boundary</h2>
     <ul>
-      <li><code>relic.yaml</code> is the sole topology authority and is not a knowledge node.</li>
+      <li>Each selected project's <code>relic.yaml</code> is its sole topology authority and is not a knowledge node.</li>
       <li>Every specification has one canonical semantic <code>index.html</code>.</li>
       <li>Shared documents and typed records are canonical Markdown with only <code>id</code> required.</li>
       <li>Record prefixes and roots come from topology; common kinds include FR, NFR, ADR, BR, GL, and EPIC.</li>
@@ -69,6 +77,7 @@
       <li>Ordinary relative links create a peer-to-peer web and derived backlinks.</li>
       <li>Statuses, metadata, and project governance remain project-defined.</li>
       <li>Git retains superseded history; active Relic knowledge describes the current frontier.</li>
+      <li>An optional federation composes explicit direct project read models without absorbing their topology or ownership.</li>
     </ul>
   </section>
 
@@ -113,6 +122,7 @@
       <li><a href="../../records/decisions/ADR-001-skill-first-stateless-architecture.md">ADR-001 skill-first architecture</a></li>
       <li><a href="../../records/decisions/ADR-002-topology-and-relative-links.md">ADR-002 topology and links</a></li>
       <li><a href="../../records/epics/EPIC-001-relic-2-release.md">EPIC-001 Relic 2.0 release</a></li>
+      <li><a href="../002-relic-federation/index.html">Accepted federation extension</a></li>
     </ul>
   </section>
 
@@ -121,8 +131,8 @@
     <p>
       Relic 2.0 contains no constitution, preamble, fixed spec anatomy, Markdown/HTML
       mode, workflow prompts, validation command, active document, hidden state,
-      generated backlink index, topology delegation, plugin router, or 1.x compatibility
-      layer.
+      generated backlink index, implicit topology discovery, cross-project mutation
+      engine, plugin router, or 1.x compatibility layer.
     </p>
   </section>
 </relic-body>
