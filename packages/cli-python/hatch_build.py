@@ -23,5 +23,8 @@ class CustomBuildHook(BuildHookInterface):
         if binary_name != "relic.exe" and not os.access(binary, os.X_OK):
             raise RuntimeError(f"native Relic binary is not executable: {binary}")
 
+        build_data["force_include"] = {
+            str(binary): f"relic/{binary_name}",
+        }
         build_data["tag"] = f"py3-none-{platform_tag}"
         build_data["pure_python"] = False

@@ -26,7 +26,6 @@ Repository = "https://github.com/filfp/relic"
 
 [tool.hatch.build.targets.wheel]
 packages = ["relic"]
-artifacts = ["relic/relic", "relic/relic.exe"]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "hatch_build.py"
