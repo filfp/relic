@@ -55,10 +55,11 @@ of its own.
 ## Accepted federation model
 
 Federation is specified but not yet implemented. When the selected relic.yaml declares
-`federation.members`, its root read model composes with the read models of those valid
-direct members. The nearest relic.yaml still selects the entire invocation boundary:
-Relic does not inspect ancestors for another federation, recursively discover descendant
-projects, or traverse a member's own federation.
+`federation.members`, its read model composes with each valid member and continues through
+the explicit federation declarations of every reached member. The nearest relic.yaml
+still selects the entire invocation boundary: Relic does not inspect ancestors for
+another federation or discover undeclared descendant projects. A member may be an
+independently governed package without being a Git repository or submodule.
 
 Every member retains its own topology, record kinds, graph, diagnostics, governance, and
 filesystem boundary. Root membership controls visibility only; it grants no semantic
@@ -66,14 +67,17 @@ precedence and no automatic mutation authority. Intentional overlap between corp
 owned by different projects remains visible under each project and is not treated as a
 global ownership error.
 
-Federated addresses keep project, project-relative path, and optional document identity
-as separate fields. Member keys are view-local addresses, never prefixes written into
-document IDs. Duplicate membership paths resolving to the same project are normalized
-once with localized configuration diagnostics.
+Federated addresses keep a hierarchical project path, project-relative document path,
+and optional document identity as separate fields. The project path begins with the
+reserved `root` segment and appends each local member key traversed from the selected
+project. It is a view-local address, never a prefix written into document IDs. A project
+realpath reached through multiple branches is loaded once; the shortest valid address
+wins, with lexical ordering as the equal-depth tie-breaker, and repeated edges receive
+localized configuration diagnostics.
 
-Ordinary relative links may resolve from the selected root into a direct member. Their
-cross-project backlinks exist only in the composed view. Member links remain contained
-by the member project and do not federate upward or sideways.
+Ordinary relative links may resolve from an ancestor project into any reachable
+descendant. Their cross-project backlinks exist only in a composed view containing both
+projects. Descendant links do not federate upward or across branches.
 
 The frontend and CLI consume the same exhaustive read model. Search is supplementary:
 agents remain free to use filesystem traversal, grep, ripgrep, symbol search, and other

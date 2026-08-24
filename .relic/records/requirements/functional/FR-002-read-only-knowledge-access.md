@@ -16,12 +16,13 @@ API. The catalog must include disconnected documents, relationships, backlinks,
 artifacts, and localized maintenance diagnostics. Search and the frontend must agree on
 canonical identities and artifact boundaries.
 
-The accepted federation extension composes the selected root with explicitly declared
-valid direct members. Search, API, and viewer must preserve the owning project as a
-separate address field rather than deriving global document IDs. Projects without
-federation retain current single-project response shapes. The composed view may derive
-root-to-member canonical links and backlinks, but member graphs remain contained when
-consulted independently. Federation is specified but not yet implemented.
+The accepted federation extension composes the selected root with every valid project
+transitively reached through explicit member declarations. Search, API, and viewer must
+preserve the owning project as a hierarchical address path rather than deriving global
+document IDs. Projects without federation retain current single-project response shapes.
+The composed view may derive ancestor-to-descendant canonical links and backlinks, but a
+nested project selected independently exposes only its own graph and federation subtree.
+Federation is specified but not yet implemented.
 
 The CLI surface is exactly:
 

@@ -16,11 +16,12 @@ Relic is a Bun workspace with four active implementation boundaries:
   interpreting project knowledge.
 
 For the accepted federation extension, core owns independent parsing of local topology
-and federation membership plus composed project addresses, relationships, search,
-normalization, and diagnostics. CLI selection still stops at the nearest project root
-and owns HTTP and safe artifact routing. The viewer presents the composed model, engines
-remain project-local, and the central skill owns federated confrontation and authorized
-authoring. Federation is specified but not yet implemented.
+and federation membership, traversal of explicitly declared member edges, hierarchical
+project addresses, relationships, search, normalization, and diagnostics. CLI selection
+still stops at the nearest project root and owns HTTP and safe artifact routing. The
+viewer presents the composed tree, engines remain project-local, and the central skill
+owns federated confrontation and authorized authoring. Federation is specified but not
+yet implemented.
 
 skills/relic is the complete distribution source of truth. Its portable contract is
 shared by every target; optional host metadata is selected only for its owning target.

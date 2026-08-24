@@ -25,12 +25,13 @@ part of the request. Consulting knowledge for a fix or ordinary development crea
 mandatory record.
 
 When the selected relic.yaml declares federation, the skill reads its focused federation
-reference and may confront relevant root or direct-member knowledge without loading the
-entire composed corpus as a gateway. Selection still stops at the nearest relic.yaml; the
-skill never searches ancestors for a broader federation. It identifies the owning project
-for every proposed document change, and one explicit developer authorization may name
-coordinated writes across the root and members. No root, command, or agent silently
-synchronizes member knowledge.
+reference and may confront relevant knowledge from any project transitively reached
+through explicit member declarations without loading the entire composed corpus as a
+gateway. Selection still stops at the nearest relic.yaml; the skill never searches
+ancestors for a broader federation. It identifies the owning project for every proposed
+document change, and one explicit developer authorization may name coordinated writes
+across the selected federation tree. No project, command, or agent silently synchronizes
+member knowledge.
 
 See the [product boundary](../../../shared/SHARED-product.md),
 [skill-first architecture](../../decisions/ADR-001-skill-first-stateless-architecture.md),

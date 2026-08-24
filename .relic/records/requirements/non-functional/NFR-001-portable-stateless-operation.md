@@ -21,9 +21,11 @@ knowledge and code.
 
 Federation must preserve the same stateless boundary. Relic selects only the nearest
 project authority and never searches ancestors for a parent federation or descendants
-for undeclared members. Work is bounded by the selected root and its explicit direct
-members. Process-local derived caching is allowed, but no persisted or authoritative
-federation cache, registry, or synchronization state may participate in discovery.
+for undeclared members. It follows explicit federation edges transitively from the
+selected root, loading each reached project realpath at most once. Work is bounded by the
+reachable declared graph rather than repository size. Process-local derived caching is
+allowed, but no persisted or authoritative federation cache, registry, or synchronization
+state may participate in discovery.
 
 npm bundles, compiled Bun binaries, and platform Python wheels must embed the same skill
 and viewer without requiring the source checkout.

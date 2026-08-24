@@ -23,10 +23,11 @@ workflow machinery.
 
 The accepted federation extension preserves that split. The skill reads a dedicated
 federation reference only when the selected relic.yaml declares federation, then uses
-relevant root and direct-member knowledge for confrontation and developer-authorized
-authoring. Deterministic federation parsing, addressing, normalization, links, search,
-transport, and diagnostics remain machinery. Selection never climbs above the nearest
-project authority, and no cognitive or mutation pipeline is added.
+relevant knowledge from the explicitly reachable federation tree for confrontation and
+developer-authorized authoring. Deterministic federation parsing, traversal, hierarchical
+addressing, normalization, links, search, transport, and diagnostics remain machinery.
+Selection never climbs above the nearest project authority, and no cognitive or mutation
+pipeline is added.
 
 See the [product specification](../../specs/001-relic-2/index.html),
 [skill workflow requirement](../requirements/functional/FR-001-skill-first-knowledge-workflow.md),

@@ -18,9 +18,11 @@ The product combines:
 - a read-only local frontend that makes the knowledge web consultable;
 - a four-command CLI limited to init, install, search, and serve.
 
-The accepted federation extension composes a selected root corpus with explicitly
-declared direct Relic projects. Working inside a member still selects only that member;
-Relic never searches above the nearest project authority for a parent federation.
+The accepted federation extension composes a selected root corpus with every Relic
+project transitively reachable through explicit `federation.members` declarations.
+Members may be independently governed packages without being separate Git repositories.
+Working inside a member selects only that member and its declared federation subtree;
+Relic never searches above the nearest project authority for an ancestor federation.
 Federation changes consultability, not document ownership or the developer's authority
 to approve coordinated writes. The extension is specified but not yet implemented.
 

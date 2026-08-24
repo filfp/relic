@@ -26,16 +26,19 @@ status lifecycle.
 
 Federated consultation must validate every member independently and preserve every safe
 valid project when another member fails. Invalid member entries, duplicate member
-realpaths, unsafe authorities, and unavailable member corpora produce project-qualified
-diagnostics. Duplicate membership is normalized once; intentional content overlap across
-independent project topologies is not an ownership error. Artifact delivery accepts only
-a validated member key and a discovered project-relative artifact path, so caller input
-cannot select an arbitrary filesystem root.
+realpaths, repeated traversal, unsafe authorities, and unavailable member corpora produce
+project-address-qualified diagnostics. Reached realpaths are normalized once across the
+whole federation tree; intentional content overlap across independent project topologies
+is not an ownership error. A failing member edge hides only the subtree reachable solely
+through that edge. Artifact delivery accepts only a validated hierarchical project
+address and a discovered project-relative artifact path, so caller input cannot select
+an arbitrary filesystem root.
 
-The selected project cannot be its own federation member. Absolute member paths, project
-boundary escapes, unknown member keys, member-to-parent escapes, and unsafe cross-member
-artifact requests fail locally. Root-to-direct-member links may resolve only when their
-ordinary relative targets belong to validated member knowledge.
+No project can declare itself as a federation member. Absolute member paths, project
+boundary escapes, unknown address segments, repeated realpaths, descendant-to-ancestor
+escapes, and unsafe cross-branch artifact requests fail locally. Ancestor-to-descendant
+links may resolve only when their ordinary relative targets belong to knowledge in the
+validated reachable subtree.
 
 See the [knowledge model](../../../shared/SHARED-knowledge-model.md),
 [read-only access](../functional/FR-002-read-only-knowledge-access.md),
