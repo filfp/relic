@@ -45,7 +45,7 @@ either side universally authoritative.
 ### Project configuration is explicit and otherwise free
 
 The selected root `relic.yaml` is the sole project configuration authority. Its required
-`topology` object owns the local corpus; the accepted federation extension adds only an
+`topology` object owns the local corpus; federation adds only an
 optional map of explicit member-project edges. Reached members may declare further
 explicit edges, but Relic never discovers undeclared projects by scanning the filesystem.
 Topology paths may use any project layout, including directories supplied through a

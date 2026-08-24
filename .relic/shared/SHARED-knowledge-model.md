@@ -6,7 +6,7 @@ id: SHARED-knowledge-model
 
 Each selected project's root relic.yaml is its single topology authority. Its required
 topology contains the specification root, shared root, and a map of project-declared
-record prefixes to Markdown roots. The accepted federation extension adds an optional
+record prefixes to Markdown roots. Federation adds an optional
 sibling federation map of explicitly selected Relic projects. The file is configuration,
 not a canonical document. No engine registry, ID counter, manifest, session file, or
 hidden state participates in knowledge discovery.
@@ -52,10 +52,10 @@ other project-chosen location. The project that contains the code owns relic.yam
 declares how it consumes the corpus; a storage repository needs no Relic configuration
 of its own.
 
-## Accepted federation model
+## Federation model
 
-Federation is specified but not yet implemented. When the selected relic.yaml declares
-`federation.members`, its read model composes with each valid member and continues through
+When the selected relic.yaml declares `federation.members`, its read model composes with
+each valid member and continues through
 the explicit federation declarations of every reached member. The nearest relic.yaml
 still selects the entire invocation boundary: Relic does not inspect ancestors for
 another federation or discover undeclared descendant projects. A member may be an

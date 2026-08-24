@@ -35,4 +35,4 @@ member knowledge.
 
 See the [product boundary](../../../shared/SHARED-product.md),
 [skill-first architecture](../../decisions/ADR-001-skill-first-stateless-architecture.md),
-and the [accepted federation extension](../../../specs/002-relic-federation/index.html).
+and the [federation specification](../../../specs/002-relic-federation/index.html).

@@ -21,7 +21,7 @@ ownership, progressive context discovery, and natural agent interaction. Determi
 reading, tests, diagnostics, and the frontend preserve consultability without restoring
 workflow machinery.
 
-The accepted federation extension preserves that split. The skill reads a dedicated
+Federation preserves that split. The skill reads a dedicated
 federation reference only when the selected relic.yaml declares federation, then uses
 relevant knowledge from the explicitly reachable federation tree for confrontation and
 developer-authorized authoring. Deterministic federation parsing, traversal, hierarchical

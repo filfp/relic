@@ -5,8 +5,8 @@ id: ADR-002
 # Project-owned topology, explicit federation, and relative links
 
 Each selected project's root relic.yaml is its only machine-readable project authority.
-Its required `topology` object declares the local corpus. The accepted federation
-extension adds an optional sibling `federation.members` map of explicit local project
+Its required `topology` object declares the local corpus. Federation adds an optional
+sibling `federation.members` map of explicit local project
 edges. A reached member's own federation declarations are traversed transitively; Relic
 does not add another configuration file, registry, or knowledge node.
 
@@ -50,7 +50,6 @@ links and the skill may propose a grep-assisted repair, but Relic does not rewri
 synchronize corpora automatically. The developer may explicitly authorize coordinated
 writes in the root and members; each project remains authoritative for its destination.
 
-The federation decision is accepted but not yet implemented. See the
-[knowledge model](../../shared/SHARED-knowledge-model.md),
+See the [knowledge model](../../shared/SHARED-knowledge-model.md),
 [read-only access requirement](../requirements/functional/FR-002-read-only-knowledge-access.md),
 and [federation specification](../../specs/002-relic-federation/index.html).

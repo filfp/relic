@@ -4,8 +4,8 @@ id: EPIC-002
 
 # Hierarchical Relic federation
 
-Deliver explicit hierarchical federation across Relic's deterministic packages, viewer,
-distributions, and central skill. A selected project must expose its own corpus plus every
+Relic delivers explicit hierarchical federation across its deterministic packages,
+viewer, distributions, and central skill. A selected project exposes its own corpus plus every
 safe project transitively reachable through declared `federation.members` edges, while a
 nested invocation remains bounded to that project's own federation subtree.
 
@@ -28,8 +28,8 @@ coordinates delivery evidence; it does not replace or reopen that contract.
 
 ## Delivery sequence and gates
 
-Deliver federation through ordered gates. A later gate may begin only after the previous
-one has a stable typed contract and focused tests:
+Federation was delivered through ordered gates, with each later boundary built on the
+stable typed contract and focused tests of the previous one:
 
 1. Close the remaining transport contract in the federation specification.
 2. Split configuration reading, local corpus loading, and federated composition in core.
@@ -42,10 +42,9 @@ one has a stable typed contract and focused tests:
 7. Run source and distribution gates, then update the accepted documents from
    not-implemented to delivered behavior.
 
-Before core implementation begins, extend the
-[federation specification](../../specs/002-relic-federation/index.html) with the exact
+The [federation specification](../../specs/002-relic-federation/index.html) owns the exact
 HTTP serialization and federated response discriminant described below. The EPIC records
-the accepted delivery direction but does not become a substitute public API contract.
+delivery scope and evidence; it does not become a substitute public API contract.
 
 ## Core configuration and project model
 
@@ -188,7 +187,7 @@ Keep `packages/engines` project-local. Installation and discovery must not trave
 federation members, and every distribution must continue to install the same portable
 skill content atomically.
 
-Only after core, CLI transport, and viewer behavior are stable:
+With core, CLI transport, and viewer behavior stable, the distributed skill must:
 
 - revise `skills/relic/SKILL.md` with the minimal selected-boundary and conditional
   federation-reference routing;
@@ -245,16 +244,21 @@ bundle, compiled Bun binary, supported engine installations, embedded viewer, np
 and native-wheel verification for the current platform. Cross-platform wheel coverage
 remains owned by the supported CI and publication matrix.
 
-## Completion
+## Completion evidence
 
-The EPIC is complete when implementation, tests, generated outputs, documentation, and
-distributed behavior agree with the federation specification. At that point:
+Implementation, generated outputs, documentation, and distributed behavior agree with
+the federation specification. Focused tests cover hierarchical traversal, selected
+boundaries, addressed relationships and search, top-down links, overlap ambiguity,
+failure isolation, HTTP routing and artifact safety, cache refresh, viewer identities,
+and conditional skill distribution.
 
-- remove the specification's not-implemented qualification and update current delivery
-  wording in linked contracts;
-- record final validation evidence without converting the EPIC into an append-only log;
-- leave release versioning, changelog, publication, and registry verification to an
-  explicitly authorized release scope.
+Repository validation completed with lint, typecheck, all source package suites, the
+self-contained npm and Bun distribution gate, embedded viewer and native engine
+discovery, package-content checks, macOS arm64 wheel metadata/content/install smoke, and
+a dependency audit with no known vulnerabilities. Cross-platform wheel coverage remains
+owned by supported CI. Release versioning,
+changelog, publication, and registry verification remain outside this implementation
+scope until explicitly authorized.
 
 See the [knowledge model](../../shared/SHARED-knowledge-model.md),
 [read-only access requirement](../requirements/functional/FR-002-read-only-knowledge-access.md),

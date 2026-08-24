@@ -108,9 +108,9 @@ shapes tested locally.
 
 `relic.yaml` is the only project configuration authority. Its topology paths contain the
 current canonical product knowledge: specs, shared documents, and project-defined record
-kinds such as requirements, decisions, business rules, glossary entries, and epics. The
-accepted but unimplemented federation contract adds explicit, transitively composed
-member-project edges without filesystem autodiscovery.
+kinds such as requirements, decisions, business rules, glossary entries, and epics. Its
+optional federation map adds explicit, transitively composed member-project edges without
+filesystem autodiscovery.
 
 ### `docs`
 
