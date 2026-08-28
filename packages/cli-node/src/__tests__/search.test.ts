@@ -36,6 +36,7 @@ function createTemporaryProject(): string {
 function writeSearchProject(
   directory: string,
   members: Record<string, string> = {},
+  note = "Federated document needle.",
 ): void {
   mkdirSync(join(directory, "knowledge/specs/001-same"), { recursive: true });
   mkdirSync(join(directory, "knowledge/shared"), { recursive: true });
@@ -50,7 +51,7 @@ function writeSearchProject(
   );
   writeFileSync(
     join(directory, "knowledge/notes/NOTE-001-same.md"),
-    "---\nid: NOTE-001\n---\n\n# Same note\n\nFederated document needle.\n",
+    `---\nid: NOTE-001\n---\n\n# Same note\n\n${note}\n`,
   );
   const federation = Object.keys(members).length === 0
     ? ""
@@ -278,6 +279,25 @@ describe("Relic 2.0 search command", () => {
     expect(lines).toContain("Relic federation diagnostics: 1");
     expect(lines).toContain(
       "[error] root federation.members.missing: federation.members.missing references a missing or unreadable directory",
+    );
+  });
+
+  test("exposes federated member boundary escapes as search diagnostics", async () => {
+    const root = createTemporaryProject();
+    const backend = join(root, "backend");
+    mkdirSync(backend);
+    writeSearchProject(
+      backend,
+      {},
+      "[Outside](../../../knowledge/notes/NOTE-001-same.md)",
+    );
+    writeSearchProject(root, { backend: "backend" });
+
+    await runSearch({ query: "NOTE-001", projectDir: root });
+
+    expect(lines).toContain("Relic federation diagnostics: 2");
+    expect(lines).toContain(
+      "[warning] root/backend: Relative link leaves federated project boundary: ../../../knowledge/notes/NOTE-001-same.md",
     );
   });
 

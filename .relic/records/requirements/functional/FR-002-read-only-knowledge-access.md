@@ -28,10 +28,21 @@ The CLI surface is exactly:
 - relic init;
 - relic install;
 - relic search;
-- relic serve.
+- relic serve;
+- relic verify.
 
-No validation, mode, workflow, record-generation, session, migration, or direct-model
-command belongs to the product.
+`relic verify` must read the selected aggregate without mutation and report every
+read-model warning and error. Its diagnostics include a project-address-qualified
+warning for every relative link authored by a reached member that leaves that member's
+project boundary, including upward and cross-branch targets. The same diagnostic must
+be present in federated search and serve results. It must not label the root project's
+links, external URLs, or other unsafe link forms as federation outbound links. Any
+reported warning or error makes the command exit unsuccessfully so a gate can require
+repair.
+
+No validation workflow, mode, record-generation, session, migration, or direct-model
+command belongs to the product. Verify is deterministic read-model inspection, not an
+agent workflow or a knowledge mutation surface.
 
 See the [knowledge model](../../../shared/SHARED-knowledge-model.md),
 [safe consultability](../non-functional/NFR-002-safe-consultability.md), and the

@@ -8,14 +8,15 @@ authority; Git retains the removed Relic 1.x implementation and superseded decis
 ## Implementation boundaries
 
 - packages/core is the pure topology, parsing, graph, diagnostics, and search read model.
-- packages/cli-node owns the four-command CLI, project discovery, read-only HTTP API,
+- packages/cli-node owns the five-command CLI, project discovery, read-only HTTP API,
   and embedded viewer delivery.
 - packages/engines owns project-local discovery and installation of the central skill.
 - packages/viewer renders the core transport contract and does not interpret repository
   knowledge independently.
 - skills/relic is the only source of truth for the distributed central skill.
 
-Keep the public CLI limited to init, install, search, and serve. Do not introduce hidden
+Keep the public CLI limited to init, install, search, serve, and deterministic verify.
+Do not introduce hidden
 sessions, counters, locks, manifests, workflow modes, project-governance enforcement, or
 AGENTS.md mutation.
 

@@ -8,7 +8,7 @@ Relic is a Bun workspace with four active implementation boundaries:
 
 - packages/core owns topology loading, canonical parsing, relationships, diagnostics,
   search, and read-model projections. It has no CLI, HTTP, React, or engine dependency.
-- packages/cli-node owns the four-command CLI, project discovery, the read-only local
+- packages/cli-node owns the five-command CLI, project discovery, the read-only local
   HTTP boundary, and embedded viewer delivery.
 - packages/engines owns only project-local discovery, target-owned file selection, and
   failure-safe installation of the central skill from embedded distribution content.
@@ -38,10 +38,10 @@ root. The normal validation surface is:
 
 Typecheck and test regenerate embedded skill and viewer assets, so clean checkouts do
 not depend on ignored generated files. Distribution tests exercise the Node bundle,
-compiled Bun binary, native skill roots, search, viewer lifecycle, and npm package
+compiled Bun binary, native skill roots, search, verification, viewer lifecycle, and npm package
 contents.
 
-Releases publish the same four-command product through npm and platform-specific Python
+Releases publish the same five-command product through npm and platform-specific Python
 wheels. The release workflow uses pinned actions, frozen dependency installation, and
 trusted PyPI publishing.
 

@@ -153,8 +153,8 @@ Update `packages/cli-node` around the core-owned meaning:
   relationship, diagnostic, search, and artifact transport;
 - reject unknown address segments, boundary escapes, unsafe authorities, and arbitrary
   filesystem paths without hiding safe projects;
-- keep `relic init` and `relic install` project-local and retain the four-command public
-  surface.
+- keep `relic init` and `relic install` project-local; expose read-only federation-boundary
+  verification without changing either command's scope.
 
 The serve reader must rebuild the reachable configuration graph and derived aggregate
 after its process-local cache expires. It may not retain the startup member list as

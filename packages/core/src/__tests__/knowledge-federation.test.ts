@@ -521,6 +521,42 @@ describe("Relic hierarchical federation", () => {
     expect(aggregate.documents.filter(({ project }) =>
       project.join("/") !== "root/backend"
     ).flatMap((document) => document.backlinks)).toEqual([]);
+    expect(aggregate.diagnostics).toEqual(expect.arrayContaining([
+      {
+        project: ["root", "backend"],
+        diagnostic: {
+          code: "federated-outbound-link",
+          severity: "warning",
+          message: "Relative link leaves federated project boundary: ../../../knowledge/notes/NOTE-001-same.md",
+          path: "knowledge/notes/NOTE-001-same.md",
+          href: "../../../knowledge/notes/NOTE-001-same.md",
+        },
+      },
+      {
+        project: ["root", "backend"],
+        diagnostic: {
+          code: "federated-outbound-link",
+          severity: "warning",
+          message: "Relative link leaves federated project boundary: ../../../frontend/knowledge/notes/NOTE-001-same.md",
+          path: "knowledge/notes/NOTE-001-same.md",
+          href: "../../../frontend/knowledge/notes/NOTE-001-same.md",
+        },
+      },
+    ]));
+  });
+
+  test("does not report unsafe protocol links as federation boundary escapes", () => {
+    const root = createRoot();
+    const backend = projectDirectory(root, "backend");
+    writeKnowledgeProject(backend);
+    writeKnowledgeProject(root, { backend: "backend" });
+    writeNote(backend, "[Unsafe protocol](file:///private/secret.txt)");
+
+    const aggregate = loadFederatedKnowledgeProject(root);
+
+    expect(aggregate.diagnostics).not.toContainEqual(expect.objectContaining({
+      diagnostic: expect.objectContaining({ code: "federated-outbound-link" }),
+    }));
   });
 
   test("keeps an overlapping descendant target unowned when promotion is ambiguous", () => {

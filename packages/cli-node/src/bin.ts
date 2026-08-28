@@ -9,6 +9,7 @@ import { runInit } from "./commands/init.ts";
 import { runInstall } from "./commands/install.ts";
 import { runSearch } from "./commands/search.ts";
 import { runServe } from "./commands/serve.ts";
+import { runVerify } from "./commands/verify.ts";
 
 const VERSION = "2.1.0";
 
@@ -61,6 +62,15 @@ export function createProgram(): Command {
     .option("--port <port>", "Bind a specific localhost port", port)
     .action(async (options: { port?: number }) => {
       await runServe({ port: options.port, version: VERSION });
+    });
+
+  program
+    .command("verify")
+    .description("Verify the complete current knowledge read model")
+    .option("--json", "Output the verification model as JSON", false)
+    .action(async (options: { json: boolean }) => {
+      const output = await runVerify(options);
+      if (!output.valid) process.exitCode = 1;
     });
 
   return program;

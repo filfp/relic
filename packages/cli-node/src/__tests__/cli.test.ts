@@ -7,8 +7,10 @@ import {
 } from "bun:test";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -30,13 +32,14 @@ afterEach(() => {
 });
 
 describe("Relic 2.0 CLI surface", () => {
-  test("registers exactly the four approved product commands", () => {
+  test("registers exactly the five approved product commands", () => {
     const program = createProgram();
     expect(program.commands.map((command) => command.name())).toEqual([
       "init",
       "install",
       "search",
       "serve",
+      "verify",
     ]);
     expect(program.helpInformation()).not.toContain("validate");
     expect(program.helpInformation()).not.toContain("specify");
@@ -55,6 +58,7 @@ describe("Relic 2.0 CLI surface", () => {
       install: ["--engine"],
       search: ["--json"],
       serve: ["--port"],
+      verify: ["--json"],
     });
   });
 
@@ -68,5 +72,33 @@ describe("Relic 2.0 CLI surface", () => {
     ]);
     expect(existsSync(join(dir, "relic.yaml"))).toBe(true);
     expect(existsSync(join(dir, ".relic"))).toBe(false);
+  });
+
+  test("fails a federation-link gate without mutating the test process", () => {
+    const backend = join(dir, "backend");
+    mkdirSync(join(dir, "knowledge/specs"), { recursive: true });
+    mkdirSync(join(dir, "knowledge/shared"), { recursive: true });
+    mkdirSync(join(backend, "knowledge/specs"), { recursive: true });
+    mkdirSync(join(backend, "knowledge/shared"), { recursive: true });
+    mkdirSync(join(backend, "knowledge/notes"), { recursive: true });
+    writeFileSync(
+      join(dir, "relic.yaml"),
+      "topology:\n  specs: knowledge/specs\n  shared: knowledge/shared\n  records: {}\nfederation:\n  members:\n    backend: backend\n",
+    );
+    writeFileSync(
+      join(backend, "relic.yaml"),
+      "topology:\n  specs: knowledge/specs\n  shared: knowledge/shared\n  records:\n    note: knowledge/notes\n",
+    );
+    writeFileSync(
+      join(backend, "knowledge/notes/NOTE-001.md"),
+      "---\nid: NOTE-001\n---\n\n[Outside](../../../outside.md)\n",
+    );
+
+    const result = Bun.spawnSync(
+      [process.execPath, join(import.meta.dir, "../bin.ts"), "verify"],
+      { cwd: dir, stdout: "pipe", stderr: "pipe" },
+    );
+
+    expect(result.exitCode).toBe(1);
   });
 });

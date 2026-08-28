@@ -172,10 +172,14 @@ federation:
           <td><code>relic install</code></td>
           <td>Install only for the selected project; never traverse federation membership.</td>
         </tr>
+        <tr>
+          <td><code>relic verify</code></td>
+          <td>Report every read-model warning and error, including a member-authored relative link that leaves its own project boundary, and fail the gate without rewriting or federating that link.</td>
+        </tr>
       </tbody>
     </table>
     <p>
-      Federation adds no command, mode, session, manifest, synchronization engine, or
+      Federation adds no mode, session, manifest, synchronization engine, or
       persisted cache. Search, serve, and their HTTP API remain read-only; this does not
       restrict developer-authorized skill authoring across project boundaries.
     </p>
@@ -343,7 +347,7 @@ federation:
       <li>Descendant-to-ancestor and cross-branch federated links.</li>
       <li>Global or derived document IDs.</li>
       <li>Automatic cross-project writes, synchronization, reconciliation, or lifecycle governance.</li>
-      <li>A fifth CLI command or a second Relic configuration file.</li>
+      <li>A second Relic configuration file.</li>
     </ul>
   </section>
 

@@ -16,7 +16,7 @@ The product combines:
 - a living, linked knowledge corpus discovered through the topology in root relic.yaml;
 - specialized full-text search for large repositories;
 - a read-only local frontend that makes the knowledge web consultable;
-- a four-command CLI limited to init, install, search, and serve.
+- a five-command CLI: init, install, search, serve, and verify.
 
 Federation composes a selected root corpus with every Relic
 project transitively reachable through explicit `federation.members` declarations.
@@ -25,6 +25,12 @@ Working inside a member selects only that member and its declared federation sub
 Relic never searches above the nearest project authority for an ancestor federation.
 Federation changes consultability, not document ownership or the developer's authority
 to approve coordinated writes.
+
+`relic verify` is a read-only gate for the selected project boundary. It reports every
+read-model warning and error, including a project-address-qualified warning when a
+member-authored relative link leaves its owning project, and exits unsuccessfully so
+automated agent gates can require repair. It never rewrites knowledge or broadens a
+member's link authority.
 
 Persistence is developer-owned. The skill may suggest that durable behavior,
 constraints, architecture, coordinated delivery scope, or reusable knowledge deserves a
