@@ -9,6 +9,12 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `relic verify` now provides a read-only automation gate for the selected knowledge
+  aggregate. It reports maintenance warnings and errors, including a qualified warning
+  when a federated member's relative link escapes its project boundary; the same warning
+  is available through search and the viewer.
+
 ## [2.1.0] — 2026-08-24
 
 ### Added
