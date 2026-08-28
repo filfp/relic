@@ -39,6 +39,7 @@ function writeViewerProject(
   directory: string,
   label: string,
   members: Record<string, string> = {},
+  note = "",
 ): void {
   mkdirSync(join(directory, "knowledge/specs/001-same"), { recursive: true });
   mkdirSync(join(directory, "knowledge/shared"), { recursive: true });
@@ -53,7 +54,7 @@ function writeViewerProject(
   );
   writeFileSync(
     join(directory, "knowledge/notes/NOTE-001-same.md"),
-    `---\nid: NOTE-001\n---\n\n# ${label} note\n`,
+    `---\nid: NOTE-001\n---\n\n# ${label} note\n\n${note}\n`,
   );
   const federation = Object.keys(members).length === 0
     ? ""
@@ -300,6 +301,43 @@ describe("Relic 2.0 read-only viewer API", () => {
       "root",
       "root/backend",
     ]);
+  });
+
+  test("exposes federated member boundary escapes through the viewer model", () => {
+    const root = createTemporaryProject();
+    const backend = join(root, "backend");
+    mkdirSync(backend);
+    writeViewerProject(
+      backend,
+      "Backend",
+      {},
+      "[Outside](../../../knowledge/notes/NOTE-001-same.md)",
+    );
+    writeViewerProject(root, "Root", { backend: "backend" });
+
+    const project = federatedJson<{
+      diagnostics: Array<{
+        project: string[];
+        diagnostic: {
+          code: string;
+          severity: string;
+          message: string;
+          path?: string;
+          href?: string;
+        };
+      }>;
+    }>(root, "/api/project");
+
+    expect(project.diagnostics).toContainEqual({
+      project: ["root", "backend"],
+      diagnostic: {
+        code: "federated-outbound-link",
+        severity: "warning",
+        message: "Relative link leaves federated project boundary: ../../../knowledge/notes/NOTE-001-same.md",
+        path: "knowledge/notes/NOTE-001-same.md",
+        href: "../../../knowledge/notes/NOTE-001-same.md",
+      },
+    });
   });
 
   test("serves artifact content only through a validated project address", () => {

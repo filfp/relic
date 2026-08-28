@@ -81,13 +81,14 @@ produce precise diagnostics rather than making the whole corpus unusable.
 
 ### The public surface stays small
 
-The CLI has four commands:
+The CLI has five commands:
 
 - `init` creates only the minimal topology file;
 - `install` installs or refreshes the central skill for discovered engines or
   one explicit engine;
 - `search` queries current canonical knowledge and spec artifacts;
 - `serve` starts the read-only local viewer.
+- `verify` runs deterministic, read-only checks suitable for automation gates.
 
 Engine integrations remain thin, native installations of the same portable
 skill. Target-specific metadata is isolated to its owner and must not change the
@@ -101,9 +102,9 @@ following:
 - a mandatory `specify -> clarify -> plan -> tasks` workflow or equivalent
   lifecycle state machine;
 - modes, active specs, sessions, preambles, constitutions, or managed templates;
-- a CLI command for validation, generation, records, engines, plugins, routing,
-  orchestration, or any other agent judgment already expressible through the
-  central skill;
+- a CLI command for generation, records, engines, plugins, routing, orchestration, or
+  any other agent judgment already expressible through the central skill; or a
+  validation workflow beyond deterministic read-model checks;
 - counters, high-water marks, ID locks, reservations, manifests, registries, or
   caches that can be derived from the current topology and filesystem;
 - automatic document creation, status transitions, reconciliation, or

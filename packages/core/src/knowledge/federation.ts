@@ -15,6 +15,7 @@ import { loadKnowledgeProjectFromConfiguration } from "./read-model.ts";
 import type {
   FederatedKnowledgeDiagnostic,
   FederatedKnowledgeProject,
+  FederatedDocument,
   FederationEdge,
   FederationProjectNode,
   KnowledgeArtifact,
@@ -60,6 +61,7 @@ function edgeDiagnostic(
 function aggregateDiagnostics(
   projects: FederationProjectNode[],
   edges: FederationEdge[],
+  documents: FederatedDocument[],
 ): FederatedKnowledgeDiagnostic[] {
   const edgeDiagnostics = new Set(
     edges.flatMap((edge) => edge.diagnostics),
@@ -81,6 +83,7 @@ function aggregateDiagnostics(
       });
     }
   }
+  diagnostics.push(...federatedOutboundLinkDiagnostics(documents));
 
   return diagnostics.sort((left, right) =>
     compareProjectAddress(left.project, right.project) ||
@@ -88,6 +91,47 @@ function aggregateDiagnostics(
     compareText(left.diagnostic.code, right.diagnostic.code) ||
     compareText(left.diagnostic.message, right.diagnostic.message)
   );
+}
+
+function isRelativeLinkPath(href: string): boolean {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//") || href.startsWith("/")) {
+    return false;
+  }
+  const beforeFragment = href.split("#", 1)[0] ?? "";
+  const path = beforeFragment.split("?", 1)[0] ?? "";
+  if (path === "") return false;
+  try {
+    decodeURIComponent(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Finds member-authored relative links rejected because they escape the member's own
+ * project boundary. The local read model remains the authority that classifies a link
+ * as unsafe; this adds federation-qualified maintenance evidence to the aggregate.
+ */
+function federatedOutboundLinkDiagnostics(
+  documents: FederatedDocument[],
+): FederatedKnowledgeDiagnostic[] {
+  return documents.flatMap((item) => {
+    if (item.project.length === 1) return [];
+    return item.links.flatMap((link) => {
+      if (link.status !== "unsafe" || !isRelativeLinkPath(link.href)) return [];
+      return [{
+        project: item.project,
+        diagnostic: {
+          code: "federated-outbound-link",
+          severity: "warning" as const,
+          message: `Relative link leaves federated project boundary: ${link.href}`,
+          path: item.document.path,
+          href: link.href,
+        },
+      }];
+    });
+  });
 }
 
 export function loadFederatedKnowledgeProject(
@@ -256,7 +300,7 @@ export function loadFederatedKnowledgeProject(
     edges,
     documents,
     artifacts,
-    diagnostics: aggregateDiagnostics(projects, edges),
+    diagnostics: aggregateDiagnostics(projects, edges, documents),
   };
   projectRootsByAggregate.set(aggregate, new Map(projectRoots));
   return aggregate;

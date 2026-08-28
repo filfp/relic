@@ -52,6 +52,7 @@ Owns the executable product surface:
 - `install` delegates engine discovery and installation;
 - `search` exposes the core search model for humans and agents;
 - `serve` exposes the read-only HTTP API and embedded viewer on localhost;
+- `verify` exposes deterministic, read-only gate checks over the selected project;
 - project discovery walks upward for a regular, non-symlinked `relic.yaml`.
 
 It orchestrates core and engines but must not duplicate their interpretation or

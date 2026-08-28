@@ -45,6 +45,12 @@ a canonical document or artifact in any reachable descendant. The corresponding 
 exists only in a view containing both projects. Descendant links do not federate upward
 or across branches and cannot escape the selected subtree.
 
+For automated maintenance, the composed read model derives a warning for
+member-authored relative links that escape their own project boundary. Search and serve
+expose the same project-address-qualified diagnostic; `relic verify` reports it with
+every other warning or error and exits unsuccessfully, giving agent gates a repair
+signal without granting an exception to the link boundary.
+
 Topology or membership changes may orphan authored paths. The read model exposes broken
 links and the skill may propose a grep-assisted repair, but Relic does not rewrite or
 synchronize corpora automatically. The developer may explicitly authorize coordinated
