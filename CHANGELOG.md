@@ -9,6 +9,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.1.1] — 2026-08-28
+
 ### Added
 - `relic verify` now provides a read-only automation gate for the selected knowledge
   aggregate. It reports maintenance warnings and errors, including a qualified warning
