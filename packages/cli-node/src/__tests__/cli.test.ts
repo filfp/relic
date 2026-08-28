@@ -74,7 +74,7 @@ describe("Relic 2.0 CLI surface", () => {
     expect(existsSync(join(dir, ".relic"))).toBe(false);
   });
 
-  test("fails a federation-link gate without turning its warning into an error", async () => {
+  test("fails a federation-link gate without mutating the test process", () => {
     const backend = join(dir, "backend");
     mkdirSync(join(dir, "knowledge/specs"), { recursive: true });
     mkdirSync(join(dir, "knowledge/shared"), { recursive: true });
@@ -94,20 +94,11 @@ describe("Relic 2.0 CLI surface", () => {
       "---\nid: NOTE-001\n---\n\n[Outside](../../../outside.md)\n",
     );
 
-    const originalCwd = process.cwd();
-    const originalExitCode = process.exitCode;
-    try {
-      process.chdir(dir);
-      process.exitCode = undefined;
-      await createProgram().parseAsync([
-        "bun",
-        "relic",
-        "verify",
-      ]);
-      expect(Number(process.exitCode)).toBe(1);
-    } finally {
-      process.chdir(originalCwd);
-      process.exitCode = originalExitCode ?? 0;
-    }
+    const result = Bun.spawnSync(
+      [process.execPath, join(import.meta.dir, "../bin.ts"), "verify"],
+      { cwd: dir, stdout: "pipe", stderr: "pipe" },
+    );
+
+    expect(result.exitCode).toBe(1);
   });
 });

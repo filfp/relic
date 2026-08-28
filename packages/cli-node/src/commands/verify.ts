@@ -12,14 +12,18 @@ export interface VerifyOutput {
   valid: boolean;
 }
 
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 function compareDiagnostics(
   left: FederatedKnowledgeDiagnostic,
   right: FederatedKnowledgeDiagnostic,
 ): number {
-  return left.project.join("/").localeCompare(right.project.join("/")) ||
-    (left.diagnostic.path ?? "").localeCompare(right.diagnostic.path ?? "") ||
-    left.diagnostic.code.localeCompare(right.diagnostic.code) ||
-    left.diagnostic.message.localeCompare(right.diagnostic.message);
+  return compareText(left.project.join("/"), right.project.join("/")) ||
+    compareText(left.diagnostic.path ?? "", right.diagnostic.path ?? "") ||
+    compareText(left.diagnostic.code, right.diagnostic.code) ||
+    compareText(left.diagnostic.message, right.diagnostic.message);
 }
 
 function humanDiagnostic(item: FederatedKnowledgeDiagnostic): string[] {
