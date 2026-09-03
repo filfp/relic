@@ -17,6 +17,7 @@ const federation = readFileSync(
   resolve(skillRoot, "references/federation.md"),
   "utf8",
 );
+const roast = readFileSync(resolve(skillRoot, "references/roast.md"), "utf8");
 const openAiMetadata = readFileSync(
   resolve(skillRoot, "agents/openai.yaml"),
   "utf8",
@@ -71,6 +72,94 @@ describe("central Relic skill distribution source", () => {
     expect(federation).toContain("global monorepo knowledge is intentionally absent");
     expect(federation).toContain("does not forbid ordinary file edits");
     expect(federation).toContain("Do not choose a project owner from path overlap");
+  });
+
+  test("opens every reference with its trigger and a contents index", () => {
+    const references = {
+      "roast.md": roast,
+      "federation.md": federation,
+      "knowledge-authoring.md": authoring,
+      "semantic-html.md": semanticHtml,
+    };
+    const shape = Object.fromEntries(
+      Object.entries(references).map(([name, content]) => [
+        name,
+        {
+          trigger: /^# .+\n\nRead this reference/.test(content),
+          contents: content.includes("\n## Contents\n"),
+        },
+      ]),
+    );
+    expect(shape).toEqual(
+      Object.fromEntries(
+        Object.keys(references).map((name) => [
+          name,
+          { trigger: true, contents: true },
+        ]),
+      ),
+    );
+  });
+
+  test("routes every focused reference through one explicit trigger", () => {
+    expect(skill).toContain("## Route References Deliberately");
+    expect(normalizedSkill).toContain(
+      "Read a reference only when its trigger fires; never open one to check",
+    );
+    expect(normalizedSkill).toContain("Most tasks fire no trigger");
+    for (const reference of [
+      "references/roast.md",
+      "references/federation.md",
+      "references/knowledge-authoring.md",
+      "references/semantic-html.md",
+    ]) {
+      expect(skill.split(`(${reference})`).length - 1).toBe(1);
+    }
+  });
+
+  test("suspends mutation while a blocking fork stays open", () => {
+    expect(normalizedSkill).toContain(
+      "While a blocking fork is open on the affected boundary, investigation continues and mutation stops",
+    );
+    expect(normalizedSkill).toContain(
+      "until the developer answers it or authorizes progress under a stated assumption",
+    );
+    expect(normalizedSkill).toContain(
+      "no mutation may be presented as pending confirmation and performed in the same turn",
+    );
+    expect(normalizedSkill).toContain(
+      "Unblocked boundaries continue",
+    );
+  });
+
+  test("treats a duplicated path as a material finding", () => {
+    expect(normalizedSkill).toContain(
+      "Treat a duplicated path as a material finding, not a preference",
+    );
+    expect(normalizedSkill).toContain(
+      "in code or in knowledge, is at least P1",
+    );
+  });
+
+  test("grounds the roast discipline without adding a lifecycle", () => {
+    expect(roast).toContain(
+      "Read this reference when the developer requests a roast or a grill",
+    );
+    expect(roast.replaceAll(/\s+/g, " ")).toContain(
+      "Rounds order questions; they are not a lifecycle the developer must complete",
+    );
+    expect(roast).toContain("Finding facts is your job");
+    expect(roast.replaceAll(/\s+/g, " ")).toContain(
+      "Do not require a particular delegation, command, or engine capability",
+    );
+    expect(roast.replaceAll(/\s+/g, " ")).toContain(
+      "Never write it to a file or turn it into session state",
+    );
+    expect(roast.replaceAll(/\s+/g, " ")).toContain(
+      "never lift it. Only the developer does",
+    );
+    expect(roast.replaceAll(/\s+/g, " ")).toContain(
+      "an empty frontier is not a precondition for starting work",
+    );
   });
 
   test("covers discovery without a user-facing mode or second invocation", () => {

@@ -18,13 +18,10 @@ workflow the developer must complete before work can continue.
 3. If project instructions have not already routed the task through Relic, read that
    boundary's `relic.yaml` as the first Relic context step and use its topology to locate
    local knowledge.
-4. When the selected `relic.yaml` declares `federation.members`, read
-   [`references/federation.md`](references/federation.md) before deciding cross-project
-   scope. Ignore that reference when federation is absent.
-5. Start from the target named by the developer. Follow only relevant links and expand
+4. Start from the target named by the developer. Follow only relevant links and expand
    context with the frontend, Relic search, filesystem search, symbol search, or other
    native tools as the task requires.
-6. Treat code as evidence of present behavior and Relic documents as current best
+5. Treat code as evidence of present behavior and Relic documents as current best
    knowledge of intent, contracts, decisions, and structure. Investigate a divergence;
    do not give either source universal precedence.
 
@@ -33,6 +30,16 @@ Do not load the whole corpus by default or require `relic search` as a gateway.
 If `relic.yaml` is missing or malformed, report that focused discovery problem.
 Continue with repository-native evidence when the requested work can still proceed; do
 not invent topology.
+
+## Route References Deliberately
+
+This file is complete on its own. Read a reference only when its trigger fires; never
+open one to check whether it applies. Most tasks fire no trigger.
+
+**A roast or a grill is requested, or the work has an open blocking fork** → [roast.md](references/roast.md)
+**When the selected `relic.yaml` declares `federation.members`** → [federation.md](references/federation.md). Ignore that reference when federation is absent.
+**A knowledge write is authorized, or a proposed write needs a concrete destination** → [knowledge-authoring.md](references/knowledge-authoring.md)
+**Authoring or reviewing canonical specification HTML, or HTML embedded in a record** → [semantic-html.md](references/semantic-html.md)
 
 ## Reduce the Decision Space
 
@@ -58,6 +65,16 @@ Resolve a finding directly when established constraints leave one coherent solut
 Ask only when multiple valid choices materially change behavior, authority, ownership,
 or scope, or when evidence cannot establish product intent. Group dependent questions
 into a small batch and resolve the decisions that eliminate later questions first.
+
+While a blocking fork is open on the affected boundary, investigation continues and
+mutation stops: no edit to code, configuration, or knowledge and no irreversible command
+until the developer answers it or authorizes progress under a stated assumption. Your own
+confidence does not lift that suspension, and no mutation may be presented as pending
+confirmation and performed in the same turn. Unblocked boundaries continue.
+
+Treat a duplicated path as a material finding, not a preference: a second mechanism where
+one already exists, in code or in knowledge, is at least P1. Recommend extending the
+current path and make a deliberate fork an explicit decision with a stated reason.
 
 Preserve confirmed decisions unless concrete new evidence contradicts them. Separate
 current-scope needs from generality or improvements that can wait. Do not produce edge
@@ -111,11 +128,6 @@ When implementation changes the current knowledge frontier, identify affected do
 and propose the update. Write only after authorization. Active knowledge describes the
 current project; remove obsolete alternatives unless the developer asks to preserve
 them. Git retains history.
-
-When persistence is authorized, read
-[`references/knowledge-authoring.md`](references/knowledge-authoring.md). When authoring
-or reviewing canonical specification HTML, also read
-[`references/semantic-html.md`](references/semantic-html.md).
 
 ## Boundaries
 

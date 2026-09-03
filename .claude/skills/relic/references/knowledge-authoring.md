@@ -3,6 +3,14 @@
 Read this reference only when the developer has authorized a knowledge write or when a
 proposed write needs a concrete destination.
 
+## Contents
+
+- Follow the Project Topology — reading the owning project's destinations
+- Choose the Smallest Useful Identity — specs, shared knowledge, and record kinds
+- Allocate a Number Without State — deriving the next identity from current topology
+- Author the Web — ordinary relative links, and what never becomes a graph edge
+- Keep Current Knowledge Current — correcting, splitting, merging, and removing
+
 ## Follow the Project Topology
 
 Read the `relic.yaml` of the project that will own the knowledge write. Its topology is
