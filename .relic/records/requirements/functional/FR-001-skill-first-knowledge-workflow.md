@@ -14,6 +14,17 @@ a course before asking about a material fork, derives the answer when current ev
 permits only one coherent choice, and stops asking when no remaining decision changes or
 blocks the requested scope.
 
+While a blocking fork remains open on the affected boundary, the skill keeps
+investigating and stops mutating. It edits code, configuration, or knowledge only after
+the developer answers the fork or explicitly authorizes progress under a stated
+assumption, and it never performs a mutation it has just presented as pending
+confirmation. Unblocked work on other boundaries is not suspended. A duplicated path in
+code or knowledge is reported as a material finding rather than a preference.
+
+The skill routes its focused references by explicit trigger and reads only the ones
+whose trigger fires. No reference is a mandatory preamble, and a harder confrontation
+discipline must not become a lifecycle the developer completes before work continues.
+
 When work creates durable knowledge, the skill may propose a specification, shared
 document, or project-declared record such as an FR, NFR, ADR, BR, GL, or EPIC at a
 natural boundary. It must prefer updating existing knowledge and may write only after
@@ -35,4 +46,5 @@ member knowledge.
 
 See the [product boundary](../../../shared/SHARED-product.md),
 [skill-first architecture](../../decisions/ADR-001-skill-first-stateless-architecture.md),
-and the [federation specification](../../../specs/002-relic-federation/index.html).
+the [federation specification](../../../specs/002-relic-federation/index.html), and
+the [roast discipline epic](../../epics/EPIC-003-skill-roast-discipline.md).

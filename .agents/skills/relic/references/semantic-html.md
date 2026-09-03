@@ -3,6 +3,12 @@
 Read this reference when authoring or reviewing a specification's canonical
 `index.html`, or when embedding HTML in a canonical Markdown record.
 
+## Contents
+
+- Canonical Fragment — the `relic-body` root and the enhancement elements
+- Embedded Markdown HTML — when a canonical record may reach for HTML
+- Presentation Boundary — what the frontend owns and what must never appear
+
 ## Canonical Fragment
 
 Author an HTML fragment with one required root. Its `id` is the specification identity

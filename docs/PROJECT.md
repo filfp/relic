@@ -82,7 +82,8 @@ model. `relic/relic` and `relic/relic.exe` are distribution artifacts.
 ### `skills/relic`
 
 The sole authored source of the central Relic skill. `SKILL.md` defines its
-portable behavior; `references/` contains focused authoring contracts;
+portable behavior and routes every reference by explicit trigger; `references/`
+contains those focused conduct and authoring contracts;
 `agents/openai.yaml` is Codex-owned metadata filtered during installation.
 Never patch `.agents/skills/relic`, `.codex/skills/relic`, or generated embedded
 content as an independent implementation.

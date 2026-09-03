@@ -3,6 +3,12 @@
 Read this reference only when the selected project boundary declares
 `federation.members`.
 
+## Contents
+
+- Keep the Selected Boundary Honest — what `root` means and which projects it reaches
+- Confront Across Projects Without Flattening Them — using descendant knowledge safely
+- Preserve Developer-Owned Authoring — where an authorized cross-project write belongs
+
 ## Keep the Selected Boundary Honest
 
 The selected `relic.yaml` is `root` for the current view. Its explicitly declared members
