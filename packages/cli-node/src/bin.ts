@@ -11,7 +11,7 @@ import { runSearch } from "./commands/search.ts";
 import { runServe } from "./commands/serve.ts";
 import { runVerify } from "./commands/verify.ts";
 
-const VERSION = "2.1.1";
+const VERSION = "2.2.0";
 
 function port(value: string): number {
   const parsed = Number(value);

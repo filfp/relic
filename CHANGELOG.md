@@ -9,6 +9,23 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-09-02
+
+### Changed
+- The central skill now suspends project mutation while a blocking fork is open on the
+  affected boundary. It keeps investigating, but edits no code, configuration, or knowledge
+  and runs no irreversible command until the developer resolves the fork or authorizes
+  progress under a stated assumption. It also reports a duplicated path in code or
+  knowledge as a material finding rather than a preference.
+- The skill routes each of its focused references through one explicit trigger instead of
+  carrying routing rules through the whole file, so a reference is read only when its
+  trigger fires.
+
+### Added
+- A roast reference gives the confrontation its own conduct contract: frontier rounds,
+  agent-owned fact finding, and ledger restatement that keeps the discipline from decaying
+  in a long session. Every reference now opens with its trigger and a contents index.
+
 ## [2.1.1] — 2026-08-28
 
 ### Added
