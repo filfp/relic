@@ -80,8 +80,9 @@ descendant. Their cross-project backlinks exist only in a composed view containi
 projects. Descendant links do not federate upward or across branches.
 
 A descendant-authored relative boundary escape is project-address-qualified warning
-evidence in the composed read model. Search, serve, and verify expose that same
-diagnostic; it neither resolves the link nor changes the ordinary localized evidence.
+evidence in the composed read model. Serve and verify expose that diagnostic; it neither
+resolves the link nor changes the ordinary localized evidence. Search returns matching
+documents and artifacts without maintenance diagnostics, in human and JSON output.
 
 The frontend and CLI consume the same exhaustive read model. Search is supplementary:
 agents remain free to use filesystem traversal, grep, ripgrep, symbol search, and other

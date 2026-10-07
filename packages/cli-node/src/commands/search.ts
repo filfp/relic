@@ -2,7 +2,6 @@ import {
   loadFederatedKnowledgeProject,
   searchFederatedKnowledge,
   searchKnowledge,
-  type FederatedKnowledgeDiagnostic,
   type FederatedKnowledgeSearchResult,
   type KnowledgeDiagnostic,
   type KnowledgeSearchResult,
@@ -24,9 +23,6 @@ export interface LocalSearchOutput {
 export interface FederatedSearchOutput {
   query: string;
   results: FederatedKnowledgeSearchResult[];
-  federation: {
-    diagnostics: FederatedKnowledgeDiagnostic[];
-  };
 }
 
 export type SearchOutput = LocalSearchOutput | FederatedSearchOutput;
@@ -80,19 +76,6 @@ function humanFederatedResult(result: FederatedKnowledgeSearchResult): string[] 
   ];
 }
 
-function humanFederatedDiagnostic(
-  item: FederatedKnowledgeDiagnostic,
-): string[] {
-  const location = item.edge
-    ? `${item.edge.parent.join("/")} federation.members.${item.edge.key}`
-    : item.project.join("/");
-  return [
-    `[${item.diagnostic.severity}] ${location}: ${item.diagnostic.message}`,
-    ...(item.diagnostic.path ? [`  path: ${item.diagnostic.path}`] : []),
-    ...(item.diagnostic.href ? [`  href: ${item.diagnostic.href}`] : []),
-  ];
-}
-
 export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   const query = options.query.trim();
   if (query === "") throw new Error("Search query cannot be empty");
@@ -135,7 +118,6 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   const output: FederatedSearchOutput = {
     query,
     results: searchFederatedKnowledge(aggregate, query),
-    federation: { diagnostics: aggregate.diagnostics },
   };
   if (options.json) {
     console.log(JSON.stringify(output, null, 2));
@@ -147,15 +129,6 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   );
   for (const result of output.results) {
     for (const line of humanFederatedResult(result)) console.log(line);
-  }
-  const visibleDiagnostics = output.federation.diagnostics.filter((item) =>
-    item.diagnostic.severity !== "info"
-  );
-  if (visibleDiagnostics.length > 0) {
-    console.log(`Relic federation diagnostics: ${visibleDiagnostics.length}`);
-    for (const diagnostic of visibleDiagnostics) {
-      for (const line of humanFederatedDiagnostic(diagnostic)) console.log(line);
-    }
   }
   return output;
 }

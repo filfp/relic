@@ -41,9 +41,10 @@ links may resolve only when their ordinary relative targets belong to knowledge 
 validated reachable subtree.
 
 The composed read model reports a member boundary escape as a project-address-qualified
-warning while preserving every readable project. Search, serve, and verify expose that
-same evidence. It does not reinterpret an unsafe protocol, malformed URL encoding, or
-root-authored link as an outbound federation link.
+warning while preserving every readable project. Serve and verify expose that evidence;
+search returns matching knowledge without maintenance diagnostics. The warning does not
+reinterpret an unsafe protocol, malformed URL encoding, or root-authored link as an
+outbound federation link.
 
 See the [knowledge model](../../../shared/SHARED-knowledge-model.md),
 [read-only access](../functional/FR-002-read-only-knowledge-access.md),

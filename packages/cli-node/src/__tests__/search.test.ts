@@ -176,7 +176,7 @@ describe("Relic 2.0 search command", () => {
       projectDir: root,
     });
 
-    expect("federation" in documents).toBe(true);
+    expect(documents).not.toHaveProperty("federation");
     expect(documents.results.map((result) => ({
       type: result.type,
       project: "project" in result ? result.project.join("/") : undefined,
@@ -229,7 +229,7 @@ describe("Relic 2.0 search command", () => {
     expect(nested.results[0]).not.toHaveProperty("project");
   });
 
-  test("keeps member search usable when the root topology is invalid", async () => {
+  test("keeps member search usable without maintenance output when the root topology is invalid", async () => {
     const root = createTemporaryProject();
     const backend = join(root, "backend");
     mkdirSync(backend);
@@ -252,15 +252,11 @@ describe("Relic 2.0 search command", () => {
         path: "knowledge/notes/NOTE-001-same.md",
       }),
     ]);
-    expect("federation" in output && output.federation.diagnostics).toContainEqual(
-      expect.objectContaining({
-        project: ["root"],
-        diagnostic: expect.objectContaining({ code: "invalid-topology" }),
-      }),
-    );
+    expect(output).not.toHaveProperty("federation");
+    expect(JSON.parse(lines.at(-1) ?? "")).toEqual(output);
   });
 
-  test("qualifies federated human results and reports actionable diagnostics", async () => {
+  test("qualifies federated human results without unrelated diagnostics", async () => {
     const root = createTemporaryProject();
     const backend = join(root, "backend");
     mkdirSync(backend);
@@ -276,13 +272,12 @@ describe("Relic 2.0 search command", () => {
     expect(lines.filter((line) => line === "  project: root")).toHaveLength(1);
     expect(lines.filter((line) => line === "  project: root/backend"))
       .toHaveLength(1);
-    expect(lines).toContain("Relic federation diagnostics: 1");
-    expect(lines).toContain(
-      "[error] root federation.members.missing: federation.members.missing references a missing or unreadable directory",
-    );
+    expect(lines.some((line) => line.includes("diagnostics"))).toBe(false);
+    expect(lines.some((line) => line.includes("federation.members.missing")))
+      .toBe(false);
   });
 
-  test("exposes federated member boundary escapes as search diagnostics", async () => {
+  test("leaves member boundary diagnostics to verify", async () => {
     const root = createTemporaryProject();
     const backend = join(root, "backend");
     mkdirSync(backend);
@@ -293,12 +288,11 @@ describe("Relic 2.0 search command", () => {
     );
     writeSearchProject(root, { backend: "backend" });
 
-    await runSearch({ query: "NOTE-001", projectDir: root });
+    const output = await runSearch({ query: "NOTE-001", projectDir: root });
 
-    expect(lines).toContain("Relic federation diagnostics: 2");
-    expect(lines).toContain(
-      "[warning] root/backend: Relative link leaves federated project boundary: ../../../knowledge/notes/NOTE-001-same.md",
-    );
+    expect(output.results).toHaveLength(2);
+    expect(output).not.toHaveProperty("federation");
+    expect(lines.some((line) => line.includes("Relative link leaves"))).toBe(false);
   });
 
   test("rejects an empty query and unreadable topology", async () => {

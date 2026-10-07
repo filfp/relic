@@ -145,8 +145,9 @@ Update `packages/cli-node` around the core-owned meaning:
 - make `relic search` expose aggregate results with hierarchical project addresses;
 - allow search and serve to continue when the selected project's local topology is
   unavailable but its structurally readable configuration reaches valid member corpora;
-- report localized federation diagnostics alongside usable human and JSON search results
-  instead of treating every root-topology error as a fatal command error;
+- return only matching knowledge in human and JSON search output, leaving localized
+  federation diagnostics to serve and verify rather than treating every root-topology
+  error as a fatal search error;
 - reserve fatal command failure for a selected boundary that cannot be interpreted safely
   enough to expose any valid local or member corpus;
 - make `relic serve` expose the same composed read model through stable document,
