@@ -9,6 +9,17 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-10-07
+
+### Changed
+- `relic search` now returns only matching knowledge in human and JSON output, without
+  unrelated federation maintenance diagnostics. `relic verify` remains the read-only
+  gate for warnings and errors, while the viewer retains its maintenance evidence.
+
+### Security
+- Updated the transitive `source-map-js` resolution to `1.2.2` to address
+  `GHSA-68fv-2mgg-jv7q`.
+
 ## [2.2.0] — 2026-09-02
 
 ### Changed
