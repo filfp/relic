@@ -9,7 +9,8 @@ the current topology and every artifact recursively contained by a specification
 
 Relic search must query canonical metadata and content plus supported textual artifacts.
 Artifact results retain parent specification context and do not become canonical
-document nodes.
+document nodes. Human and JSON search output contain query results, not maintenance
+diagnostics.
 
 Relic serve must expose the same model through a localhost-only, read-only frontend and
 API. The catalog must include disconnected documents, relationships, backlinks,
@@ -35,10 +36,10 @@ The CLI surface is exactly:
 read-model warning and error. Its diagnostics include a project-address-qualified
 warning for every relative link authored by a reached member that leaves that member's
 project boundary, including upward and cross-branch targets. The same diagnostic must
-be present in federated search and serve results. It must not label the root project's
-links, external URLs, or other unsafe link forms as federation outbound links. Any
-reported warning or error makes the command exit unsuccessfully so a gate can require
-repair.
+be present in the served read model and `relic verify` output, not in `relic search`.
+It must not label the root project's links, external URLs, or other unsafe link forms
+as federation outbound links. Any warning or error reported by `relic verify` makes
+that command exit unsuccessfully so a gate can require repair.
 
 No validation workflow, mode, record-generation, session, migration, or direct-model
 command belongs to the product. Verify is deterministic read-model inspection, not an
