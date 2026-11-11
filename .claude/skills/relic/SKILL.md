@@ -40,6 +40,7 @@ open one to check whether it applies. Most tasks fire no trigger.
 **When the selected `relic.yaml` declares `federation.members`** → [federation.md](references/federation.md). Ignore that reference when federation is absent.
 **A knowledge write is authorized, or a proposed write needs a concrete destination** → [knowledge-authoring.md](references/knowledge-authoring.md)
 **Authoring or reviewing canonical specification HTML, or HTML embedded in a record** → [semantic-html.md](references/semantic-html.md)
+**Documents must be selected or narrowed across the corpus by kind or metadata, and native exploration would be clumsy** → [search.md](references/search.md)
 
 ## Reduce the Decision Space
 

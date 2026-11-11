@@ -57,8 +57,8 @@
       </tbody>
     </table>
     <ul>
-      <li>Every given filter must match. AND is the only combination; there is no OR, negation, range, or ordering. A caller that needs another combination runs several searches and combines the results itself.</li>
-      <li>Filters combine with the free-text query; the query becomes optional when at least one filter is present.</li>
+      <li>Every given filter must match. AND is the only combination; there is no OR, negation, range, or ordering. A caller that needs another combination runs several searches and combines the results itself. Repeating <code>kind</code> requires every kind among a document's memberships, so it rarely helps; a caller that wants several kinds runs one search per kind.</li>
+      <li>Filters combine with the free-text query; the query becomes optional when at least one filter is present. With neither a query nor a filter the invocation is an input error: a query or at least one filter is required.</li>
       <li>Keys are compared exactly. Values compare against the scalar's string form, so <code>priority: 3</code> matches <code>priority=3</code>. A <code>null</code> value matches only the presence filter.</li>
       <li>Nested objects, lists of objects, and dotted key paths are not traversed; such values match only the presence filter.</li>
       <li>A document without the key, or a metadata shape the filter cannot read, simply does not match. No warning, error, or verify finding exists for absence.</li>
@@ -86,10 +86,11 @@
       </tbody>
     </table>
     <ul>
-      <li>An argument is read as JSON when it starts with <code>{</code>; any other argument keeps the <code>key</code> or <code>key=value</code> form.</li>
+      <li>An argument is read as JSON only when it starts with <code>{</code>; any other argument keeps the <code>key</code> or <code>key=value</code> form, split at the first <code>=</code>. A root that is not an object therefore cannot reach the JSON reader.</li>
+      <li>A <code>null</code> item inside a list becomes a presence filter for that key. An empty list adds no filter, so <code>{}</code> alone is no filter.</li>
       <li>Every entry of the object is one more filter, combined by AND with all other filters, whether they came from JSON or from the plain form. Both forms may be mixed and repeated.</li>
       <li>Keys are top-level metadata keys, compared exactly; they are never split into paths.</li>
-      <li>Invalid JSON, a root that is not an object, or a nested object or list of objects as a value is an input error of that invocation. It is reported before searching and is not a knowledge diagnostic.</li>
+      <li>Invalid JSON or a nested object or list of objects as a value is an input error of that invocation. It is reported before searching and is not a knowledge diagnostic.</li>
     </ul>
   </section>
 
@@ -114,7 +115,7 @@
     <h2>Result model</h2>
     <ul>
       <li>Each document result additionally carries its outgoing links and derived backlinks as the read model already computes them, so a consumer can follow the web without a second query.</li>
-      <li>The JSON output carries a format version. Additive fields keep the version; removed or renamed fields change it.</li>
+      <li>The JSON output carries a <code>formatVersion</code> field, currently <code>1</code>, in the CLI and in the HTTP API. Additive fields keep the version; removed or renamed fields change it.</li>
       <li>Artifacts have no metadata or membership of their own: any metadata or kind filter excludes them.</li>
       <li>In a federated view filters apply to every composed document, and results keep their project address.</li>
       <li>Human output stays focused on results; filters change selection, not presentation.</li>
@@ -132,7 +133,9 @@
     <p>
       <code>--kind</code> and <code>--meta</code> are repeatable options on the existing
       <code>search</code> command. The public surface stays at five commands. The local
-      API used by the viewer exposes the same selection through the same core function.
+      API used by the viewer exposes the same selection through the same core function:
+      <code>/api/search</code> accepts <code>q</code> and repeated <code>kind</code> and
+      <code>meta</code> parameters, and answers 400 for a malformed filter.
     </p>
   </section>
 
