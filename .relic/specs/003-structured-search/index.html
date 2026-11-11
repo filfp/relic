@@ -1,0 +1,167 @@
+<relic-body id="003-structured-search" data-status="proposed">
+  <header>
+    <relic-chip>Search</relic-chip>
+    <h1>Structured search over kind and opaque metadata</h1>
+    <p>
+      Search gains a list of structural filters, by corpus membership and by literal
+      metadata key and value, and its JSON result carries the links each document
+      already has in the read model. Relic still assigns no meaning to any project
+      metadata key or value.
+    </p>
+  </header>
+
+  <relic-callout type="principle">
+    <strong>Opaque by construction:</strong> a metadata filter is a literal structural
+    match. It never promises that a key exists anywhere, never types a value, and never
+    produces a diagnostic. The project, or a tool built on top of Relic, owns meaning.
+  </relic-callout>
+
+  <section>
+    <h2>Why Relic needs it on its own</h2>
+    <p>
+      Free-text search already reads serialized metadata, but it cannot express "every
+      ADR", "records that carry an <code>owner</code>", or "records tagged
+      <code>auth</code>" without false positives from body text. A project with dozens of
+      declared records needs these narrowing questions with no external tooling.
+      Consumers such as other CLIs and agents gain a stable, read-only way to select
+      documents without parsing the corpus a second time.
+    </p>
+  </section>
+
+  <section>
+    <h2>Filters</h2>
+    <table>
+      <thead>
+        <tr><th>Filter</th><th>Matches a document when</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>kind</code></td>
+          <td>
+            One of its corpus memberships equals the given value:
+            <code>spec</code>, <code>shared</code>, or a record kind declared in topology.
+            Memberships are topology-owned, so this filter is native Relic structure.
+          </td>
+        </tr>
+        <tr>
+          <td><code>key</code></td>
+          <td>Its top-level metadata contains that key, whatever the value.</td>
+        </tr>
+        <tr>
+          <td><code>key=value</code></td>
+          <td>
+            The top-level value under <code>key</code> is a scalar whose string form equals
+            <code>value</code> exactly, or is a list containing such a scalar.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>Every given filter must match. AND is the only combination; there is no OR, negation, range, or ordering. A caller that needs another combination runs several searches and combines the results itself.</li>
+      <li>Filters combine with the free-text query; the query becomes optional when at least one filter is present.</li>
+      <li>Keys are compared exactly. Values compare against the scalar's string form, so <code>priority: 3</code> matches <code>priority=3</code>. A <code>null</code> value matches only the presence filter.</li>
+      <li>Nested objects, lists of objects, and dotted key paths are not traversed; such values match only the presence filter.</li>
+      <li>A document without the key, or a metadata shape the filter cannot read, simply does not match. No warning, error, or verify finding exists for absence.</li>
+      <li>Specification metadata is whatever the read model already exposes for that specification; no new extraction rule is introduced.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>JSON filter input</h2>
+    <p>
+      As an extra form beside <code>key</code> and <code>key=value</code>, a filter
+      argument may be a JSON object. This lets agents and tools build a filter set as one
+      value instead of concatenating repeated options. It is only another spelling of the
+      same filters and adds no matching power.
+    </p>
+    <table>
+      <thead>
+        <tr><th>JSON entry</th><th>Equivalent filter</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>"owner": "platform"</code></td><td><code>owner=platform</code></td></tr>
+        <tr><td><code>"priority": 3</code>, <code>"draft": true</code></td><td><code>priority=3</code>, <code>draft=true</code>, compared by the same scalar string form</td></tr>
+        <tr><td><code>"owner": null</code></td><td><code>owner</code>, presence only</td></tr>
+        <tr><td><code>"tags": ["auth", "api"]</code></td><td><code>tags=auth</code> and <code>tags=api</code></td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>An argument is read as JSON when it starts with <code>{</code>; any other argument keeps the <code>key</code> or <code>key=value</code> form.</li>
+      <li>Every entry of the object is one more filter, combined by AND with all other filters, whether they came from JSON or from the plain form. Both forms may be mixed and repeated.</li>
+      <li>Keys are top-level metadata keys, compared exactly; they are never split into paths.</li>
+      <li>Invalid JSON, a root that is not an object, or a nested object or list of objects as a value is an input error of that invocation. It is reported before searching and is not a knowledge diagnostic.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>One shape rule in core</h2>
+    <p>
+      The viewer already classifies metadata by value shape, distinguishing scalars,
+      scalar lists, and nested structures, in its metadata component. That
+      classification moves into core and both the viewer and search consume it, so
+      the rule that decides "scalar or list item" exists once. This removes logic held
+      only by the viewer instead of adding a second copy for search.
+    </p>
+    <relic-callout type="boundary">
+      Metadata values never become graph edges. A frontmatter value that looks like an
+      identity is still opaque text; relationships are authored as ordinary relative
+      links, as decided in
+      <a href="../../records/decisions/ADR-002-topology-and-relative-links.md">ADR-002</a>.
+    </relic-callout>
+  </section>
+
+  <section>
+    <h2>Result model</h2>
+    <ul>
+      <li>Each document result additionally carries its outgoing links and derived backlinks as the read model already computes them, so a consumer can follow the web without a second query.</li>
+      <li>The JSON output carries a format version. Additive fields keep the version; removed or renamed fields change it.</li>
+      <li>Artifacts have no metadata or membership of their own: any metadata or kind filter excludes them.</li>
+      <li>In a federated view filters apply to every composed document, and results keep their project address.</li>
+      <li>Human output stays focused on results; filters change selection, not presentation.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Command surface</h2>
+    <relic-flow direction="right">
+      relic search [query...] --kind adr --meta owner --meta tags=auth --json
+    </relic-flow>
+    <relic-flow direction="right">
+      relic search --kind work --meta '{"owner": null, "tags": ["auth", "api"]}' --json
+    </relic-flow>
+    <p>
+      <code>--kind</code> and <code>--meta</code> are repeatable options on the existing
+      <code>search</code> command. The public surface stays at five commands. The local
+      API used by the viewer exposes the same selection through the same core function.
+    </p>
+  </section>
+
+  <section>
+    <h2>Deliberately absent</h2>
+    <p>
+      No key registry, known-value list, metadata index or cache, type coercion beyond
+      the scalar string form, status vocabulary, saved queries, query language,
+      sorting by metadata, or diagnostics about missing metadata. No metadata value is
+      resolved as a link.
+    </p>
+    <relic-callout type="deferral">
+      <strong>Other logic operators are deferred, not rejected.</strong> OR, NOT, and
+      richer value matching are not ruled out. They stay out of this scope because no
+      current user needs them, and caller-side combination covers today's cases. Revisit
+      them when several Relic users need them, or when a consumer's needs change
+      substantially. Design them then as a whole, rather than growing operators one at a
+      time.
+    </relic-callout>
+  </section>
+
+  <section>
+    <h2>Linked contracts</h2>
+    <ul>
+      <li><a href="../001-relic-2/index.html">Relic 2 product surface</a></li>
+      <li><a href="../002-relic-federation/index.html">Federation</a></li>
+      <li><a href="../../shared/SHARED-knowledge-model.md">Knowledge model</a></li>
+      <li><a href="../../records/requirements/functional/FR-002-read-only-knowledge-access.md">FR-002 read-only access</a></li>
+      <li><a href="../../records/requirements/non-functional/NFR-001-portable-stateless-operation.md">NFR-001 portable stateless operation</a></li>
+    </ul>
+  </section>
+</relic-body>
