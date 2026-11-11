@@ -297,7 +297,7 @@ describe("Relic 2.0 search command", () => {
 
   test("rejects an empty query and unreadable topology", async () => {
     await expect(runSearch({ query: " ", projectDir: fixture })).rejects.toThrow(
-      /cannot be empty/,
+      /query or at least one --kind\/--meta filter/,
     );
 
     const malformed = mkdtempSync(join(tmpdir(), "relic-search-malformed-"));
@@ -315,5 +315,75 @@ describe("Relic 2.0 search command", () => {
     const before = snapshot(fixture);
     await runSearch({ query: "auth", projectDir: fixture });
     expect(snapshot(fixture)).toEqual(before);
+  });
+
+  test("selects by kind and metadata with an optional query", async () => {
+    const kind = await runSearch({ kinds: ["fr"], projectDir: fixture });
+    expect(kind.results.length).toBeGreaterThan(0);
+    expect(kind.results.every((result) =>
+      result.type === "document" && result.memberships.includes("fr")
+    )).toBe(true);
+
+    const meta = await runSearch({ meta: ["priority=essential"], projectDir: fixture });
+    expect(meta.results).toEqual([
+      expect.objectContaining({ type: "document", id: "FR-001" }),
+    ]);
+    expect(lines[0]).toContain("(filters only)");
+
+    const json = await runSearch({
+      kinds: ["fr"],
+      meta: ['{"priority":"essential"}', "priority"],
+      query: "authenticate",
+      json: true,
+      projectDir: fixture,
+    });
+    expect(json.formatVersion).toBe(1);
+    expect(JSON.parse(lines.at(-1) ?? "")).toEqual(json);
+    expect(json.results).toEqual([
+      expect.objectContaining({
+        id: "FR-001",
+        links: expect.any(Array),
+        backlinks: expect.any(Array),
+      }),
+    ]);
+  });
+
+  test("excludes artifacts when a filter is present", async () => {
+    const output = await runSearch({
+      query: "legacy session",
+      kinds: ["spec"],
+      projectDir: fixture,
+    });
+    expect(output.results.some((result) => result.type === "artifact")).toBe(false);
+  });
+
+  test("reports filter input errors before searching", async () => {
+    for (const bad of ['{"a":', '{"a":{"b":1}}', '{"a":[{"b":1}]}']) {
+      await expect(runSearch({ meta: [bad], projectDir: fixture })).rejects.toThrow(
+        /metadata filter|JSON/i,
+      );
+    }
+    // Input errors win even when the project cannot be read.
+    await expect(
+      runSearch({ meta: ['{"a":'], projectDir: "/nonexistent-relic-dir" }),
+    ).rejects.toThrow(/JSON/);
+    await expect(runSearch({ projectDir: fixture })).rejects.toThrow(
+      /query or at least one/,
+    );
+    await expect(runSearch({ meta: ["{}"], projectDir: fixture })).rejects.toThrow(
+      /query or at least one/,
+    );
+  });
+
+  test("filters federated projects and keeps addresses", async () => {
+    const root = createTemporaryProject();
+    const backend = join(root, "backend");
+    mkdirSync(backend);
+    writeSearchProject(backend);
+    writeSearchProject(root, { backend: "backend" });
+    const output = await runSearch({ kinds: ["note"], projectDir: root });
+    expect(output.results.map((result) =>
+      "project" in result ? result.project.join("/") : undefined
+    )).toEqual(["root", "root/backend"]);
   });
 });

@@ -2,6 +2,7 @@ import { basename, resolve } from "node:path";
 
 import { compareProjectAddress, compareText } from "./address.ts";
 import { loadKnowledgeProject } from "./read-model.ts";
+import type { KnowledgeSearchFilters } from "./filters.ts";
 import { searchFederatedKnowledge, searchKnowledge } from "./search.ts";
 import type {
   CanonicalDocument,
@@ -384,14 +385,16 @@ export function federatedArtifactView(
 
 export function searchView(
   project: KnowledgeProject,
-  query: string,
+  query: string | undefined,
+  filters?: KnowledgeSearchFilters,
 ): KnowledgeSearchResult[] {
-  return searchKnowledge(project, query);
+  return searchKnowledge(project, query, filters);
 }
 
 export function federatedSearchView(
   aggregate: FederatedKnowledgeProject,
-  query: string,
+  query: string | undefined,
+  filters?: KnowledgeSearchFilters,
 ): FederatedKnowledgeSearchResult[] {
-  return searchFederatedKnowledge(aggregate, query);
+  return searchFederatedKnowledge(aggregate, query, filters);
 }

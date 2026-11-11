@@ -195,6 +195,23 @@ describe("Relic 2.0 read-only viewer API", () => {
     ]);
   });
 
+  test("exposes structured filters through the same core search", () => {
+    const filtered = json<{
+      formatVersion: number;
+      results: Array<{ type: string; id?: string; links?: unknown[] }>;
+    }>("/api/search?kind=fr&meta=priority%3Dessential");
+    expect(filtered.formatVersion).toBe(1);
+    expect(filtered.results).toEqual([
+      expect.objectContaining({ type: "document", id: "FR-001", links: expect.any(Array) }),
+    ]);
+    const mixed = json<{ results: unknown[] }>(
+      `/api/search?meta=${encodeURIComponent('{"priority":"essential"}')}&q=legacy`,
+    );
+    expect(mixed.results).toEqual([]);
+    const bad = request(`/api/search?meta=${encodeURIComponent('{"a":')}`, "GET");
+    expect(bad.status).toBe(400);
+  });
+
   test("exposes a federated project envelope without member filesystem roots", () => {
     const root = createTemporaryProject();
     const backend = join(root, "backend");

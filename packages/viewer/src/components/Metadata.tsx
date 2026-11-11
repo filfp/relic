@@ -1,23 +1,16 @@
 import type { ReactNode } from "react";
 
+import {
+  isMetadataPlainObject as isPlainObject,
+  isMetadataScalar as isScalar,
+  isMetadataScalarArray as isScalarArray,
+  type MetadataScalar as Scalar,
+} from "@relic/core/metadata";
+
 import { Chip } from "./bits";
 
 /** Prevent pathological project-owned input from exhausting the browser renderer. */
 const MAX_RENDER_DEPTH = 12;
-
-type Scalar = string | number | boolean | null;
-
-function isScalar(value: unknown): value is Scalar {
-  return value === null || ["string", "number", "boolean"].includes(typeof value);
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isScalarArray(value: unknown[]): value is Scalar[] {
-  return value.every(isScalar);
-}
 
 function ScalarValue({ value }: { value: Scalar }) {
   if (value === null) return <span className="rl-meta-empty">none</span>;

@@ -27,6 +27,9 @@ import {
   type KnowledgeArtifact,
   type KnowledgeProject,
   type ProjectAddress,
+  buildSearchFilters,
+  SEARCH_FORMAT_VERSION,
+  SearchFilterInputError,
 } from "@relic/core";
 
 import { VIEWER_ASSETS } from "../generated/viewer-assets.ts";
@@ -238,11 +241,25 @@ export function resolveViewerRequest(
       : jsonResponse(404, { error: `artifact "${path}" not found` });
   }
   if (url.pathname === "/api/search") {
+    const query = url.searchParams.get("q") ?? "";
+    let filters;
+    try {
+      filters = buildSearchFilters(
+        url.searchParams.getAll("kind"),
+        url.searchParams.getAll("meta"),
+      );
+    } catch (error) {
+      if (error instanceof SearchFilterInputError) {
+        return jsonResponse(400, { error: error.message });
+      }
+      throw error;
+    }
     return jsonResponse(200, {
-      query: url.searchParams.get("q") ?? "",
+      formatVersion: SEARCH_FORMAT_VERSION,
+      query,
       results: federation
-        ? federatedSearchView(aggregate, url.searchParams.get("q") ?? "")
-        : searchView(project, url.searchParams.get("q") ?? ""),
+        ? federatedSearchView(aggregate, query, filters)
+        : searchView(project, query, filters),
     });
   }
   if (url.pathname === "/api/content") {

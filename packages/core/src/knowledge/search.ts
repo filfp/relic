@@ -1,4 +1,9 @@
 import { compareProjectAddress, compareText } from "./address.ts";
+import {
+  hasStructuralFilters,
+  matchesFilters,
+  type KnowledgeSearchFilters,
+} from "./filters.ts";
 import type {
   CanonicalDocument,
   FederatedKnowledgeProject,
@@ -8,7 +13,10 @@ import type {
   KnowledgeSearchResult,
 } from "./types.ts";
 
-interface PreparedQuery {
+/** Free-text query, absent when only structural filters select documents. */
+type PreparedQuery = TextQuery | undefined;
+
+interface TextQuery {
   normalized: string;
   tokens: string[];
 }
@@ -47,7 +55,9 @@ function prepareQuery(query: string): PreparedQuery | undefined {
 function searchDocument(
   document: CanonicalDocument,
   query: PreparedQuery,
+  filters: KnowledgeSearchFilters | undefined,
 ): Extract<KnowledgeSearchResult, { type: "document" }> | undefined {
+  if (!matchesFilters(document, filters)) return undefined;
   const identity = normalize([
     document.id ?? "",
     document.label,
@@ -58,24 +68,27 @@ function searchDocument(
   ].join(" "));
   const content = normalize(document.searchableText);
   const haystack = `${identity} ${content}`;
-  if (!tokenMatch(haystack, query.tokens)) return undefined;
-  const score =
-    query.tokens.filter((token) => identity.includes(token)).length * 10 +
-    query.tokens.filter((token) => content.includes(token)).length;
+  if (query && !tokenMatch(haystack, query.tokens)) return undefined;
+  const score = query
+    ? query.tokens.filter((token) => identity.includes(token)).length * 10 +
+      query.tokens.filter((token) => content.includes(token)).length
+    : 0;
   return {
     type: "document",
     path: document.path,
     label: document.label,
     ...(document.id !== undefined && { id: document.id }),
     memberships: document.memberships,
-    snippet: snippet(document.searchableText, query.normalized),
+    links: document.links,
+    backlinks: document.backlinks,
+    snippet: query ? snippet(document.searchableText, query.normalized) : "",
     score,
   };
 }
 
 function searchArtifact(
   artifact: KnowledgeArtifact,
-  query: PreparedQuery,
+  query: TextQuery,
 ): Extract<KnowledgeSearchResult, { type: "artifact" }> | undefined {
   if (artifact.mediaType !== "text" || artifact.searchableText === undefined) {
     return undefined;
@@ -98,22 +111,31 @@ function searchArtifact(
   };
 }
 
+/**
+ * Free-text query and structural filters combine by AND. The query is optional when
+ * at least one filter exists; with neither, nothing matches. Artifacts have no
+ * memberships or metadata, so any filter excludes them.
+ */
 export function searchKnowledge(
   project: KnowledgeProject,
-  query: string,
+  query: string | undefined,
+  filters?: KnowledgeSearchFilters,
 ): KnowledgeSearchResult[] {
-  const prepared = prepareQuery(query);
-  if (!prepared) return [];
+  const prepared = prepareQuery(query ?? "");
+  const filtered = hasStructuralFilters(filters);
+  if (!prepared && !filtered) return [];
   const results: KnowledgeSearchResult[] = [];
 
   for (const document of project.documents) {
-    const result = searchDocument(document, prepared);
+    const result = searchDocument(document, prepared, filters);
     if (result) results.push(result);
   }
 
-  for (const artifact of project.artifacts) {
-    const result = searchArtifact(artifact, prepared);
-    if (result) results.push(result);
+  if (prepared && !filtered) {
+    for (const artifact of project.artifacts) {
+      const result = searchArtifact(artifact, prepared);
+      if (result) results.push(result);
+    }
   }
 
   return results.sort(
@@ -123,25 +145,31 @@ export function searchKnowledge(
 
 export function searchFederatedKnowledge(
   aggregate: FederatedKnowledgeProject,
-  query: string,
+  query: string | undefined,
+  filters?: KnowledgeSearchFilters,
 ): FederatedKnowledgeSearchResult[] {
-  const prepared = prepareQuery(query);
-  if (!prepared) return [];
+  const prepared = prepareQuery(query ?? "");
+  const filtered = hasStructuralFilters(filters);
+  if (!prepared && !filtered) return [];
   const results: FederatedKnowledgeSearchResult[] = [];
 
-  for (const { project, document } of aggregate.documents) {
-    const result = searchDocument(document, prepared);
-    if (result) results.push({ ...result, project });
+  for (const { project, document, links, backlinks } of aggregate.documents) {
+    const result = searchDocument(document, prepared, filters);
+    if (result?.type === "document") {
+      results.push({ ...result, project, links, backlinks });
+    }
   }
-  for (const item of aggregate.artifacts) {
-    const result = searchArtifact(item.artifact, prepared);
-    if (result?.type === "artifact") {
-      const { specificationPaths: _localSpecificationPaths, ...searchResult } = result;
-      results.push({
-        ...searchResult,
-        project: item.project,
-        specifications: item.specifications,
-      });
+  if (prepared && !filtered) {
+    for (const item of aggregate.artifacts) {
+      const result = searchArtifact(item.artifact, prepared);
+      if (result?.type === "artifact") {
+        const { specificationPaths: _localSpecificationPaths, ...searchResult } = result;
+        results.push({
+          ...searchResult,
+          project: item.project,
+          specifications: item.specifications,
+        });
+      }
     }
   }
 
