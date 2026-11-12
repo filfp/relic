@@ -92,8 +92,14 @@ and the changelog entry), then tags the pull-request merge commit:
 - `v1.2.3-npm` dispatches npm only;
 - `v1.2.3-pypi` dispatches PyPI only.
 
+The release-tag workflow also creates the GitHub release for the tag, with the
+version's `CHANGELOG.md` section as its notes.
+
 The npm workflow installs pinned dependencies, embeds the current skill and
-viewer, builds the Node bundle, and publishes with npm provenance.
+viewer, builds the Node bundle, and publishes with npm provenance. It then
+publishes the same bundle to GitHub Packages as `@filfp/relic-cli`, so the
+repository lists it; GitHub Packages only accepts scoped names. Both steps skip
+a version that is already published, so a rerun is safe.
 
 The PyPI workflow installs its build tooling from hash-locked requirements,
 compiles and smoke-tests native binaries, builds and verifies
@@ -156,8 +162,8 @@ Keep these files coherent when changing the release contract:
 - `.github/workflows/tag-release.yml`, the shared `release-tag.yml` and
   `scripts/release-check.sh` for merged-branch validation and dispatch (Ranni
   calls `release-tag.yml` too, pinned to a commit);
-- `.github/actions/setup-bun` and `.github/actions/supply-chain`, also shared
-  with Ranni;
+- `.github/actions/setup-bun`, `.github/actions/supply-chain` and
+  `.github/actions/github-packages`, also shared with Ranni;
 - `.github/workflows/publish-npm.yml` for the npm artifact;
 - `.github/workflows/publish-pypi.yml` for native wheels and PyPI publication;
 - all version-bearing package files and `CHANGELOG.md`;

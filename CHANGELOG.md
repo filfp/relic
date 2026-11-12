@@ -21,6 +21,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 - CI setup, the supply-chain gate and the release-tag workflow are reusable,
   shared with Ranni. CI runs Bun 1.4.0.
+- Each release creates a GitHub release with its changelog section, and the
+  npm bundle is also published to GitHub Packages as `@filfp/relic-cli`.
 
 ## [2.3.0] — 2026-11-11
 
