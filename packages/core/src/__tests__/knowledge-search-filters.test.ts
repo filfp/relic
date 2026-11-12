@@ -154,6 +154,13 @@ describe("structured search filters (local)", () => {
     expect(note.links.map((link) => link.targetPath)).toEqual([work.path]);
     expect(work.backlinks.map((link) => link.sourcePath)).toEqual([note.path]);
   });
+
+  test("results carry the document's opaque metadata as read", () => {
+    const [note] = searchKnowledge(project, undefined, meta("tags=auth"));
+    if (note?.type !== "document") throw new Error("missing");
+    expect(note.metadata.owner).toBe("platform");
+    expect(note.metadata.tags).toContain("auth");
+  });
 });
 
 describe("structured search filters (federated)", () => {
@@ -174,6 +181,7 @@ describe("structured search filters (federated)", () => {
     const first = results[0];
     if (first?.type !== "document") throw new Error("expected document");
     expect(first.links.map((link) => link.source.project.join("/"))).toEqual(["root"]);
+    expect(first.metadata.owner).toBe("platform");
 
     const queried = searchFederatedKnowledge(aggregate, "alpha", meta("tags=ui"));
     expect(queried.map((r) => (r.type === "document" ? r.project.join("/") : "artifact")))

@@ -79,6 +79,7 @@ function searchDocument(
     label: document.label,
     ...(document.id !== undefined && { id: document.id }),
     memberships: document.memberships,
+    metadata: document.metadata,
     links: document.links,
     backlinks: document.backlinks,
     snippet: query ? snippet(document.searchableText, query.normalized) : "",

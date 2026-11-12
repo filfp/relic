@@ -39,7 +39,8 @@ relic search [query...] [--kind <kind>] [--meta <filter>] [--json]
   when a filter is given. There is no OR, negation, range, or sorting; run several
   searches and combine them yourself.
 - Any filter excludes spec artifacts.
-- `--json` returns results with outgoing links and backlinks, plus `formatVersion`.
+- `--json` returns results with their metadata as read, outgoing links and backlinks, plus
+  `formatVersion`.
 
 Filters are literal and metadata stays opaque: Relic never promises a key exists, types a
 value, or reports a missing key. Nested objects match only by presence. What a key means

@@ -114,7 +114,7 @@
   <section>
     <h2>Result model</h2>
     <ul>
-      <li>Each document result additionally carries its outgoing links and derived backlinks as the read model already computes them, so a consumer can follow the web without a second query.</li>
+      <li>Each document result additionally carries its metadata exactly as read, unfiltered and uninterpreted, and its outgoing links and derived backlinks as the read model already computes them, so a consumer can read values and follow the web without a second query.</li>
       <li>The JSON output carries a <code>formatVersion</code> field, currently <code>1</code>, in the CLI and in the HTTP API. Additive fields keep the version; removed or renamed fields change it.</li>
       <li>Artifacts have no metadata or membership of their own: any metadata or kind filter excludes them.</li>
       <li>In a federated view filters apply to every composed document, and results keep their project address.</li>

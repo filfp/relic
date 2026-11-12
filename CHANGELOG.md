@@ -15,7 +15,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
   when a filter is given. Metadata filters are literal matches on top-level keys; artifacts
   are excluded when any filter is present. The local viewer API (`/api/search`) accepts the
   same `kind` and `meta` parameters through the same core function.
-- Document search results carry their outgoing links and backlinks, and the JSON output
+- Document search results carry their metadata, outgoing links and backlinks, and the JSON output
   carries `formatVersion`.
 
 ### Changed

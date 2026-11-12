@@ -202,6 +202,7 @@ export type KnowledgeSearchResult =
       label: string;
       id?: string;
       memberships: CorpusMembership[];
+      metadata: Record<string, unknown>;
       links: KnowledgeLink[];
       backlinks: KnowledgeBacklink[];
       snippet: string;
