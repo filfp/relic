@@ -9,6 +9,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.3.0] — 2026-11-11
+
 ### Added
 - `relic search` accepts repeatable `--kind` and `--meta` filters (`key`, `key=value`, or a
   JSON object) combined by AND with each other and with the query, which is now optional
@@ -21,6 +23,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ### Changed
 - Metadata value-shape classification moved from the viewer into `@relic/core` so search and
   the viewer share one rule.
+
+### Security
+- Bumped the viewer's build-only `vite` dependency to 8.1.6, clearing the audit advisories
+  reported against 8.1.1 and its bundled `launch-editor`.
 
 ## [2.2.1] — 2026-10-07
 
