@@ -19,3 +19,4 @@ jobs:
     with:
       check: bash scripts/release-check.sh
       targets: npm:publish-npm.yml pypi:publish-pypi.yml
+      changelog: CHANGELOG.md

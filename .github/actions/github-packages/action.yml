@@ -1,0 +1,39 @@
+name: github-packages
+description: >-
+  Publishes the package in `directory`, already published to npmjs.com, to the GitHub
+  Packages npm registry as @<owner>/<name>, so it is listed on the repository. GitHub
+  Packages only takes scoped names. Skips a version that is already there. Needs
+  `packages: write`. Shared by Relic and Ranni.
+
+inputs:
+  directory:
+    description: Directory holding the package.json to publish.
+    default: "."
+  token:
+    description: Token with packages:write.
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      working-directory: ${{ inputs.directory }}
+      env:
+        TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        name=$(node -p "require('./package.json').name")
+        version=$(node -p "require('./package.json').version")
+        owner="${GITHUB_REPOSITORY_OWNER,,}"
+        scoped="@${owner}/${name#*/}"
+        # A config of its own, so the npmjs.com credentials of setup-node never reach GitHub.
+        rc="$RUNNER_TEMP/github-packages.npmrc"
+        printf '@%s:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=%s\n' "$owner" "$TOKEN" > "$rc"
+        if NPM_CONFIG_USERCONFIG="$rc" npm view "$scoped@$version" version >/dev/null 2>&1; then
+          echo "$scoped@$version is already on GitHub Packages."
+          exit 0
+        fi
+        npm pkg set name="$scoped"
+        trap 'npm pkg set name="$name"' EXIT
+        NPM_CONFIG_USERCONFIG="$rc" npm publish --registry https://npm.pkg.github.com
+        echo "Published $scoped@$version to GitHub Packages."

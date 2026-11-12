@@ -2,8 +2,9 @@ name: Release tag
 
 # Reusable by Relic and Ranni. Called from a workflow triggered by a closed pull request:
 # when a merged `release/v<x.y.z>` or `release/v<x.y.z>-<target>` branch lands, it runs the
-# repository's release check, tags the merge commit `v<release>`, and dispatches the publish
-# workflow of each target (all of them without a suffix, only that one with it).
+# repository's release check, tags the merge commit `v<release>`, creates the GitHub release,
+# and dispatches the publish workflow of each target (all of them without a suffix, only that
+# one with it).
 
 on:
   workflow_call:
@@ -16,6 +17,12 @@ on:
         description: Space-separated `name:workflow.yml` pairs, for example `npm:publish-npm.yml`.
         type: string
         required: true
+      changelog:
+        description: >-
+          Keep-a-Changelog file whose `## [x.y.z]` section becomes the GitHub release notes.
+          Empty: GitHub generates the notes from the merged pull requests.
+        type: string
+        default: ""
 
 permissions: {}
 
@@ -61,6 +68,20 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "$TAG" "$MERGE_SHA"
           git push origin "$TAG"
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+          CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          if [[ -n "$CHANGELOG" ]]; then
+            awk -v head="## [$VERSION]" 'index($0, head) == 1 { on = 1; next } on && /^## \[/ { exit } on' "$CHANGELOG" > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi
 
       - name: Dispatch publish workflows
         env:

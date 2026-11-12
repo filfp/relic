@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -28,6 +29,17 @@ jobs:
       - name: Build npm bundle
         run: bun run build:npm
 
+      # A rerun skips a version npm already has, so the GitHub Packages step can still run.
       - name: Publish to npm
         working-directory: packages/cli-node
-        run: npm publish --provenance --access public
+        run: |
+          if npm view "relic-cli@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
+            echo "Already on npm."
+          else
+            npm publish --provenance --access public
+          fi
+
+      - name: Publish to GitHub Packages
+        uses: ./.github/actions/github-packages
+        with:
+          directory: packages/cli-node
