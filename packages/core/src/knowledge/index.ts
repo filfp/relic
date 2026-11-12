@@ -5,6 +5,21 @@ export { loadFederatedKnowledgeProject, resolveFederatedArtifactAuthority } from
 export { loadKnowledgeProject } from "./read-model.ts";
 export { searchFederatedKnowledge, searchKnowledge } from "./search.ts";
 export {
+  buildSearchFilters,
+  hasStructuralFilters,
+  SEARCH_FORMAT_VERSION,
+  parseMetadataFilter,
+  SearchFilterInputError,
+} from "./filters.ts";
+export type { KnowledgeSearchFilters, MetadataFilter } from "./filters.ts";
+export {
+  isMetadataPlainObject,
+  isMetadataScalar,
+  isMetadataScalarArray,
+  metadataScalarString,
+} from "./metadata.ts";
+export type { MetadataScalar } from "./metadata.ts";
+export {
   artifactView,
   documentView,
   federatedArtifactView,

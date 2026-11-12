@@ -1,5 +1,8 @@
 import {
+  buildSearchFilters,
+  hasStructuralFilters,
   loadFederatedKnowledgeProject,
+  SEARCH_FORMAT_VERSION,
   searchFederatedKnowledge,
   searchKnowledge,
   type FederatedKnowledgeSearchResult,
@@ -10,17 +13,23 @@ import {
 import { resolveRelicProjectDir } from "../project.ts";
 
 export interface SearchOptions {
-  query: string;
+  query?: string;
+  /** Repeatable `--kind` values. */
+  kinds?: string[];
+  /** Repeatable `--meta` arguments, plain (`key`, `key=value`) or a JSON object. */
+  meta?: string[];
   json?: boolean;
   projectDir?: string;
 }
 
 export interface LocalSearchOutput {
+  formatVersion: typeof SEARCH_FORMAT_VERSION;
   query: string;
   results: KnowledgeSearchResult[];
 }
 
 export interface FederatedSearchOutput {
+  formatVersion: typeof SEARCH_FORMAT_VERSION;
   query: string;
   results: FederatedKnowledgeSearchResult[];
 }
@@ -77,8 +86,13 @@ function humanFederatedResult(result: FederatedKnowledgeSearchResult): string[] 
 }
 
 export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
-  const query = options.query.trim();
-  if (query === "") throw new Error("Search query cannot be empty");
+  const query = (options.query ?? "").trim();
+  // Input errors surface before the project is read.
+  const filters = buildSearchFilters(options.kinds, options.meta);
+  if (query === "" && !hasStructuralFilters(filters)) {
+    throw new Error("Provide a search query or at least one --kind/--meta filter");
+  }
+  const label = query === "" ? "(filters only)" : query;
 
   const projectDir = resolveRelicProjectDir(options.projectDir);
   const aggregate = loadFederatedKnowledgeProject(projectDir);
@@ -100,15 +114,16 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   if (!rootProject.knowledge.federation) {
     const project = rootProject.knowledge;
     const output: LocalSearchOutput = {
+      formatVersion: SEARCH_FORMAT_VERSION,
       query,
-      results: searchKnowledge(project, query),
+      results: searchKnowledge(project, query, filters),
     };
     if (options.json) {
       console.log(JSON.stringify(output, null, 2));
       return output;
     }
 
-    console.log(`Relic search: ${query} (${output.results.length} results)`);
+    console.log(`Relic search: ${label} (${output.results.length} results)`);
     for (const result of output.results) {
       for (const line of humanResult(result)) console.log(line);
     }
@@ -116,8 +131,9 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   }
 
   const output: FederatedSearchOutput = {
+    formatVersion: SEARCH_FORMAT_VERSION,
     query,
-    results: searchFederatedKnowledge(aggregate, query),
+    results: searchFederatedKnowledge(aggregate, query, filters),
   };
   if (options.json) {
     console.log(JSON.stringify(output, null, 2));
@@ -125,7 +141,7 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   }
 
   console.log(
-    `Relic search: ${query} (${output.results.length} results across ${readableProjects.length} projects)`,
+    `Relic search: ${label} (${output.results.length} results across ${readableProjects.length} projects)`,
   );
   for (const result of output.results) {
     for (const line of humanFederatedResult(result)) console.log(line);

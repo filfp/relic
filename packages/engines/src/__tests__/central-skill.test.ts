@@ -17,6 +17,7 @@ const federation = readFileSync(
   resolve(skillRoot, "references/federation.md"),
   "utf8",
 );
+const search = readFileSync(resolve(skillRoot, "references/search.md"), "utf8");
 const roast = readFileSync(resolve(skillRoot, "references/roast.md"), "utf8");
 const openAiMetadata = readFileSync(
   resolve(skillRoot, "agents/openai.yaml"),
@@ -80,6 +81,7 @@ describe("central Relic skill distribution source", () => {
       "federation.md": federation,
       "knowledge-authoring.md": authoring,
       "semantic-html.md": semanticHtml,
+      "search.md": search,
     };
     const shape = Object.fromEntries(
       Object.entries(references).map(([name, content]) => [
@@ -100,6 +102,12 @@ describe("central Relic skill distribution source", () => {
     );
   });
 
+  test("keeps search an optional, literal selection aid", () => {
+    expect(search).toContain("Native tools (grep, file reads, symbol search) are equally valid");
+    expect(search).toContain("Search\nis never a gateway");
+    expect(search).toContain("metadata stays opaque");
+  });
+
   test("routes every focused reference through one explicit trigger", () => {
     expect(skill).toContain("## Route References Deliberately");
     expect(normalizedSkill).toContain(
@@ -111,6 +119,7 @@ describe("central Relic skill distribution source", () => {
       "references/federation.md",
       "references/knowledge-authoring.md",
       "references/semantic-html.md",
+      "references/search.md",
     ]) {
       expect(skill.split(`(${reference})`).length - 1).toBe(1);
     }

@@ -202,6 +202,9 @@ export type KnowledgeSearchResult =
       label: string;
       id?: string;
       memberships: CorpusMembership[];
+      metadata: Record<string, unknown>;
+      links: KnowledgeLink[];
+      backlinks: KnowledgeBacklink[];
       snippet: string;
       score: number;
     }
@@ -214,8 +217,10 @@ export type KnowledgeSearchResult =
     };
 
 export type FederatedKnowledgeSearchResult =
-  | (Extract<KnowledgeSearchResult, { type: "document" }> & {
+  | (Omit<Extract<KnowledgeSearchResult, { type: "document" }>, "links" | "backlinks"> & {
       project: ProjectAddress;
+      links: FederatedKnowledgeLink[];
+      backlinks: FederatedKnowledgeBacklink[];
     })
   | (Omit<Extract<KnowledgeSearchResult, { type: "artifact" }>, "specificationPaths"> & {
       project: ProjectAddress;

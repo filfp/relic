@@ -9,6 +9,19 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `relic search` accepts repeatable `--kind` and `--meta` filters (`key`, `key=value`, or a
+  JSON object) combined by AND with each other and with the query, which is now optional
+  when a filter is given. Metadata filters are literal matches on top-level keys; artifacts
+  are excluded when any filter is present. The local viewer API (`/api/search`) accepts the
+  same `kind` and `meta` parameters through the same core function.
+- Document search results carry their metadata, outgoing links and backlinks, and the JSON output
+  carries `formatVersion`.
+
+### Changed
+- Metadata value-shape classification moved from the viewer into `@relic/core` so search and
+  the viewer share one rule.
+
 ## [2.2.1] — 2026-10-07
 
 ### Changed

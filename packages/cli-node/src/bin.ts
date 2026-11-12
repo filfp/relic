@@ -21,6 +21,10 @@ function port(value: string): number {
   return parsed;
 }
 
+function collect(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
 export function createProgram(): Command {
   const program = new Command();
   program
@@ -50,10 +54,30 @@ export function createProgram(): Command {
   program
     .command("search")
     .description("Search the complete current Relic corpus")
-    .argument("<query...>", "Search query")
+    .argument("[query...]", "Search query (optional when a filter is given)")
+    .option(
+      "--kind <kind>",
+      "Only documents in this corpus kind (repeatable, combined with AND)",
+      collect,
+      [],
+    )
+    .option(
+      "--meta <filter>",
+      "Metadata filter: key, key=value, or a JSON object (repeatable, combined with AND)",
+      collect,
+      [],
+    )
     .option("--json", "Output the result model as JSON", false)
-    .action(async (query: string[], options: { json: boolean }) => {
-      await runSearch({ query: query.join(" "), json: options.json });
+    .action(async (
+      query: string[],
+      options: { kind: string[]; meta: string[]; json: boolean },
+    ) => {
+      await runSearch({
+        query: query.join(" "),
+        kinds: options.kind,
+        meta: options.meta,
+        json: options.json,
+      });
     });
 
   program
