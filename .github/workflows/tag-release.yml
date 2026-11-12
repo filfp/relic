@@ -11,64 +11,11 @@ permissions: {}
 
 jobs:
   tag:
-    name: Tag merged release branch
     if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v')
-    runs-on: ubuntu-latest
     permissions:
       contents: write
       actions: write
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
-          fetch-depth: 0
-
-      - name: Validate release contract and push tag
-        id: tag
-        env:
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-        run: |
-          release="${HEAD_REF#release/v}"
-          if [[ ! "$release" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-(npm|pypi))?$ ]]; then
-            echo "Invalid release branch: $HEAD_REF" >&2
-            exit 1
-          fi
-
-          version="${BASH_REMATCH[1]}"
-          target="${BASH_REMATCH[3]}"
-          tag="v${release}"
-          npm_version=$(node -p "require('./packages/cli-node/package.json').version")
-          root_version=$(node -p "require('./package.json').version")
-          python_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' packages/cli-python/pyproject.toml)
-          binary_version=$(sed -n 's/^const VERSION = "\([^"]*\)";/\1/p' packages/cli-node/src/bin.ts)
-          module_version=$(sed -n 's/^__version__ = "\([^"]*\)"/\1/p' packages/cli-python/relic/__init__.py)
-
-          if [[ "$npm_version" != "$version" || "$root_version" != "$version" || "$python_version" != "$version" || "$binary_version" != "$version" || "$module_version" != "$version" ]]; then
-            echo "Release branch $HEAD_REF does not match package versions" >&2
-            exit 1
-          fi
-          if ! grep -Fq "## [$version]" CHANGELOG.md; then
-            echo "CHANGELOG.md has no ## [$version] release entry" >&2
-            exit 1
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$tag" "$MERGE_SHA"
-          git push origin "$tag"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "target=$target" >> "$GITHUB_OUTPUT"
-
-      - name: Dispatch selected publish workflows
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.tag.outputs.tag }}
-          TARGET: ${{ steps.tag.outputs.target }}
-        run: |
-          if [[ -z "$TARGET" || "$TARGET" == "npm" ]]; then
-            gh workflow run publish-npm.yml --ref "refs/tags/$TAG"
-          fi
-          if [[ -z "$TARGET" || "$TARGET" == "pypi" ]]; then
-            gh workflow run publish-pypi.yml --ref "refs/tags/$TAG"
-          fi
+    uses: ./.github/workflows/release-tag.yml
+    with:
+      check: bash scripts/release-check.sh
+      targets: npm:publish-npm.yml pypi:publish-pypi.yml

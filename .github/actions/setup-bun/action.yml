@@ -1,0 +1,20 @@
+name: setup-bun
+description: >-
+  Bun at a pinned version and the dependencies of the frozen lockfile. Shared by Relic and
+  Ranni: the repository's bunfig.toml exact pins and 7-day release floor apply to this install.
+
+inputs:
+  bun-version:
+    description: Exact Bun version.
+    default: "1.4.0"
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+    # --frozen-lockfile: a lockfile that drifted from package.json fails here instead of
+    # resolving something nobody reviewed.
+    - run: bun install --frozen-lockfile
+      shell: bash

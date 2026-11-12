@@ -1,0 +1,11 @@
+name: supply-chain
+description: >-
+  Blocks unpinned or script-trusting dependencies, a bunfig.toml without exact pins and the
+  7-day release floor, and any advisory in bun audit that is not allowlisted with a reason.
+  Shared by Relic and Ranni; run it after setup-bun.
+
+runs:
+  using: composite
+  steps:
+    - run: bun "$GITHUB_ACTION_PATH/check.ts"
+      shell: bash
