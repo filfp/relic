@@ -1,0 +1,85 @@
+name: Release tag
+
+# Reusable by Relic and Ranni. Called from a workflow triggered by a closed pull request:
+# when a merged `release/v<x.y.z>` or `release/v<x.y.z>-<target>` branch lands, it runs the
+# repository's release check, tags the merge commit `v<release>`, and dispatches the publish
+# workflow of each target (all of them without a suffix, only that one with it).
+
+on:
+  workflow_call:
+    inputs:
+      check:
+        description: Shell command that validates the release; VERSION holds x.y.z.
+        type: string
+        required: true
+      targets:
+        description: Space-separated `name:workflow.yml` pairs, for example `npm:publish-npm.yml`.
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  tag:
+    name: Tag merged release branch
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Read the release branch
+        id: release
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          release="${HEAD_REF#release/v}"
+          if [[ ! "$release" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-([a-z]+))?$ ]]; then
+            echo "Invalid release branch: $HEAD_REF" >&2
+            exit 1
+          fi
+          echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          echo "target=${BASH_REMATCH[3]}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${release}" >> "$GITHUB_OUTPUT"
+
+      - name: Check the release
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: ${{ inputs.check }}
+
+      - name: Push the tag
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "$MERGE_SHA"
+          git push origin "$TAG"
+
+      - name: Dispatch publish workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          TARGET: ${{ steps.release.outputs.target }}
+          TARGETS: ${{ inputs.targets }}
+        run: |
+          dispatched=0
+          for pair in $TARGETS; do
+            name="${pair%%:*}"
+            workflow="${pair#*:}"
+            if [[ -z "$TARGET" || "$TARGET" == "$name" ]]; then
+              gh workflow run "$workflow" --ref "refs/tags/$TAG"
+              echo "Dispatched $workflow at $TAG."
+              dispatched=1
+            fi
+          done
+          if [[ "$dispatched" == 0 ]]; then
+            echo "No target named $TARGET in: $TARGETS" >&2
+            exit 1
+          fi

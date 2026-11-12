@@ -9,6 +9,19 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+- CI enforces the supply chain: exact pins, a 7-day minimum release age in
+  `bunfig.toml`, no trusted install scripts, and a `bun audit` gate that knows
+  the release floor and takes a reasoned allowlist.
+- The PyPI build installs hash-locked tooling and builds without isolation.
+- A Claude Code hook refuses unpinned or non-Bun installs.
+
+### Changed
+
+- CI setup, the supply-chain gate and the release-tag workflow are reusable,
+  shared with Ranni. CI runs Bun 1.4.0.
+
 ## [2.3.0] — 2026-11-11
 
 ### Added

@@ -83,8 +83,10 @@ pull-request CI finish before merging.
 
 [`tag-release.yml`](../.github/workflows/tag-release.yml) runs only when a pull
 request into `main` is merged and its source branch begins with `release/v`.
-It validates the branch name, all five version sites, and the changelog entry,
-then tags the pull-request merge commit:
+It calls the reusable [`release-tag.yml`](../.github/workflows/release-tag.yml),
+shared with Ranni, which validates the branch name, runs
+[`scripts/release-check.sh`](../scripts/release-check.sh) (all five version sites
+and the changelog entry), then tags the pull-request merge commit:
 
 - `v1.2.3` dispatches npm and PyPI;
 - `v1.2.3-npm` dispatches npm only;
@@ -93,7 +95,8 @@ then tags the pull-request merge commit:
 The npm workflow installs pinned dependencies, embeds the current skill and
 viewer, builds the Node bundle, and publishes with npm provenance.
 
-The PyPI workflow compiles and smoke-tests native binaries, builds and verifies
+The PyPI workflow installs its build tooling from hash-locked requirements,
+compiles and smoke-tests native binaries, builds and verifies
 wheels for Linux x64/arm64, macOS x64/arm64, and Windows x64, then publishes the
 collected wheels through trusted publishing.
 
@@ -150,7 +153,11 @@ trusted workflow.
 Keep these files coherent when changing the release contract:
 
 - `scripts/publish.ts` for release preparation;
-- `.github/workflows/tag-release.yml` for merged-branch validation and dispatch;
+- `.github/workflows/tag-release.yml`, the shared `release-tag.yml` and
+  `scripts/release-check.sh` for merged-branch validation and dispatch (Ranni
+  calls `release-tag.yml` too, pinned to a commit);
+- `.github/actions/setup-bun` and `.github/actions/supply-chain`, also shared
+  with Ranni;
 - `.github/workflows/publish-npm.yml` for the npm artifact;
 - `.github/workflows/publish-pypi.yml` for native wheels and PyPI publication;
 - all version-bearing package files and `CHANGELOG.md`;

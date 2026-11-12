@@ -30,8 +30,31 @@ bun run lint
 bun run typecheck
 bun run test
 bun run test:distribution
-bun audit
+bun .github/actions/supply-chain/check.ts
 ```
+
+### Supply chain
+
+`bunfig.toml` pins exact versions and refuses any release younger than 7 days
+(`minimumReleaseAge`): a fresh release is the window in which a compromised
+package does its damage. Add a dependency with `bun add --exact <pkg>@<x.y.z>`.
+
+[`check.ts`](.github/actions/supply-chain/check.ts) runs in CI and blocks a range,
+a moving tag, a git or URL source, `trustedDependencies`, or a `bunfig.toml`
+without both rules. It also blocks every `bun audit` advisory, at any severity,
+unless its only fix is younger than the floor (then it warns with the date the
+fix can install) or `.supply-chain.json` allowlists it with a reason. An audit
+that cannot reach the registry blocks.
+
+The Claude Code hook `.claude/hooks/guard-install.sh` refuses npm, pnpm and yarn
+installs, unpinned `bun add`, `--trust`, and release-age overrides before they run.
+
+The PyPI build installs its tooling from the hash-locked
+`packages/cli-python/build-requirements.txt` and builds without isolation, so no
+unpinned Python package enters it.
+
+The supply-chain action, the `setup-bun` action and the reusable
+`release-tag.yml` workflow are shared with Ranni, which references them by commit.
 
 Typecheck and test regenerate ignored embedded assets. Distribution tests build and
 exercise the npm bundle and compiled Bun binary, install the same central skill for all
