@@ -9,6 +9,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-11-17
+
 ### Added
 
 - Federated `relic search --json` output, and the viewer's `/api/search`, carry a
