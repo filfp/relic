@@ -1,5 +1,5 @@
 import { realpathSync } from "node:fs";
-import { resolve } from "node:path";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 
 import {
   compareCanonicalProjectAddress,
@@ -16,6 +16,7 @@ import type {
   FederatedKnowledgeDiagnostic,
   FederatedKnowledgeProject,
   FederatedDocument,
+  FederatedProjectRoot,
   FederationEdge,
   FederationProjectNode,
   KnowledgeArtifact,
@@ -24,10 +25,6 @@ import type {
 } from "./types.ts";
 
 const ROOT_ADDRESS: ProjectAddress = ["root"];
-const projectRootsByAggregate = new WeakMap<
-  FederatedKnowledgeProject,
-  ReadonlyMap<string, string>
->();
 
 export interface FederatedArtifactAuthority {
   projectRoot: string;
@@ -153,7 +150,6 @@ export function loadFederatedKnowledgeProject(
 
   const projects: FederationProjectNode[] = [];
   const edges: FederationEdge[] = [];
-  const projectRoots = new Map<string, string>();
   const readsByRealPath = new Map<string, RelicProjectConfigurationRead>([
     [selectedRead.projectRoot, selectedRead],
   ]);
@@ -180,8 +176,11 @@ export function loadFederatedKnowledgeProject(
     );
     const task = queue.shift()!;
     const knowledge = loadKnowledgeProjectFromConfiguration(task.read);
-    projects.push({ address: task.address, knowledge });
-    projectRoots.set(task.address.join("/"), task.projectRoot);
+    projects.push({
+      address: task.address,
+      projectRoot: task.projectRoot,
+      knowledge,
+    });
 
     const members = [...(task.read.configuration?.federation?.members ?? [])]
       .sort((left, right) =>
@@ -293,17 +292,36 @@ export function loadFederatedKnowledgeProject(
   edges.sort(compareEdges);
   const { documents, artifacts } = composeFederatedRelationships(
     projects,
-    projectRoots,
+    new Map(projects.map((node) => [node.address.join("/"), node.projectRoot])),
   );
-  const aggregate: FederatedKnowledgeProject = {
+  return {
     projects,
     edges,
     documents,
     artifacts,
     diagnostics: aggregateDiagnostics(projects, edges, documents),
   };
-  projectRootsByAggregate.set(aggregate, new Map(projectRoots));
-  return aggregate;
+}
+
+/**
+ * Lists every reached project's directory relative to the selected root's realpath.
+ * Member containment makes each one a descendant path; an entry that would leave the
+ * selected root (possible only if the filesystem changed during traversal) is omitted
+ * rather than exposed as an absolute or escaping path.
+ */
+export function federatedProjectRoots(
+  aggregate: FederatedKnowledgeProject,
+): FederatedProjectRoot[] {
+  const selected = aggregate.projects.find((node) => node.address.length === 1);
+  if (!selected) return [];
+  return aggregate.projects.flatMap((node) => {
+    const path = relative(selected.projectRoot, node.projectRoot);
+    if (isAbsolute(path) || path === ".." || path.startsWith(`..${sep}`)) return [];
+    return [{
+      address: node.address,
+      root: path === "" ? "." : path.split(sep).join("/"),
+    }];
+  });
 }
 
 export function resolveFederatedArtifactAuthority(
@@ -311,7 +329,9 @@ export function resolveFederatedArtifactAuthority(
   project: ProjectAddress,
   path: string,
 ): FederatedArtifactAuthority | undefined {
-  const projectRoot = projectRootsByAggregate.get(aggregate)?.get(project.join("/"));
+  const projectRoot = aggregate.projects.find((node) =>
+    compareProjectAddress(node.address, project) === 0
+  )?.projectRoot;
   if (!projectRoot) return undefined;
   const artifact = aggregate.artifacts.find((candidate) =>
     compareProjectAddress(candidate.project, project) === 0 &&

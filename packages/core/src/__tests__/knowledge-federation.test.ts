@@ -7,9 +7,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 import {
+  federatedProjectRoots,
   loadFederatedKnowledgeProject,
   searchFederatedKnowledge,
 } from "../knowledge/index.ts";
@@ -688,5 +689,113 @@ describe("Relic hierarchical federation", () => {
     expect(aggregate.edges).toEqual([]);
     expect(aggregate.documents).toEqual([]);
     expect(aggregate.artifacts).toEqual([]);
+  });
+});
+
+function roots(projectPath: string): Array<[string, string]> {
+  return federatedProjectRoots(loadFederatedKnowledgeProject(projectPath))
+    .map((item) => [item.address.join("/"), item.root]);
+}
+
+describe("Federated project roots", () => {
+  test("derives nested roots relative to the selected project", () => {
+    const root = createRoot();
+    const a = projectDirectory(root, "a");
+    const b = projectDirectory(a, "b");
+    writeRelic(b);
+    writeRelic(a, { b: "b" });
+    writeRelic(root, { a: "a" });
+
+    expect(roots(root)).toEqual([
+      ["root", "."],
+      ["root/a", "a"],
+      ["root/a/b", "a/b"],
+    ]);
+    expect(roots(a)).toEqual([["root", "."], ["root/b", "b"]]);
+  });
+
+  test("uses forward slashes for deeper member paths", () => {
+    const root = createRoot();
+    const api = projectDirectory(root, "services/backend/api");
+    writeRelic(api);
+    writeRelic(root, { api: "services/backend/api" });
+
+    expect(roots(root)).toEqual([
+      ["root", "."],
+      ["root/api", "services/backend/api"],
+    ]);
+    for (const [, path] of roots(root)) expect(path).not.toContain("\\");
+  });
+
+  test("never lists a member that leaves its declaring project", () => {
+    const parent = createRoot();
+    const selected = projectDirectory(parent, "home");
+    const sibling = projectDirectory(parent, "kite");
+    writeRelic(sibling);
+    writeRelic(selected, { kite: "../kite" });
+
+    expect(roots(selected)).toEqual([["root", "."]]);
+    for (const [, path] of roots(selected)) {
+      expect(path.startsWith("..")).toBe(false);
+      expect(isAbsolute(path)).toBe(false);
+    }
+
+    if (process.platform === "win32") return;
+    symlinkSync(sibling, join(selected, "kite-link"));
+    writeRelic(selected, { kite: "kite-link" });
+    expect(roots(selected)).toEqual([["root", "."]]);
+  });
+
+  test("adds no entry for aliases, repeats, or invalid and unavailable members", () => {
+    const root = createRoot();
+    const product = projectDirectory(root, "product");
+    projectDirectory(root, "empty");
+    writeRelic(product);
+    writeRelic(root, {
+      product: "product",
+      again: "product",
+      empty: "empty",
+      missing: "missing",
+      Bad: "product",
+    });
+
+    expect(roots(root)).toEqual([
+      ["root", "."],
+      ["root/again", "product"],
+    ]);
+
+    if (process.platform === "win32") return;
+    const aliased = createRoot();
+    const backend = projectDirectory(aliased, "services/backend");
+    writeRelic(backend);
+    mkdirSync(join(aliased, "aliases"));
+    symlinkSync(backend, join(aliased, "aliases/backend"));
+    writeRelic(aliased, { backend: "services/backend", link: "aliases/backend" });
+    expect(roots(aliased)).toEqual([
+      ["root", "."],
+      ["root/backend", "services/backend"],
+    ]);
+  });
+
+  test("derives roots from the realpath of a symlinked selected root", () => {
+    if (process.platform === "win32") return;
+    const root = createRoot();
+    const real = projectDirectory(root, "real");
+    const member = projectDirectory(real, "member");
+    writeRelic(member);
+    writeRelic(real, { member: "member" });
+    symlinkSync(real, join(root, "link"));
+
+    expect(roots(join(root, "link"))).toEqual(roots(real));
+    expect(roots(join(root, "link"))).toEqual([
+      ["root", "."],
+      ["root/member", "member"],
+    ]);
+  });
+
+  test("keeps the selected root as the only entry without federation", () => {
+    const root = createRoot();
+    writeRelic(root);
+    expect(roots(root)).toEqual([["root", "."]]);
   });
 });

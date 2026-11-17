@@ -224,7 +224,7 @@ describe("Relic 2.0 read-only viewer API", () => {
       documents: Array<{ project: string[]; path: string }>;
       artifacts: Array<{ project: string[]; path: string }>;
       federation: {
-        projects: Array<{ address: string[] }>;
+        projects: Array<{ address: string[]; root?: string }>;
         edges: Array<{ parent: string[]; child?: string[]; status: string }>;
       };
     };
@@ -243,6 +243,8 @@ describe("Relic 2.0 read-only viewer API", () => {
     ]);
     expect(body.federation.projects.map((project) => project.address.join("/")))
       .toEqual(["root", "root/backend"]);
+    expect(body.federation.projects.map((project) => project.root))
+      .toEqual([".", "backend"]);
     expect(body.federation.edges).toContainEqual(expect.objectContaining({
       parent: ["root"],
       child: ["root", "backend"],
@@ -284,8 +286,13 @@ describe("Relic 2.0 read-only viewer API", () => {
       parents: Array<{ project: string[]; path: string }>;
     }>(root, `/api/artifact?project=root%2Fbackend&path=${artifactPath}`);
     const search = federatedJson<{
+      projects: Array<{ address: string[]; root: string }>;
       results: Array<{ project: string[]; path: string }>;
     }>(root, "/api/search?q=note");
+    expect(search.projects).toEqual([
+      { address: ["root"], root: "." },
+      { address: ["root", "backend"], root: "backend" },
+    ]);
 
     expect(rootNote.document.links[0]).toMatchObject({
       status: "canonical",

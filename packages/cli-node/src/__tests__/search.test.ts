@@ -386,4 +386,77 @@ describe("Relic 2.0 search command", () => {
       "project" in result ? result.project.join("/") : undefined
     )).toEqual(["root", "root/backend"]);
   });
+
+  test("lists federated project roots relative to the selected root", async () => {
+    const root = createTemporaryProject();
+    const backend = join(root, "services/backend");
+    const domain = join(backend, "packages/domain");
+    mkdirSync(domain, { recursive: true });
+    writeSearchProject(domain);
+    writeSearchProject(backend, { domain: "packages/domain" });
+    writeSearchProject(root, { backend: "services/backend" });
+
+    const output = await runSearch({
+      query: "document needle",
+      json: true,
+      projectDir: root,
+    });
+    const printed = lines.at(-1) ?? "";
+
+    expect(JSON.parse(printed)).toEqual(output);
+    expect(output.formatVersion).toBe(1);
+    expect("projects" in output && output.projects).toEqual([
+      { address: ["root"], root: "." },
+      { address: ["root", "backend"], root: "services/backend" },
+      {
+        address: ["root", "backend", "domain"],
+        root: "services/backend/packages/domain",
+      },
+    ]);
+    expect(printed).not.toContain(root);
+    const strings: string[] = [];
+    const collect = (value: unknown): void => {
+      if (typeof value === "string") strings.push(value);
+      else if (Array.isArray(value)) value.forEach(collect);
+      else if (value && typeof value === "object") Object.values(value).forEach(collect);
+    };
+    collect(JSON.parse(printed));
+    for (const value of strings) {
+      expect(value.startsWith("/")).toBe(false);
+      expect(/^[A-Za-z]:[\\/]/.test(value)).toBe(false);
+    }
+  });
+
+  test("lists every reached project even when nothing matches", async () => {
+    const root = createTemporaryProject();
+    const backend = join(root, "backend");
+    mkdirSync(backend);
+    writeSearchProject(backend);
+    writeSearchProject(root, { backend: "backend" });
+
+    const output = await runSearch({
+      query: "no document contains this phrase",
+      json: true,
+      projectDir: root,
+    });
+    expect(output.results).toEqual([]);
+    expect("projects" in output && output.projects).toEqual([
+      { address: ["root"], root: "." },
+      { address: ["root", "backend"], root: "backend" },
+    ]);
+
+    await runSearch({ kinds: ["missing-kind"], json: true, projectDir: root });
+    expect(JSON.parse(lines.at(-1) ?? "").projects).toHaveLength(2);
+  });
+
+  test("keeps non-federated JSON without project roots", async () => {
+    const output = await runSearch({
+      query: "authentication",
+      json: true,
+      projectDir: fixture,
+    });
+    expect(output.formatVersion).toBe(1);
+    expect(Object.keys(output).sort()).toEqual(["formatVersion", "query", "results"]);
+    expect(output).not.toHaveProperty("projects");
+  });
 });

@@ -1,7 +1,11 @@
 export { parseFrontmatter } from "./frontmatter.ts";
 export { parseMarkdown } from "./markdown.ts";
 export { parseSpecHtml } from "./html.ts";
-export { loadFederatedKnowledgeProject, resolveFederatedArtifactAuthority } from "./federation.ts";
+export {
+  federatedProjectRoots,
+  loadFederatedKnowledgeProject,
+  resolveFederatedArtifactAuthority,
+} from "./federation.ts";
 export { loadKnowledgeProject } from "./read-model.ts";
 export { searchFederatedKnowledge, searchKnowledge } from "./search.ts";
 export {
@@ -41,6 +45,7 @@ export type {
   FederatedKnowledgeDiagnostic,
   FederatedKnowledgeLink,
   FederatedKnowledgeProject,
+  FederatedProjectRoot,
   FederatedKnowledgeReference,
   FederatedKnowledgeSearchResult,
   FederationConfiguration,

@@ -87,6 +87,11 @@ knowledge changes and use Git when historical recovery is needed.
 | `relic search <query...> [--json]` | Search the complete current corpus |
 | `relic serve [--port number]` | Serve the read-only interactive knowledge viewer |
 
+In a federated project, `search --json` also lists each reached project's
+`address` and its `root` directory, relative to the selected project, so a
+result's project-relative `path` can be opened without reading member
+configuration.
+
 Without `--engine`, `install` refreshes supported project-local engine roots
 that already exist.
 

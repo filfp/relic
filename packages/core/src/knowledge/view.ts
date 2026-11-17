@@ -1,6 +1,7 @@
 import { basename, resolve } from "node:path";
 
 import { compareProjectAddress, compareText } from "./address.ts";
+import { federatedProjectRoots } from "./federation.ts";
 import { loadKnowledgeProject } from "./read-model.ts";
 import type { KnowledgeSearchFilters } from "./filters.ts";
 import { searchFederatedKnowledge, searchKnowledge } from "./search.ts";
@@ -110,6 +111,8 @@ export interface FederatedKnowledgeArtifactView {
 
 export interface FederationProjectSummary {
   address: ProjectAddress;
+  /** Directory relative to the selected root, as in federated search output. */
+  root?: string;
   topology?: KnowledgeTopology;
   counts: {
     documents: number;
@@ -233,6 +236,9 @@ export function federatedProjectView(
   const root = aggregate.projects.find((node) => node.address.length === 1);
   if (!root) return undefined;
   const local = projectView(projectPath, root.knowledge);
+  const rootsByAddress = new Map(
+    federatedProjectRoots(aggregate).map((item) => [item.address.join("/"), item.root]),
+  );
   return {
     ...local,
     documents: aggregate.documents.map(federatedDocumentSummary),
@@ -255,6 +261,9 @@ export function federatedProjectView(
     federation: {
       projects: aggregate.projects.map((node) => ({
         address: node.address,
+        ...rootsByAddress.has(node.address.join("/")) && {
+          root: rootsByAddress.get(node.address.join("/")),
+        },
         ...(node.knowledge.topology !== undefined && {
           topology: node.knowledge.topology,
         }),

@@ -133,7 +133,16 @@ export type FederationEdgeStatus =
 
 export interface FederationProjectNode {
   address: ProjectAddress;
+  /** Absolute realpath of the project directory. Internal; never serialized as is. */
+  projectRoot: string;
   knowledge: KnowledgeProject;
+}
+
+/** A reached project's directory, relative to the selected project root. */
+export interface FederatedProjectRoot {
+  address: ProjectAddress;
+  /** POSIX-separated path relative to the selected root's realpath; "." for the root. */
+  root: string;
 }
 
 export interface FederationEdge {

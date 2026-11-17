@@ -1,11 +1,13 @@
 import {
   buildSearchFilters,
+  federatedProjectRoots,
   hasStructuralFilters,
   loadFederatedKnowledgeProject,
   SEARCH_FORMAT_VERSION,
   searchFederatedKnowledge,
   searchKnowledge,
   type FederatedKnowledgeSearchResult,
+  type FederatedProjectRoot,
   type KnowledgeDiagnostic,
   type KnowledgeSearchResult,
 } from "@relic/core";
@@ -31,6 +33,8 @@ export interface LocalSearchOutput {
 export interface FederatedSearchOutput {
   formatVersion: typeof SEARCH_FORMAT_VERSION;
   query: string;
+  /** Every reached project's directory relative to the selected root. */
+  projects: FederatedProjectRoot[];
   results: FederatedKnowledgeSearchResult[];
 }
 
@@ -133,6 +137,7 @@ export async function runSearch(options: SearchOptions): Promise<SearchOutput> {
   const output: FederatedSearchOutput = {
     formatVersion: SEARCH_FORMAT_VERSION,
     query,
+    projects: federatedProjectRoots(aggregate),
     results: searchFederatedKnowledge(aggregate, query, filters),
   };
   if (options.json) {

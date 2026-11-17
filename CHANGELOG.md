@@ -9,6 +9,14 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Federated `relic search --json` output, and the viewer's `/api/search`, carry a
+  top-level `projects` list of `{ address, root }` for every reached project. `root` is
+  the project's directory relative to the selected project, with `/` separators, and is
+  never absolute. `formatVersion` stays `1`; non-federated output is unchanged. The
+  viewer's `/api/project` federation summary carries the same `root`.
+
 ### Security
 
 - CI enforces the supply chain: exact pins, a 7-day minimum release age in
