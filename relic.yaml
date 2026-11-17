@@ -6,3 +6,4 @@ topology:
     nfr: .relic/records/requirements/non-functional
     adr: .relic/records/decisions
     epic: .relic/records/epics
+    ticket: .relic/records/ticket
