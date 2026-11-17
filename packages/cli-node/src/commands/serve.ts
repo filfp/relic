@@ -18,6 +18,7 @@ import {
   federatedArtifactView,
   federatedDocumentView,
   federatedProjectView,
+  federatedProjectRoots,
   federatedSearchView,
   loadFederatedKnowledgeProject,
   projectView,
@@ -257,6 +258,7 @@ export function resolveViewerRequest(
     return jsonResponse(200, {
       formatVersion: SEARCH_FORMAT_VERSION,
       query,
+      ...(federation && { projects: federatedProjectRoots(aggregate) }),
       results: federation
         ? federatedSearchView(aggregate, query, filters)
         : searchView(project, query, filters),

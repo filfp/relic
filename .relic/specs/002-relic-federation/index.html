@@ -213,6 +213,62 @@ federation:
     </ul>
   </section>
 
+  <section id="project-roots">
+    <h2>Project roots in federated search output</h2>
+    <p>
+      A federated result names its project by address and its file by a project-relative
+      path. Without the project's directory, no consumer can open that file, the central
+      skill included, unless it rebuilds the chain of <code>relic.yaml</code> edges itself.
+      Rebuilding it would repeat realpath containment, alias and repeat normalization,
+      and member availability outside core. Core already resolves every reached project's
+      realpath during traversal, so the federated output exposes that derived fact once.
+    </p>
+    <pre><code>{
+  "formatVersion": 1,
+  "query": "",
+  "projects": [
+    { "address": ["root"], "root": "." },
+    { "address": ["root", "kite"], "root": "apps/kite" },
+    { "address": ["root", "kite", "api"], "root": "apps/kite/services/api" }
+  ],
+  "results": []
+}</code></pre>
+    <ul>
+      <li><code>projects</code> is a top-level array in federated <code>relic search --json</code> output and in the federated <code>/api/search</code> response. A project without federation keeps its single-project shape and gains no field.</li>
+      <li>Each entry carries exactly <code>address</code> and <code>root</code>. It carries no topology, counts, diagnostics, edge status, or other project data; the viewer API remains the maintenance view.</li>
+      <li><code>address</code> is the canonical project address used by search results.</li>
+      <li><code>root</code> is the project's realpath expressed relative to the realpath of the selected project root, with <code>/</code> separators on every platform. The selected project is <code>"."</code>.</li>
+      <li>Member containment makes every reached project a descendant of the selected root, so <code>root</code> never begins with <code>../</code> and is never absolute. An entry that would leave the selected root, possible only if the filesystem changes during traversal, is omitted rather than exposed.</li>
+      <li>Only reached, readable projects with a canonical address appear. Noncanonical aliases and repeated realpaths add no entry; invalid or unavailable members are absent.</li>
+      <li>Entries are ordered by project address, and the array lists every reached project regardless of which results the query or filters return.</li>
+      <li>The field is additive, so <code>formatVersion</code> stays <code>1</code> under the <a href="../003-structured-search/index.html">structured search</a> versioning rule.</li>
+      <li>A consumer resolves <code>root</code> against the realpath of the directory containing the selected <code>relic.yaml</code>. Resolving against a symlinked path to that directory may reach a different location.</li>
+      <li>The field is derived on every invocation from <code>relic.yaml</code> and the filesystem. It is not a registry, cache, or persisted state, and no consumer writes it back.</li>
+    </ul>
+    <table>
+      <thead>
+        <tr><th>Boundary</th><th>Responsibility</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Core</td><td>Keep each reached project's realpath with its read model and derive its root relative to the selected root.</td></tr>
+        <tr><td>CLI</td><td>Serialize the derived list in federated search JSON and <code>/api/search</code> without path logic of its own; the <code>/api/project</code> federation summary carries the same <code>root</code>.</td></tr>
+        <tr><td>Central skill</td><td>Map a federated result to its file through <code>projects</code> instead of walking member configuration.</td></tr>
+      </tbody>
+    </table>
+    <h3>Acceptance evidence</h3>
+    <ol>
+      <li>A nested chain <code>root → a → b</code> yields roots <code>.</code>, <code>a</code>, and <code>a/b</code>.</li>
+      <li>A member declared as <code>../x</code>, or through a symlink that leaves its declaring project, is not listed, and no root begins with <code>../</code>.</li>
+      <li>A noncanonical alias or a repeated realpath adds no entry; an invalid or unavailable member is absent.</li>
+      <li>A selected root reached through a symlink yields roots relative to its realpath.</li>
+      <li>No value in federated search JSON is an absolute path: none begins with <code>/</code> or a drive letter.</li>
+      <li>Federated <code>/api/search</code> and the <code>/api/project</code> federation summary carry the same roots as the CLI.</li>
+      <li>Nested member roots use <code>/</code> separators on every platform.</li>
+      <li>Non-federated search JSON is unchanged, and <code>formatVersion</code> remains <code>1</code>.</li>
+      <li>A query with no results still lists every reached project.</li>
+    </ol>
+  </section>
+
   <section>
     <h2>Configuration duplicates</h2>
     <p>

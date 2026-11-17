@@ -26,6 +26,12 @@ Use Relic search or the viewer when they provide the composed model. Native file
 text, and symbol search remain valid for investigation, but do not infer additional
 federation edges from files you happen to find.
 
+A federated result's `path` is relative to its own project. To open it, look up the
+result's `project` address in the top-level `projects` list of `relic search --json`,
+whose `root` is that project's directory relative to the selected `relic.yaml`
+directory, and join the two. Do not walk member `relic.yaml` files to rebuild that
+mapping.
+
 ## Confront Across Projects Without Flattening Them
 
 - Use relevant descendant knowledge when reasoning from an ancestor federation view.
